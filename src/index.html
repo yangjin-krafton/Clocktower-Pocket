@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clocktower Pocket - 서버 접속 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+        }
+
+        .status-ok {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clocktower Pocket</h1>
+        <p class="subtitle">서버 접속 테스트 페이지</p>
+
+        <div class="info-box">
+            <p>이 페이지는 Clocktower Pocket 프로젝트의 서버 접속 테스트를 위한 임시 페이지입니다. WebRTC 기반 P2P 통신을 사용하여 서버 없이 동작하는 Blood on the Clocktower 게임 도우미입니다.</p>
+        </div>
+
+        <div class="status-box">
+            <div class="status-item">
+                <span class="status-label">접속 상태</span>
+                <span class="status-value status-ok">연결됨</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">프로젝트</span>
+                <span class="status-value">Clocktower Pocket</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">타입</span>
+                <span class="status-value">Static WebApp (P2P)</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">상태</span>
+                <span class="status-value status-pending">개발 중</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">타임스탬프</span>
+                <span class="status-value" id="timestamp">-</span>
+            </div>
+        </div>
+
+        <button class="btn" onclick="testConnection()">연결 테스트</button>
+    </div>
+
+    <script>
+        // 현재 시간 표시
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString('ko-KR');
+        }
+
+        // 연결 테스트 함수
+        function testConnection() {
+            alert('연결 테스트 성공! 페이지가 정상적으로 로드되었습니다.');
+            console.log('Connection test successful at:', new Date().toISOString());
+        }
+
+        // 페이지 로드 시 타임스탬프 업데이트
+        updateTimestamp();
+
+        // 1초마다 타임스탬프 갱신
+        setInterval(updateTimestamp, 1000);
+
+        console.log('Clocktower Pocket - Test Page Loaded');
+        console.log('Project Type: Static WebApp with P2P (WebRTC)');
+    </script>
+</body>
+</html>

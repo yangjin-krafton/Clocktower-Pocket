@@ -10,7 +10,8 @@
       "Bash(npm run dev:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(ipconfig:*)"
+      "Bash(ipconfig:*)",
+      "Bash(tasklist:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

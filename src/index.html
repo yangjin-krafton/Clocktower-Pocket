@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clocktower Pocket - 서버 접속 테스트</title>
+    <title>Clocktower Pocket - P2P 게임 도우미</title>
     <link rel="icon" type="image/svg+xml" href="asset/favicon.svg">
     <style>
         * {
@@ -117,6 +117,44 @@
             transform: translateY(0);
         }
 
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-card h2 {
+            margin: 15px 0 10px 0;
+            font-size: 1.3em;
+        }
+
+        .btn-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .btn-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -125,23 +163,41 @@
             h1 {
                 font-size: 1.5em;
             }
+
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Clocktower Pocket</h1>
-        <p class="subtitle">서버 접속 테스트 페이지</p>
+        <h1>🎭 Clocktower Pocket</h1>
+        <p class="subtitle">Blood on the Clocktower 게임 도우미</p>
 
         <div class="info-box">
-            <p>이 페이지는 Clocktower Pocket 프로젝트의 서버 접속 테스트를 위한 임시 페이지입니다. WebRTC 기반 P2P 통신을 사용하여 서버 없이 동작하는 Blood on the Clocktower 게임 도우미입니다.</p>
+            <p><strong>서버 없이 동작하는 P2P 게임 도우미</strong></p>
+            <p style="margin-top: 10px; font-size: 0.95em;">
+                WebRTC 기반 P2P 통신을 사용하여 별도 서버 없이 플레이어들과 직접 연결합니다.
+                스토리텔러는 방을 만들고, 플레이어들은 코드를 입력하여 참가합니다.
+            </p>
+        </div>
+
+        <div class="button-grid">
+            <a href="host.html" class="btn-card">
+                <div class="btn-icon">👑</div>
+                <h2>스토리텔러 (방장)</h2>
+                <p>방을 만들고 게임을 진행합니다</p>
+            </a>
+
+            <a href="player.html" class="btn-card">
+                <div class="btn-icon">🎮</div>
+                <h2>플레이어 (참가자)</h2>
+                <p>방 코드를 입력하여 참가합니다</p>
+            </a>
         </div>
 
         <div class="status-box">
-            <div class="status-item">
-                <span class="status-label">접속 상태</span>
-                <span class="status-value status-ok">연결됨</span>
-            </div>
             <div class="status-item">
                 <span class="status-label">프로젝트</span>
                 <span class="status-value">Clocktower Pocket</span>
@@ -151,39 +207,29 @@
                 <span class="status-value">Static WebApp (P2P)</span>
             </div>
             <div class="status-item">
-                <span class="status-label">상태</span>
-                <span class="status-value status-pending">개발 중</span>
+                <span class="status-label">기술</span>
+                <span class="status-value">WebRTC + Trystero</span>
             </div>
             <div class="status-item">
-                <span class="status-label">타임스탬프</span>
-                <span class="status-value" id="timestamp">-</span>
+                <span class="status-label">상태</span>
+                <span class="status-value status-pending">P2P 연결 테스트 중</span>
             </div>
         </div>
 
-        <button class="btn" onclick="testConnection()">연결 테스트</button>
+        <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 10px; font-size: 0.9em;">
+            <p style="color: #004085;">
+                💡 <strong>사용 방법:</strong><br>
+                1. 스토리텔러가 "방장" 버튼을 클릭하여 방을 생성합니다<br>
+                2. 플레이어들은 "참가자" 버튼을 클릭하고 방 코드를 입력합니다<br>
+                3. 모든 참가자가 연결되면 게임을 시작할 수 있습니다
+            </p>
+        </div>
     </div>
 
     <script>
-        // 현재 시간 표시
-        function updateTimestamp() {
-            const now = new Date();
-            document.getElementById('timestamp').textContent = now.toLocaleString('ko-KR');
-        }
-
-        // 연결 테스트 함수
-        function testConnection() {
-            alert('연결 테스트 성공! 페이지가 정상적으로 로드되었습니다.');
-            console.log('Connection test successful at:', new Date().toISOString());
-        }
-
-        // 페이지 로드 시 타임스탬프 업데이트
-        updateTimestamp();
-
-        // 1초마다 타임스탬프 갱신
-        setInterval(updateTimestamp, 1000);
-
-        console.log('Clocktower Pocket - Test Page Loaded');
-        console.log('Project Type: Static WebApp with P2P (WebRTC)');
+        console.log('Clocktower Pocket - Main Page Loaded');
+        console.log('Project Type: Static WebApp with P2P (WebRTC + Trystero)');
+        console.log('Ready to create or join rooms');
     </script>
 </body>
 </html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clocktower Pocket - Host (방장)</title>
+    <link rel="icon" type="image/svg+xml" href="asset/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .room-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .room-code {
+            font-family: 'Courier New', monospace;
+            font-size: 2em;
+            letter-spacing: 0.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .players-list {
+            list-style: none;
+        }
+
+        .player-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .player-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .log-time {
+            color: #666;
+        }
+
+        .log-type {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .test-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        #setupScreen {
+            display: block;
+        }
+
+        #roomScreen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Clocktower Pocket - Host</h1>
+        <p class="subtitle">스토리텔러 / 방장 화면</p>
+
+        <!-- 방 생성 화면 -->
+        <div id="setupScreen">
+            <div class="section">
+                <h2>방 생성</h2>
+                <p style="margin-bottom: 15px;">방을 생성하고 플레이어들을 초대하세요.</p>
+                <button class="btn" id="createRoomBtn">방 생성하기</button>
+            </div>
+        </div>
+
+        <!-- 방 관리 화면 -->
+        <div id="roomScreen">
+            <!-- 방 정보 -->
+            <div class="section">
+                <h2>방 정보</h2>
+                <div class="room-info">
+                    <div class="info-card">
+                        <div class="info-label">방 코드</div>
+                        <div class="info-value room-code" id="roomCode">------</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">연결된 플레이어</div>
+                        <div class="info-value" id="playerCount">0</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">내 피어 ID</div>
+                        <div class="info-value" style="font-size: 0.9em;" id="myPeerId">-</div>
+                    </div>
+                </div>
+                <p style="color: #666; font-size: 0.9em;">
+                    📱 플레이어들에게 이 코드를 공유하세요:
+                    <strong id="joinUrl" style="color: #667eea;">-</strong>
+                </p>
+            </div>
+
+            <!-- 플레이어 목록 -->
+            <div class="section">
+                <h2>참가자 목록</h2>
+                <ul class="players-list" id="playersList">
+                    <li style="color: #666; text-align: center; padding: 20px;">
+                        아직 참가자가 없습니다.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 테스트 메시지 -->
+            <div class="test-section">
+                <h3 style="margin-bottom: 10px;">🧪 연결 테스트</h3>
+                <p style="margin-bottom: 10px; font-size: 0.9em;">
+                    모든 플레이어에게 테스트 메시지를 보냅니다.
+                </p>
+                <input type="text" class="message-input" id="testMessage" placeholder="테스트 메시지를 입력하세요...">
+                <button class="btn" id="sendMessageBtn">메시지 전송</button>
+            </div>
+
+            <!-- 로그 -->
+            <div class="section">
+                <h2>연결 로그</h2>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry">
+                        <span class="log-time">[대기중]</span> 로그가 여기에 표시됩니다...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { P2PManager } from './js/p2p.js'
+
+        let p2p = null
+        const players = new Map() // peerId -> playerInfo
+
+        // 방 생성
+        async function createRoom() {
+            try {
+                addLog('INFO', '방 생성 중...')
+
+                // P2P 매니저 초기화
+                p2p = new P2PManager()
+
+                // 방 코드 생성
+                const roomCode = P2PManager.generateRoomCode()
+
+                // 콜백 설정
+                p2p.onPeerJoined = handlePeerJoined
+                p2p.onPeerLeft = handlePeerLeft
+                p2p.onRoomCreated = handleRoomCreated
+                p2p.onConnectionError = handleConnectionError
+
+                // 메시지 핸들러 등록
+                p2p.on('JOIN_REQUEST', handleJoinRequest)
+                p2p.on('CHAT_MESSAGE', handleChatMessage)
+                p2p.on('PING', handlePing)
+
+                // 방 생성
+                await p2p.createRoom(roomCode)
+
+                // UI 업데이트
+                document.getElementById('setupScreen').style.display = 'none'
+                document.getElementById('roomScreen').style.display = 'block'
+
+                addLog('SUCCESS', `방이 생성되었습니다: ${roomCode}`)
+            } catch (error) {
+                addLog('ERROR', `방 생성 실패: ${error.message}`)
+                alert('방 생성에 실패했습니다. 다시 시도해주세요.')
+            }
+        }
+
+        // 테스트 메시지 전송
+        function sendTestMessage() {
+            const message = document.getElementById('testMessage').value
+            if (!message) {
+                alert('메시지를 입력하세요.')
+                return
+            }
+
+            p2p.broadcast('CHAT_MESSAGE', {
+                text: message,
+                from: 'Host',
+                timestamp: Date.now()
+            })
+
+            addLog('SEND', `메시지 전송: ${message}`)
+            document.getElementById('testMessage').value = ''
+        }
+
+        // 콜백 핸들러들
+        function handleRoomCreated(roomCode) {
+            document.getElementById('roomCode').textContent = roomCode
+            document.getElementById('myPeerId').textContent = p2p.myPeerId.substring(0, 8) + '...'
+
+            const baseUrl = window.location.origin + window.location.pathname.replace('host.html', '')
+            const joinUrl = `${baseUrl}player.html?code=${roomCode}`
+            document.getElementById('joinUrl').textContent = joinUrl
+
+            addLog('INFO', `방 코드: ${roomCode}`)
+            addLog('INFO', `참가 URL: ${joinUrl}`)
+        }
+
+        function handlePeerJoined(peerId) {
+            addLog('PEER', `새 피어 연결: ${peerId}`)
+            updatePlayerCount()
+        }
+
+        function handlePeerLeft(peerId) {
+            addLog('PEER', `피어 연결 해제: ${peerId}`)
+            players.delete(peerId)
+            updatePlayerList()
+            updatePlayerCount()
+        }
+
+        function handleConnectionError(error) {
+            addLog('ERROR', `연결 오류: ${error.message}`)
+        }
+
+        function handleJoinRequest(data, peerId) {
+            addLog('JOIN', `플레이어 참가 요청: ${data.playerName} (${peerId})`)
+
+            // 플레이어 정보 저장
+            players.set(peerId, {
+                id: peerId,
+                name: data.playerName,
+                joinedAt: Date.now()
+            })
+
+            // 플레이어 목록 업데이트
+            updatePlayerList()
+            updatePlayerCount()
+
+            // 참가 승인 응답
+            p2p.sendToPeer(peerId, 'JOIN_RESPONSE', {
+                success: true,
+                message: '참가가 승인되었습니다.'
+            })
+
+            addLog('SEND', `참가 승인: ${data.playerName}`)
+        }
+
+        function handleChatMessage(data, peerId) {
+            const player = players.get(peerId)
+            const playerName = player ? player.name : peerId.substring(0, 8)
+            addLog('MSG', `${playerName}: ${data.text}`)
+        }
+
+        function handlePing(data, peerId) {
+            addLog('PING', `Ping from ${peerId}`)
+            p2p.sendToPeer(peerId, 'PONG', { timestamp: Date.now() })
+        }
+
+        // UI 업데이트 함수들
+        function updatePlayerCount() {
+            const count = players.size
+            document.getElementById('playerCount').textContent = count
+        }
+
+        function updatePlayerList() {
+            const listEl = document.getElementById('playersList')
+
+            if (players.size === 0) {
+                listEl.innerHTML = `
+                    <li style="color: #666; text-align: center; padding: 20px;">
+                        아직 참가자가 없습니다.
+                    </li>
+                `
+                return
+            }
+
+            listEl.innerHTML = ''
+            players.forEach((player, peerId) => {
+                const li = document.createElement('li')
+                li.className = 'player-item'
+                li.innerHTML = `
+                    <div>
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-id">${peerId.substring(0, 16)}...</div>
+                    </div>
+                    <span class="status-badge status-connected">연결됨</span>
+                `
+                listEl.appendChild(li)
+            })
+        }
+
+        function addLog(type, message) {
+            const logContainer = document.getElementById('logContainer')
+            const time = new Date().toLocaleTimeString('ko-KR')
+
+            const entry = document.createElement('div')
+            entry.className = 'log-entry'
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-type">[${type}]</span>
+                ${message}
+            `
+
+            logContainer.appendChild(entry)
+            logContainer.scrollTop = logContainer.scrollHeight
+        }
+
+        // 페이지 로드 시 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('createRoomBtn').addEventListener('click', createRoom)
+            document.getElementById('sendMessageBtn').addEventListener('click', sendTestMessage)
+
+            // Enter 키로 메시지 전송
+            document.getElementById('testMessage').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendTestMessage()
+                }
+            })
+        })
+    </script>
+</body>
+</html>

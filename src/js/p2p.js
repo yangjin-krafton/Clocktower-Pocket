@@ -3,8 +3,8 @@
  * WebRTC를 사용하여 서버 없이 직접 피어 간 통신
  */
 
-// Trystero를 CDN에서 로드 (BitTorrent 전략 - WebTorrent 트래커 사용, 안정적)
-import { joinRoom } from 'https://esm.run/trystero/torrent'
+// Trystero를 CDN에서 로드 (MQTT 전략 - Quest-Net 검증됨, 안정적)
+import { joinRoom } from 'https://esm.run/trystero/mqtt'
 
 class P2PManager {
     constructor() {
@@ -66,8 +66,8 @@ class P2PManager {
 
             console.log(`[P2P] Creating room: ${roomCode}`)
 
-            // Trystero 룸 생성
-            this.room = joinRoom({ appId: 'clocktower-pocket', relayUrls: P2PManager.TRACKERS }, roomCode)
+            // Trystero 룸 생성 (MQTT - 기본 브로커 사용)
+            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)
             this.myPeerId = 'host-' + Math.random().toString(36).substr(2, 9)
@@ -107,8 +107,8 @@ class P2PManager {
 
             console.log(`[P2P] Joining room: ${roomCode} as ${playerName}`)
 
-            // Trystero 룸 참가
-            this.room = joinRoom({ appId: 'clocktower-pocket', relayUrls: P2PManager.TRACKERS }, roomCode)
+            // Trystero 룸 참가 (MQTT - 기본 브로커 사용)
+            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
 
             // 내 피어 ID 저장
             this.myPeerId = 'player-' + Math.random().toString(36).substr(2, 9)
@@ -271,14 +271,13 @@ class P2PManager {
     }
 
     /**
-     * 신뢰할 수 있는 WebTorrent 트래커 목록
-     * 여러 트래커 중 하나만 성공하면 P2P 연결 가능
-     * relayUrls 파라미터로 Trystero에 전달
+     * MQTT 브로커 목록 (선택사항)
+     * MQTT 전략은 Trystero 기본 브로커 사용
+     * 커스텀 브로커 사용 시 relayUrls에 전달
      */
-    static TRACKERS = [
-        'wss://tracker.openwebtorrent.com',
-        'wss://tracker.files.fm:7073/announce',
-    ]
+    // static MQTT_BROKERS = [
+    //     'wss://test.mosquitto.org:8081',
+    // ]
 
     /**
      * 방 코드 생성 (6자리 영숫자)

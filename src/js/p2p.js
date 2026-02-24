@@ -267,14 +267,13 @@ class P2PManager {
     /**
      * 신뢰할 수 있는 WebTorrent 트래커 목록
      * 여러 트래커 중 하나만 성공하면 P2P 연결 가능
-     * 많을수록 연결 안정성 증가
+     * 실패하는 트래커는 제거하여 에러 로그 방지
      */
     static TRACKERS = [
         'wss://tracker.openwebtorrent.com',
         'wss://tracker.webtorrent.io:443/announce',
         'wss://tracker.files.fm:7073/announce',
         'wss://spacetradersapi-chatbox.herokuapp.com:443/announce',
-        'wss://tracker.btorrent.xyz',
         'wss://tracker.openwebtorrent.com:443/announce',
         'wss://tracker.fastcast.nz',
     ]

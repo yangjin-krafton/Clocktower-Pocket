@@ -124,12 +124,16 @@ class P2PManager {
             // playerName 저장 (피어 연결 시 JOIN_REQUEST 전송)
             this.pendingPlayerName = playerName
 
-            // JOIN_RESPONSE 받으면 pendingPlayerName 초기화
-            this.on('JOIN_RESPONSE', (data) => {
+            // JOIN_RESPONSE 받으면 pendingPlayerName 초기화 (Host 연결 완료)
+            const existingHandler = this.messageHandlers.get('JOIN_RESPONSE')
+            this.on('JOIN_RESPONSE', (data, peerId) => {
+                console.log(`[P2P] Received JOIN_RESPONSE from ${peerId}:`, data)
                 if (data.ok) {
                     this.pendingPlayerName = null
-                    console.log(`[P2P] Successfully joined as ${data.playerName}`)
+                    console.log(`[P2P] ✅ Successfully joined as ${data.playerName}, stopped sending JOIN_REQUEST`)
                 }
+                // 기존 핸들러도 실행
+                if (existingHandler) existingHandler(data, peerId)
             })
 
             if (this.onRoomJoined) {
@@ -177,7 +181,12 @@ class P2PManager {
         if (handler) {
             handler(data, peerId)
         } else {
-            console.warn(`[P2P] No handler registered for message type: ${type}`)
+            // JOIN_REQUEST는 Host만 처리하므로 Player가 받으면 조용히 무시
+            if (type === 'JOIN_REQUEST' && !this.isHost) {
+                // 무시 (정상 동작)
+            } else {
+                console.warn(`[P2P] No handler registered for message type: ${type}`)
+            }
         }
     }
 
@@ -253,12 +262,11 @@ class P2PManager {
             connectedAt: Date.now()
         })
 
-        // Player가 피어에 연결되면 JOIN_REQUEST 전송 (모든 피어에게 브로드캐스트)
-        // Host만 JOIN_REQUEST를 처리하고, 다른 Player는 무시함
-        if (!this.isHost && this.pendingPlayerName) {
-            console.log(`[P2P] Sending JOIN_REQUEST for: ${this.pendingPlayerName}`)
-            this.sendToPeer(peerId, 'JOIN_REQUEST', { playerName: this.pendingPlayerName })
-            // pendingPlayerName을 유지하여 모든 피어에게 전송
+        // Player가 첫 피어 연결 시 JOIN_REQUEST 브로드캐스트
+        // Host만 응답하고, 다른 Player는 무시
+        if (!this.isHost && this.pendingPlayerName && this.peers.size === 1) {
+            console.log(`[P2P] Broadcasting JOIN_REQUEST for: ${this.pendingPlayerName}`)
+            this.broadcast('JOIN_REQUEST', { playerName: this.pendingPlayerName })
         }
 
         if (this.onPeerJoined) {

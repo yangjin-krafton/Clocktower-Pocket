@@ -3,8 +3,8 @@
  * WebRTC를 사용하여 서버 없이 직접 피어 간 통신
  */
 
-// Trystero를 CDN에서 로드 (MQTT 전략 - Quest-Net 검증됨, 안정적)
-import { joinRoom } from 'https://esm.run/trystero/mqtt'
+// Trystero를 CDN에서 로드 (Nostr 전략 - 기본, 가장 안정적)
+import { joinRoom } from 'https://esm.run/trystero'
 
 class P2PManager {
     constructor() {
@@ -262,9 +262,10 @@ class P2PManager {
             connectedAt: Date.now()
         })
 
-        // Player가 첫 피어 연결 시 JOIN_REQUEST 브로드캐스트
+        // Player가 아직 Host에 등록되지 않았으면 모든 피어 연결 시 브로드캐스트
         // Host만 응답하고, 다른 Player는 무시
-        if (!this.isHost && this.pendingPlayerName && this.peers.size === 1) {
+        // JOIN_RESPONSE 받을 때까지 새 피어마다 브로드캐스트
+        if (!this.isHost && this.pendingPlayerName) {
             console.log(`[P2P] Broadcasting JOIN_REQUEST for: ${this.pendingPlayerName}`)
             this.broadcast('JOIN_REQUEST', { playerName: this.pendingPlayerName })
         }
@@ -288,12 +289,13 @@ class P2PManager {
     }
 
     /**
-     * MQTT 브로커 목록 (선택사항)
-     * MQTT 전략은 Trystero 기본 브로커 사용
-     * 커스텀 브로커 사용 시 relayUrls에 전달
+     * Nostr 릴레이 목록 (선택사항)
+     * Nostr 전략은 Trystero 기본 릴레이 사용
+     * 커스텀 릴레이 사용 시 relayUrls에 전달
      */
-    // static MQTT_BROKERS = [
-    //     'wss://test.mosquitto.org:8081',
+    // static NOSTR_RELAYS = [
+    //     'wss://relay.damus.io',
+    //     'wss://relay.snort.social',
     // ]
 
     /**

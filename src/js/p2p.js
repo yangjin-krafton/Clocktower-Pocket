@@ -3,8 +3,8 @@
  * WebRTC를 사용하여 서버 없이 직접 피어 간 통신
  */
 
-// Trystero를 CDN에서 로드 (Nostr 전략 - 더 안정적)
-import { joinRoom } from 'https://esm.run/trystero'
+// Trystero를 CDN에서 로드 (BitTorrent 전략 - WebTorrent 트래커 사용, 안정적)
+import { joinRoom } from 'https://esm.run/trystero/torrent'
 
 class P2PManager {
     constructor() {

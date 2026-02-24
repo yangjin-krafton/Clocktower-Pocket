@@ -19,7 +19,8 @@
       "Bash(powershell.exe:*)",
       "Bash(printf %s:*)",
       "Bash(printf %s\\\\n:*)",
-      "Bash(echo gh not found:*)"
+      "Bash(echo gh not found:*)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "\\tmp"

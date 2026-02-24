@@ -67,7 +67,7 @@ class P2PManager {
             console.log(`[P2P] Creating room: ${roomCode}`)
 
             // Trystero 룸 생성
-            this.room = joinRoom({ appId: 'clocktower-pocket', trackerUrls: P2PManager.TRACKERS }, roomCode)
+            this.room = joinRoom({ appId: 'clocktower-pocket', relayUrls: P2PManager.TRACKERS }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)
             this.myPeerId = 'host-' + Math.random().toString(36).substr(2, 9)
@@ -108,7 +108,7 @@ class P2PManager {
             console.log(`[P2P] Joining room: ${roomCode} as ${playerName}`)
 
             // Trystero 룸 참가
-            this.room = joinRoom({ appId: 'clocktower-pocket', trackerUrls: P2PManager.TRACKERS }, roomCode)
+            this.room = joinRoom({ appId: 'clocktower-pocket', relayUrls: P2PManager.TRACKERS }, roomCode)
 
             // 내 피어 ID 저장
             this.myPeerId = 'player-' + Math.random().toString(36).substr(2, 9)
@@ -273,15 +273,11 @@ class P2PManager {
     /**
      * 신뢰할 수 있는 WebTorrent 트래커 목록
      * 여러 트래커 중 하나만 성공하면 P2P 연결 가능
-     * 실패하는 트래커는 제거하여 에러 로그 방지
+     * relayUrls 파라미터로 Trystero에 전달
      */
     static TRACKERS = [
         'wss://tracker.openwebtorrent.com',
-        'wss://tracker.webtorrent.io:443/announce',
         'wss://tracker.files.fm:7073/announce',
-        'wss://spacetradersapi-chatbox.herokuapp.com:443/announce',
-        'wss://tracker.openwebtorrent.com:443/announce',
-        'wss://tracker.fastcast.nz',
     ]
 
     /**

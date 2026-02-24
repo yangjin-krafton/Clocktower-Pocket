@@ -1,520 +1,83 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clocktower Pocket - Player</title>
-    <link rel="icon" type="image/svg+xml" href="asset/favicon.svg">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.8em;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-        }
-
-        .section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .section h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 8px;
-            font-size: 1em;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .info-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-
-        .info-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .info-value {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-connecting {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .message-box {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .message-item {
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 3px solid #667eea;
-        }
-
-        .message-from {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 0.9em;
-            margin-bottom: 3px;
-        }
-
-        .message-text {
-            color: #333;
-        }
-
-        .message-time {
-            font-size: 0.8em;
-            color: #999;
-            margin-top: 3px;
-        }
-
-        .test-section {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
-        }
-
-        #joinScreen {
-            display: block;
-        }
-
-        #roomScreen {
-            display: none;
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Clocktower Pocket — 참가자</title>
+<link rel="icon" href="asset/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  .app-header {
+    flex-shrink: 0;
+    padding: 10px 16px 8px;
+    border-bottom: 1px solid var(--lead2);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .app-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 8%; right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent, var(--bl-dark) 12%, var(--pu-base) 30%,
+      var(--tl-base) 50%, var(--pu-base) 70%, var(--rd-dark) 88%, transparent
+    );
+  }
+  .app-header__logo  { font-size: 1.2rem; }
+  .app-header__title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold2);
+    flex: 1;
+  }
+  .app-header__badge {
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: rgba(46,74,143,0.2);
+    border: 1px solid rgba(46,74,143,0.4);
+    color: var(--bl-light);
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎭 Clocktower Pocket</h1>
-        <p class="subtitle">플레이어 화면</p>
 
-        <!-- 방 참가 화면 -->
-        <div id="joinScreen">
-            <div class="section">
-                <h2>방 참가</h2>
+<div class="app" id="app">
+  <div class="status-bar">
+    <span id="status-time">--:--</span>
+    <span style="font-size:0.85rem;">📶 🔋</span>
+  </div>
 
-                <div class="input-group">
-                    <label class="input-label" for="playerName">닉네임</label>
-                    <input type="text"
-                           id="playerName"
-                           class="input-field"
-                           placeholder="이름을 입력하세요"
-                           maxlength="20">
-                </div>
+  <div class="app-header">
+    <span class="app-header__logo">🏰</span>
+    <span class="app-header__title">Clocktower Pocket</span>
+    <span class="app-header__badge">참가자</span>
+  </div>
 
-                <div class="input-group">
-                    <label class="input-label" for="roomCode">방 코드</label>
-                    <input type="text"
-                           id="roomCode"
-                           class="input-field"
-                           placeholder="6자리 코드 (예: ABC123)"
-                           maxlength="6"
-                           style="text-transform: uppercase;">
-                </div>
-
-                <div class="alert alert-info" id="urlInfo" style="display: none;">
-                    URL에서 방 코드를 자동으로 가져왔습니다.
-                </div>
-
-                <button class="btn" id="joinBtn">
-                    방 참가하기
-                </button>
-            </div>
-        </div>
-
-        <!-- 방 참가 후 화면 -->
-        <div id="roomScreen">
-            <!-- 연결 정보 -->
-            <div class="section">
-                <h2>연결 정보</h2>
-                <div class="info-card">
-                    <div class="info-row">
-                        <span class="info-label">닉네임</span>
-                        <span class="info-value" id="displayName">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">방 코드</span>
-                        <span class="info-value" id="displayRoomCode">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">연결 상태</span>
-                        <span class="status-badge status-connecting" id="connectionStatus">연결 중...</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 메시지 수신함 -->
-            <div class="section">
-                <h2>메시지</h2>
-                <div class="message-box" id="messageBox">
-                    <p style="color: #999; text-align: center; padding: 20px;">
-                        아직 받은 메시지가 없습니다.
-                    </p>
-                </div>
-            </div>
-
-            <!-- 테스트 메시지 전송 -->
-            <div class="test-section">
-                <h3 style="margin-bottom: 10px; font-size: 1em;">🧪 연결 테스트</h3>
-                <p style="margin-bottom: 10px; font-size: 0.85em;">
-                    Host에게 테스트 메시지를 보냅니다.
-                </p>
-                <input type="text"
-                       class="input-field"
-                       id="testMessage"
-                       placeholder="메시지를 입력하세요..."
-                       style="margin-bottom: 10px;">
-                <button class="btn" id="sendMessageBtn">
-                    메시지 전송
-                </button>
-            </div>
-        </div>
+  <div class="page-content" id="app-content">
+    <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+      <div>초기화 중...</div>
     </div>
+  </div>
 
-    <script type="module">
-        import { P2PManager } from './js/p2p.js'
+  <div class="tab-bar" id="tab-bar" style="display:none"></div>
+</div>
 
-        let p2p = null
-        let myName = ''
-        const messages = []
+<script>
+  function updateClock() {
+    const now = new Date()
+    document.getElementById('status-time').textContent =
+      now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  }
+  updateClock()
+  setInterval(updateClock, 30000)
+</script>
 
-        // 방 참가
-        async function joinRoom() {
-            const playerName = document.getElementById('playerName').value.trim()
-            const roomCode = document.getElementById('roomCode').value.trim().toUpperCase()
-
-            // 입력 검증
-            if (!playerName) {
-                alert('닉네임을 입력하세요.')
-                return
-            }
-
-            if (!roomCode || roomCode.length !== 6) {
-                alert('6자리 방 코드를 입력하세요.')
-                return
-            }
-
-            try {
-                // 버튼 비활성화
-                const joinBtn = document.getElementById('joinBtn')
-                joinBtn.disabled = true
-                joinBtn.textContent = '연결 중...'
-
-                myName = playerName
-
-                // P2P 매니저 초기화
-                p2p = new P2PManager()
-
-                // 콜백 설정
-                p2p.onRoomJoined = handleRoomJoined
-                p2p.onPeerJoined = handlePeerJoined
-                p2p.onPeerLeft = handlePeerLeft
-                p2p.onConnectionError = handleConnectionError
-
-                // 메시지 핸들러 등록
-                p2p.on('JOIN_RESPONSE', handleJoinResponse)
-                p2p.on('CHAT_MESSAGE', handleChatMessage)
-                p2p.on('PONG', handlePong)
-
-                // 방 참가
-                await p2p.joinRoom(roomCode, playerName)
-
-                // UI 전환
-                document.getElementById('joinScreen').style.display = 'none'
-                document.getElementById('roomScreen').style.display = 'block'
-
-                // 정보 표시
-                document.getElementById('displayName').textContent = playerName
-                document.getElementById('displayRoomCode').textContent = roomCode
-
-                addMessage('시스템', `방 "${roomCode}"에 참가했습니다.`, 'info')
-
-            } catch (error) {
-                alert(`방 참가 실패: ${error.message}`)
-                const joinBtn = document.getElementById('joinBtn')
-                joinBtn.disabled = false
-                joinBtn.textContent = '방 참가하기'
-            }
-        }
-
-        // 테스트 메시지 전송
-        function sendTestMessage() {
-            const message = document.getElementById('testMessage').value.trim()
-            if (!message) {
-                alert('메시지를 입력하세요.')
-                return
-            }
-
-            // Host에게 메시지 전송
-            p2p.sendToHost('CHAT_MESSAGE', {
-                text: message,
-                from: myName,
-                timestamp: Date.now()
-            })
-
-            addMessage('나', message, 'sent')
-            document.getElementById('testMessage').value = ''
-        }
-
-        // 콜백 핸들러들
-        function handleRoomJoined(roomCode) {
-            console.log('[Player] Room joined:', roomCode)
-        }
-
-        function handlePeerJoined(peerId) {
-            console.log('[Player] Peer joined:', peerId)
-            updateConnectionStatus('connected')
-        }
-
-        function handlePeerLeft(peerId) {
-            console.log('[Player] Peer left:', peerId)
-            updateConnectionStatus('disconnected')
-            addMessage('시스템', 'Host와의 연결이 끊어졌습니다.', 'error')
-        }
-
-        function handleConnectionError(error) {
-            console.error('[Player] Connection error:', error)
-            updateConnectionStatus('disconnected')
-            addMessage('시스템', `연결 오류: ${error.message}`, 'error')
-        }
-
-        function handleJoinResponse(data, peerId) {
-            console.log('[Player] Join response:', data)
-            if (data.success) {
-                updateConnectionStatus('connected')
-                addMessage('시스템', data.message || '방 참가가 승인되었습니다.', 'success')
-            } else {
-                addMessage('시스템', data.message || '방 참가가 거부되었습니다.', 'error')
-            }
-        }
-
-        function handleChatMessage(data, peerId) {
-            console.log('[Player] Chat message:', data)
-            addMessage(data.from || 'Host', data.text, 'received')
-        }
-
-        function handlePong(data, peerId) {
-            console.log('[Player] Pong received:', data)
-            const latency = Date.now() - data.timestamp
-            addMessage('시스템', `Ping 응답 수신 (지연: ${latency}ms)`, 'info')
-        }
-
-        // UI 업데이트 함수들
-        function updateConnectionStatus(status) {
-            const statusEl = document.getElementById('connectionStatus')
-
-            switch (status) {
-                case 'connected':
-                    statusEl.textContent = '연결됨'
-                    statusEl.className = 'status-badge status-connected'
-                    break
-                case 'disconnected':
-                    statusEl.textContent = '연결 끊김'
-                    statusEl.className = 'status-badge status-disconnected'
-                    break
-                case 'connecting':
-                    statusEl.textContent = '연결 중...'
-                    statusEl.className = 'status-badge status-connecting'
-                    break
-            }
-        }
-
-        function addMessage(from, text, type = 'info') {
-            const messageBox = document.getElementById('messageBox')
-
-            // 첫 메시지면 안내 텍스트 제거
-            if (messages.length === 0) {
-                messageBox.innerHTML = ''
-            }
-
-            const time = new Date().toLocaleTimeString('ko-KR')
-
-            const messageEl = document.createElement('div')
-            messageEl.className = 'message-item'
-            messageEl.innerHTML = `
-                <div class="message-from">${from}</div>
-                <div class="message-text">${text}</div>
-                <div class="message-time">${time}</div>
-            `
-
-            messageBox.appendChild(messageEl)
-            messageBox.scrollTop = messageBox.scrollHeight
-
-            messages.push({ from, text, time, type })
-        }
-
-        // 페이지 로드 시 이벤트 리스너 등록 및 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            // URL에서 방 코드 추출
-            const urlParams = new URLSearchParams(window.location.search)
-            const urlRoomCode = urlParams.get('code')
-            if (urlRoomCode) {
-                document.getElementById('roomCode').value = urlRoomCode.toUpperCase()
-                document.getElementById('urlInfo').style.display = 'block'
-            }
-
-            // 이벤트 리스너 등록
-            document.getElementById('joinBtn').addEventListener('click', joinRoom)
-            document.getElementById('sendMessageBtn').addEventListener('click', sendTestMessage)
-
-            // Enter 키로 방 참가
-            document.getElementById('playerName').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    joinRoom()
-                }
-            })
-
-            document.getElementById('roomCode').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    joinRoom()
-                }
-            })
-
-            // Enter 키로 메시지 전송
-            document.getElementById('testMessage').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendTestMessage()
-                }
-            })
-        })
-    </script>
+<script type="module" src="js/player/app.js"></script>
 </body>
 </html>

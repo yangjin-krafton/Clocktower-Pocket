@@ -1,0 +1,219 @@
+/**
+ * C-06 SelectPanel — 밤 대상 선택 전체화면 패널 (호스트 전용)
+ * 참가자가 호스트 화면에서 직접 탭하여 대상 선택
+ *
+ * @param {Object} data
+ *   title      {string}    역할명
+ *   roleIcon   {string}    역할 아이콘
+ *   players    {Object[]}  선택 가능한 플레이어 목록
+ *   maxSelect  {number}    최대 선택 수
+ *   onConfirm  {Function}  onConfirm(selectedIds[]) 콜백
+ * @returns {HTMLElement}
+ */
+import { ROLES_BY_ID } from '../data/roles-tb.js'
+
+export function renderSelectPanel(data) {
+  const { title, roleIcon = '🎯', players = [], maxSelect = 1, onConfirm } = data
+
+  let selectedIds = []
+
+  const el = document.createElement('div')
+  el.className = 'select-panel'
+
+  // 헤더
+  const header = document.createElement('div')
+  header.className = 'select-panel__header'
+  header.innerHTML = `
+    <span class="select-panel__icon">${roleIcon}</span>
+    <div class="select-panel__title-wrap">
+      <div class="select-panel__title">${title}</div>
+      <div class="select-panel__hint">대상을 선택하세요</div>
+    </div>
+  `
+  el.appendChild(header)
+
+  // 선택 카운터
+  const counter = document.createElement('div')
+  counter.className = 'select-panel__counter'
+  counter.textContent = `선택: 0 / ${maxSelect}`
+  el.appendChild(counter)
+
+  // 플레이어 그리드
+  const grid = document.createElement('div')
+  grid.className = 'select-panel__grid'
+  el.appendChild(grid)
+
+  function buildGrid() {
+    grid.innerHTML = ''
+    players.forEach(p => {
+      const role = ROLES_BY_ID[p.role]
+      const isSelected = selectedIds.includes(p.id)
+      const canSelect = p.status === 'alive'
+
+      const cell = document.createElement('div')
+      cell.className = 'select-panel__chip' +
+        (isSelected ? ' select-panel__chip--selected' : '') +
+        (!canSelect ? ' select-panel__chip--disabled' : '')
+
+      cell.innerHTML = `
+        <div class="select-panel__gem">${role ? role.icon : '?'}</div>
+        <div class="select-panel__chip-name">${p.name}</div>
+        <div class="select-panel__chip-seat">${p.id}번</div>
+      `
+
+      if (canSelect) {
+        cell.addEventListener('click', () => {
+          if (isSelected) {
+            selectedIds = selectedIds.filter(id => id !== p.id)
+          } else {
+            if (selectedIds.length >= maxSelect) {
+              if (maxSelect === 1) selectedIds = []
+              else return
+            }
+            selectedIds.push(p.id)
+          }
+          buildGrid()
+          updateConfirm()
+        })
+      }
+
+      grid.appendChild(cell)
+    })
+  }
+
+  // 확인 버튼
+  const confirmBtn = document.createElement('button')
+  confirmBtn.className = 'select-panel__confirm btn btn-primary'
+  confirmBtn.textContent = '✅ 확인'
+  confirmBtn.disabled = true
+  confirmBtn.addEventListener('click', () => onConfirm && onConfirm([...selectedIds]))
+  el.appendChild(confirmBtn)
+
+  function updateConfirm() {
+    counter.textContent = `선택: ${selectedIds.length} / ${maxSelect}`
+    confirmBtn.disabled = selectedIds.length === 0
+  }
+
+  buildGrid()
+  return el
+}
+
+/**
+ * SelectPanel을 DOM에 마운트
+ * @returns {Function} unmount
+ */
+export function mountSelectPanel(data) {
+  const overlay = document.createElement('div')
+  overlay.className = 'select-panel-overlay'
+
+  const panel = renderSelectPanel({
+    ...data,
+    onConfirm: (ids) => {
+      overlay.remove()
+      data.onConfirm && data.onConfirm(ids)
+    }
+  })
+  overlay.appendChild(panel)
+  document.body.appendChild(overlay)
+
+  return () => overlay.remove()
+}
+
+if (!document.getElementById('select-panel-style')) {
+  const style = document.createElement('style')
+  style.id = 'select-panel-style'
+  style.textContent = `
+.select-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.select-panel {
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 16px;
+  background: radial-gradient(ellipse 80% 50% at 50% 10%, rgba(91,179,198,0.08) 0%, transparent 60%);
+}
+.select-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.select-panel__icon { font-size: 2.2rem; }
+.select-panel__title-wrap { flex: 1; }
+.select-panel__title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gold2);
+}
+.select-panel__hint { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+.select-panel__counter {
+  font-size: 0.78rem;
+  color: var(--tl-base);
+  text-align: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.select-panel__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  align-content: start;
+  padding: 4px 0;
+}
+.select-panel__chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 2px solid var(--lead2);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.select-panel__chip:active { transform: scale(0.93); }
+.select-panel__chip--selected {
+  border-color: var(--gold);
+  background: rgba(212,168,40,0.1);
+  box-shadow: 0 0 12px rgba(212,168,40,0.35);
+}
+.select-panel__chip--disabled { opacity: 0.3; cursor: default; }
+.select-panel__gem { font-size: 1.6rem; line-height: 1; }
+.select-panel__chip-name {
+  font-size: 0.72rem;
+  color: var(--text);
+  font-weight: 600;
+  text-align: center;
+}
+.select-panel__chip-seat { font-size: 0.58rem; color: var(--text4); }
+.select-panel__confirm {
+  flex-shrink: 0;
+  padding: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 10px;
+  min-height: 52px;
+}
+.select-panel__confirm:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+  `
+  document.head.appendChild(style)
+}

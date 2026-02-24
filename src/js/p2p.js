@@ -17,20 +17,26 @@ class P2PManager {
 
         // 메시지 타입 매핑 (긴 이름 → 짧은 이름, 12바이트 제한)
         this.messageTypeMap = {
-            'JOIN_REQUEST': 'JOIN_REQ',
+            'JOIN_REQUEST':  'JOIN_REQ',
             'JOIN_RESPONSE': 'JOINED',
-            'PHASE_CHANGE': 'PHASE',
-            'PLAYER_DIED': 'DIED',
-            'VOTE_RESULT': 'VOTE_RESULT',
-            'ROLE_ASSIGN': 'ROLE_ASSIGN',
-            'NIGHT_RESULT': 'NIGHT_RESULT',
-            'NIGHT_CALL': 'NIGHT_CALL',
-            'NIGHT_ACTION': 'NIGHT_ACT',
-            'VOTE': 'VOTE',
-            'CHAT_MESSAGE': 'CHAT',
-            'PLAYER_LIST': 'PLAYERS',
-            'PING': 'PING',
-            'PONG': 'PONG'
+            'PHASE_CHANGE':  'PHASE',
+            'PLAYER_DIED':   'DIED',
+            'VOTE_RESULT':   'VOTE_RESULT',
+            'ROLE_ASSIGN':   'ROLE_ASSIGN',
+            'NIGHT_RESULT':  'NIGHT_RESULT',
+            'NIGHT_CALL':    'NIGHT_CALL',
+            'NIGHT_ACTION':  'NIGHT_ACT',
+            'VOTE':          'VOTE',
+            'CHAT_MESSAGE':  'CHAT',
+            'PLAYER_LIST':   'PLAYERS',
+            'PING':          'PING',
+            'PONG':          'PONG',
+            // 게임 전용 타입
+            'GAME_START':    'GAME_ST',
+            'NIGHT_INFO':    'NIGHT_INF',
+            'VOTE_UPDATE':   'VOTE_UPD',
+            'GAME_END':      'GAME_END',
+            'EMOJI':         'EMOJI',
         }
 
         // 역방향 매핑 (짧은 이름 → 긴 이름)

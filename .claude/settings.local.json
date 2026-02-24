@@ -11,7 +11,14 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(ipconfig:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(PYTHONUTF8=1 python3:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(printf %s:*)",
+      "Bash(printf %s\\\\n:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

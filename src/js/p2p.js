@@ -66,7 +66,7 @@ class P2PManager {
             console.log(`[P2P] Creating room: ${roomCode}`)
 
             // Trystero 룸 생성
-            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
+            this.room = joinRoom({ appId: 'clocktower-pocket', trackerUrls: P2PManager.TRACKERS }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)
             this.myPeerId = 'host-' + Math.random().toString(36).substr(2, 9)
@@ -107,7 +107,7 @@ class P2PManager {
             console.log(`[P2P] Joining room: ${roomCode} as ${playerName}`)
 
             // Trystero 룸 참가
-            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
+            this.room = joinRoom({ appId: 'clocktower-pocket', trackerUrls: P2PManager.TRACKERS }, roomCode)
 
             // 내 피어 ID 저장
             this.myPeerId = 'player-' + Math.random().toString(36).substr(2, 9)
@@ -263,6 +263,16 @@ class P2PManager {
             this.onPeerLeft(peerId)
         }
     }
+
+    /**
+     * 신뢰할 수 있는 WebTorrent 트래커 목록
+     * tracker.btorrent.xyz 등 불안정한 기본 트래커 대신 사용
+     */
+    static TRACKERS = [
+        'wss://tracker.openwebtorrent.com',
+        'wss://tracker.webtorrent.dev',
+        'wss://tracker.files.fm:7073/announce',
+    ]
 
     /**
      * 방 코드 생성 (6자리 영숫자)

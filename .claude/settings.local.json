@@ -18,7 +18,8 @@
       "Bash(PYTHONUTF8=1 python3:*)",
       "Bash(powershell.exe:*)",
       "Bash(printf %s:*)",
-      "Bash(printf %s\\\\n:*)"
+      "Bash(printf %s\\\\n:*)",
+      "Bash(echo gh not found:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

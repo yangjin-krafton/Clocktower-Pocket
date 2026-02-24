@@ -14,6 +14,7 @@ class P2PManager {
         this.isHost = false
         this.roomCode = null
         this.myPeerId = null
+        this.pendingPlayerName = null // Player 참가 시 임시 저장
 
         // 메시지 타입 매핑 (긴 이름 → 짧은 이름, 12바이트 제한)
         this.messageTypeMap = {
@@ -120,10 +121,8 @@ class P2PManager {
             // 메시지 수신 설정
             this._setupMessageHandlers()
 
-            // Host에게 참가 요청 전송
-            setTimeout(() => {
-                this.sendToHost('JOIN_REQUEST', { playerName })
-            }, 1000)
+            // playerName 저장 (Host 피어 연결 시 JOIN_REQUEST 전송)
+            this.pendingPlayerName = playerName
 
             if (this.onRoomJoined) {
                 this.onRoomJoined(roomCode)
@@ -245,6 +244,13 @@ class P2PManager {
             id: peerId,
             connectedAt: Date.now()
         })
+
+        // Player가 Host에 연결되면 JOIN_REQUEST 전송
+        if (!this.isHost && this.pendingPlayerName) {
+            console.log(`[P2P] Sending JOIN_REQUEST for: ${this.pendingPlayerName}`)
+            this.sendToPeer(peerId, 'JOIN_REQUEST', { playerName: this.pendingPlayerName })
+            this.pendingPlayerName = null // 한 번만 전송
+        }
 
         if (this.onPeerJoined) {
             this.onPeerJoined(peerId)

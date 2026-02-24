@@ -121,8 +121,16 @@ class P2PManager {
             // 메시지 수신 설정
             this._setupMessageHandlers()
 
-            // playerName 저장 (Host 피어 연결 시 JOIN_REQUEST 전송)
+            // playerName 저장 (피어 연결 시 JOIN_REQUEST 전송)
             this.pendingPlayerName = playerName
+
+            // JOIN_RESPONSE 받으면 pendingPlayerName 초기화
+            this.on('JOIN_RESPONSE', (data) => {
+                if (data.ok) {
+                    this.pendingPlayerName = null
+                    console.log(`[P2P] Successfully joined as ${data.playerName}`)
+                }
+            })
 
             if (this.onRoomJoined) {
                 this.onRoomJoined(roomCode)
@@ -245,11 +253,12 @@ class P2PManager {
             connectedAt: Date.now()
         })
 
-        // Player가 Host에 연결되면 JOIN_REQUEST 전송
+        // Player가 피어에 연결되면 JOIN_REQUEST 전송 (모든 피어에게 브로드캐스트)
+        // Host만 JOIN_REQUEST를 처리하고, 다른 Player는 무시함
         if (!this.isHost && this.pendingPlayerName) {
             console.log(`[P2P] Sending JOIN_REQUEST for: ${this.pendingPlayerName}`)
             this.sendToPeer(peerId, 'JOIN_REQUEST', { playerName: this.pendingPlayerName })
-            this.pendingPlayerName = null // 한 번만 전송
+            // pendingPlayerName을 유지하여 모든 피어에게 전송
         }
 
         if (this.onPeerJoined) {

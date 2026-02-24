@@ -66,8 +66,16 @@ class P2PManager {
 
             console.log(`[P2P] Creating room: ${roomCode}`)
 
-            // Trystero 룸 생성 (MQTT - 기본 브로커 사용)
-            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
+            // Trystero 룸 생성 (Nostr - 인증 불필요한 릴레이만 사용)
+            this.room = joinRoom({
+                appId: 'clocktower-pocket',
+                relayUrls: [
+                    'wss://relay.damus.io',
+                    'wss://nos.lol',
+                    'wss://relay.snort.social',
+                ],
+                relayRedundancy: 2  // 동시 연결 수 제한 (경고 감소)
+            }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)
             this.myPeerId = 'host-' + Math.random().toString(36).substr(2, 9)
@@ -107,8 +115,16 @@ class P2PManager {
 
             console.log(`[P2P] Joining room: ${roomCode} as ${playerName}`)
 
-            // Trystero 룸 참가 (MQTT - 기본 브로커 사용)
-            this.room = joinRoom({ appId: 'clocktower-pocket' }, roomCode)
+            // Trystero 룸 참가 (Nostr - 인증 불필요한 릴레이만 사용)
+            this.room = joinRoom({
+                appId: 'clocktower-pocket',
+                relayUrls: [
+                    'wss://relay.damus.io',
+                    'wss://nos.lol',
+                    'wss://relay.snort.social',
+                ],
+                relayRedundancy: 2  // 동시 연결 수 제한 (경고 감소)
+            }, roomCode)
 
             // 내 피어 ID 저장
             this.myPeerId = 'player-' + Math.random().toString(36).substr(2, 9)

@@ -77,6 +77,17 @@ export class LobbyBanner {
     }, 1000)
   }
 
+  /** 목표 인원 수 변경 (설정 팝업 확인 후 호출) */
+  updateTotal(total) {
+    this.total = total
+    // 현재 착석 데이터 유지하면서 자리 배열 재구성
+    const seated = this.seats.filter(s => s.name !== null)
+    this.seats = Array.from({ length: total }, (_, i) => {
+      return seated[i] || { seatNum: i + 1, name: null }
+    })
+    this._render()
+  }
+
   /** 게임 시작 시 fade-out 후 자기 제거 */
   dismiss() {
     if (this._timer) clearInterval(this._timer)

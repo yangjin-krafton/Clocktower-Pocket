@@ -38,6 +38,8 @@ class P2PManager {
             'VOTE_UPDATE':   'VOTE_UPD',
             'GAME_END':      'GAME_END',
             'EMOJI':         'EMOJI',
+            'COUNTDOWN':     'CDWN',
+            'SEAT_UPDATE':   'SEAT_UPD',
         }
 
         // 역방향 매핑 (짧은 이름 → 긴 이름)

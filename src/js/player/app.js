@@ -1,10 +1,15 @@
 /**
  * 참가자 앱 — 진입점
  * 탭 라우팅 + P2P 연결 관리
+ *
+ * 흐름:
+ *   Join → 방 접속 → 즉시 게임 탭 화면 진입 (매칭은 백그라운드)
+ *       → ROLE_ASSIGN 수신: 역할 카드 업데이트
+ *       → COUNTDOWN 수신: 카운트다운 오버레이
+ *       → GAME_START 수신: 플레이어 목록 갱신
  */
 import { P2PManager }       from '../p2p.js'
 import { Join }             from './Join.js'
-import { Waiting }          from './Waiting.js'
 import { RoleCardScreen }   from './RoleCardScreen.js'
 import { PlayerTracker }    from './PlayerTracker.js'
 import { EmojiPanel }       from './EmojiPanel.js'
@@ -20,9 +25,9 @@ export class PlayerApp {
     this.players      = []
     this.gameState    = null
     this.scriptRoles  = null
-    this.gameStarted  = false
     this.currentTab   = 'role'
     this.screens      = {}
+    this.seatInfo     = null // { seated: number, total: number }
 
     this.content   = document.getElementById('app-content')
     this.tabBar    = document.getElementById('tab-bar')
@@ -57,19 +62,8 @@ export class PlayerApp {
     }
   }
 
-  _showWaiting() {
-    this.content.innerHTML = ''
-    this.tabBar.style.display = 'none'
-    const waiting = new Waiting({
-      roomCode:   this.p2p.roomCode,
-      playerName: this._playerName,
-    })
-    waiting.mount(this.content)
-    this.screens.waiting = waiting
-  }
-
+  /** 방 접속 즉시 게임 탭 화면 진입 */
   _showGame() {
-    this.gameStarted = true
     this.tabBar.style.display = 'flex'
     this._buildTabs()
     this._switchTab('role')
@@ -103,7 +97,6 @@ export class PlayerApp {
     this.currentTab = tabId
     this.content.innerHTML = ''
 
-    // 탭 활성 상태 업데이트
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId)
     })
@@ -111,7 +104,11 @@ export class PlayerApp {
     let screen
     switch (tabId) {
       case 'role':
-        screen = new RoleCardScreen({ roleId: this.myRole, team: this.myTeam })
+        screen = new RoleCardScreen({
+          roleId:   this.myRole,
+          team:     this.myTeam,
+          seatInfo: this.seatInfo,
+        })
         break
       case 'tracker':
         screen = new PlayerTracker({ players: this.players, gameState: this.gameState })
@@ -137,8 +134,37 @@ export class PlayerApp {
   }
 
   _sendEmoji(targetId, emoji) {
-    const fromId = this.myPlayerId
-    this.p2p.broadcast('EMOJI', { fromId, targetId, emoji })
+    this.p2p.broadcast('EMOJI', { fromId: this.myPlayerId, targetId, emoji })
+  }
+
+  // ─────────────────────────────────────
+  // 카운트다운 오버레이
+  // ─────────────────────────────────────
+
+  _showCountdown(seconds) {
+    document.getElementById('player-countdown')?.remove()
+
+    const overlay = document.createElement('div')
+    overlay.id = 'player-countdown'
+    overlay.className = 'player-countdown'
+    overlay.innerHTML = `
+      <div class="player-countdown__box">
+        <div class="player-countdown__num">${seconds}</div>
+        <div class="player-countdown__label">초 후 게임 시작</div>
+      </div>
+    `
+    document.body.appendChild(overlay)
+
+    let remaining = seconds
+    const timer = setInterval(() => {
+      remaining--
+      if (remaining <= 0) {
+        clearInterval(timer)
+        overlay.remove()
+      } else {
+        overlay.querySelector('.player-countdown__num').textContent = remaining
+      }
+    }, 1000)
   }
 
   // ─────────────────────────────────────
@@ -146,15 +172,13 @@ export class PlayerApp {
   // ─────────────────────────────────────
 
   _setupP2PHandlers() {
+    // 방 접속 즉시 게임 화면 진입
     this.p2p.onRoomJoined = () => {
-      this._showWaiting()
+      this._showGame()
     }
 
     this.p2p.onPeerJoined = (peerId) => {
       console.log('[Player] Peer joined:', peerId)
-      if (this.screens.waiting) {
-        this.screens.waiting.setPlayerCount(this.p2p.peers.size + 1)
-      }
     }
 
     this.p2p.on('JOIN_RESPONSE', (data) => {
@@ -163,16 +187,41 @@ export class PlayerApp {
       }
     })
 
+    // 착석 현황 업데이트 (역할 탭 대기 화면 갱신)
+    this.p2p.on('SEAT_UPDATE', (data) => {
+      this.seatInfo = { seated: data.seated?.length ?? 0, total: data.total }
+      if (this.currentTab === 'role' && !this.myRole) {
+        this._switchTab('role')
+      }
+    })
+
+    // 역할 배정
     this.p2p.on('ROLE_ASSIGN', (data) => {
       this.myPlayerId = data.playerId
       this.myRole     = data.role
       this.myTeam     = data.team
+      // 역할 탭이 열려 있으면 즉시 갱신
+      if (this.currentTab === 'role') {
+        this._switchTab('role')
+      }
     })
 
+    // 카운트다운 — 플레이어 목록도 미리 수신
+    this.p2p.on('COUNTDOWN', (data) => {
+      if (data.players) this.players = data.players
+      this._showCountdown(data.seconds || 5)
+      // 역할 탭 갱신 (역할이 이미 배정됐을 경우)
+      if (this.currentTab === 'role') {
+        this._switchTab('role')
+      }
+    })
+
+    // 게임 시작 — 플레이어 목록 최종 갱신
     this.p2p.on('GAME_START', (data) => {
       this.players     = data.players || []
-      this.scriptRoles = null // 전체 TB 사전 표시
-      this._showGame()
+      this.scriptRoles = null
+      // 이미 화면에 있으므로 현재 탭만 갱신
+      this._switchTab(this.currentTab)
     })
 
     this.p2p.on('PHASE_CHANGE', (data) => {
@@ -185,23 +234,17 @@ export class PlayerApp {
     this.p2p.on('PLAYER_DIED', (data) => {
       const player = this.players.find(p => p.id === data.playerId)
       if (player) player.status = 'dead'
-      if (this.screens.tracker) {
-        this.screens.tracker.updatePlayers(this.players)
-      }
-      if (this.screens.emoji) {
-        this.screens.emoji.updatePlayers(this.players)
-      }
+      if (this.screens.tracker) this.screens.tracker.updatePlayers(this.players)
+      if (this.screens.emoji)   this.screens.emoji.updatePlayers(this.players)
     })
 
     this.p2p.on('EMOJI', (data) => {
       const fromPlayer = this.players.find(p => p.id === data.fromId)
       const fromName   = fromPlayer ? fromPlayer.name : '누군가'
-      // 내 플레이어 ID가 수신자이거나 전체 브로드캐스트면 팝업 표시
       if (data.targetId === 'all' || data.targetId === this.myPlayerId) {
         if (this.screens.emoji) {
           this.screens.emoji.receiveEmoji(fromName, data.emoji)
         } else {
-          // 다른 탭에 있어도 팝업 표시
           import('../components/EmojiPopup.js').then(m => {
             m.showEmojiPopup({ fromName, emoji: data.emoji })
           })
@@ -232,4 +275,3 @@ export class PlayerApp {
     this.content.appendChild(el)
   }
 }
-

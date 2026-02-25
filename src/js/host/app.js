@@ -1,24 +1,37 @@
 /**
  * 호스트 앱 — 진입점
  * 화면 라우팅 + P2P 연결 관리 + GameEngine 연동
+ *
+ * 흐름:
+ *   Setup → 방 생성 → PreGame (착석 대기, 백그라운드 매칭)
+ *        → 전원 착석 → 역할 배정 + COUNTDOWN 브로드캐스트
+ *        → 5초 후 GAME_START → Grimoire (인게임)
  */
-import { P2PManager } from '../p2p.js'
-import { engine } from '../game-engine.js'
-import { Setup }    from './Setup.js'
-import { Lobby }    from './Lobby.js'
-import { Grimoire } from './Grimoire.js'
+import { P2PManager }  from '../p2p.js'
+import { engine }      from '../game-engine.js'
+import { Setup }       from './Setup.js'
+import { PreGame }     from './PreGame.js'
+import { Grimoire }    from './Grimoire.js'
 import { NightAction } from './NightAction.js'
-import { DayFlow }  from './DayFlow.js'
-import { Victory }  from './Victory.js'
+import { DayFlow }     from './DayFlow.js'
+import { Victory }     from './Victory.js'
+
+const COUNTDOWN_SECONDS = 5
 
 export class HostApp {
   constructor() {
     this.p2p = new P2PManager()
-    this.currentScreen = null
-    this.lobby = null
-    this.nightAction = null
-    this.doneSteps = []
-    this.container = document.getElementById('app-content')
+    this.currentScreen  = null
+    this.preGameScreen  = null
+    this.nightAction    = null
+    this.doneSteps      = []
+    this.container      = document.getElementById('app-content')
+
+    // 매칭 관련 상태
+    this.pendingPlayers     = [] // { peerId, name }
+    this.pendingPlayerCount = 0
+    this.pendingRoleIds     = []
+    this._gameStarting      = false // 카운트다운 중 중복 방지
   }
 
   async init() {
@@ -49,63 +62,84 @@ export class HostApp {
     const roomCode = P2PManager.generateRoomCode()
     try {
       await this.p2p.createRoom(roomCode)
-      this._showLobby(roomCode, playerCount, roleIds)
+      this.pendingPlayerCount = playerCount
+      this.pendingRoleIds     = roleIds
+      this.pendingPlayers     = []
+      this._gameStarting      = false
+      this._showPreGame(roomCode)
     } catch (e) {
       alert('방 생성 실패: ' + e.message)
     }
   }
 
-  _showLobby(roomCode, playerCount, roleIds) {
+  /** 방 생성 후 즉시 인게임 스타일 착석 대기 화면 */
+  _showPreGame(roomCode) {
     this._clearScreen()
-    this.pendingPlayerCount = playerCount
-    this.pendingRoleIds     = roleIds
-
-    const lobby = new Lobby({
+    const screen = new PreGame({
       roomCode,
-      onStartGame: (names, peerIds) => this._handleStartGame(names, peerIds),
-      onPlayerNameEdit: (peerId, name) => {
-        const p = this.p2p.peers.get(peerId)
-        if (p) p.name = name
-      },
+      total: this.pendingPlayerCount,
     })
-    lobby.mount(this.container)
-    this.lobby = lobby
-    this.currentScreen = lobby
+    screen.mount(this.container)
+    this.preGameScreen  = screen
+    this.currentScreen  = screen
   }
 
-  _handleStartGame(names, peerIds) {
+  /** 전원 착석 → 역할 배정 → 카운트다운 → 게임 시작 */
+  _startGameWithCountdown() {
+    if (this._gameStarting) return
+    this._gameStarting = true
+
+    const names   = this.pendingPlayers.map(p => p.name)
+    const peerIds = this.pendingPlayers.map(p => p.peerId)
+
+    // 엔진 초기화 + 역할 배정
     engine.reset()
     engine.initGame(names, this.pendingRoleIds)
 
-    // 각 플레이어 peerId 연결
+    // 각 플레이어에 peerId 연결
     engine.state.players.forEach((p, idx) => {
       if (peerIds[idx]) p.peerId = peerIds[idx]
     })
 
-    // 역할 P2P 전송
+    // 역할 P2P 개별 전송
     engine.state.players.forEach(p => {
       if (p.peerId) {
         this.p2p.sendToPeer(p.peerId, 'ROLE_ASSIGN', {
           playerId: p.id,
-          role: p.role,
-          team: p.team,
+          role:     p.role,
+          team:     p.team,
         })
       }
     })
 
-    // GAME_START 브로드캐스트
-    this.p2p.broadcast('GAME_START', {
-      players: engine.state.players.map(p => ({ id: p.id, name: p.name })),
-      script: 'trouble-brewing',
+    // 카운트다운 브로드캐스트 (플레이어 목록 포함)
+    const playerList = engine.state.players.map(p => ({ id: p.id, name: p.name }))
+    this.p2p.broadcast('COUNTDOWN', {
+      seconds: COUNTDOWN_SECONDS,
+      players: playerList,
     })
 
-    // 첫 밤 시작
-    engine.startNight()
-    this._showGrimoire()
+    // PreGame 화면에 카운트다운 표시
+    if (this.preGameScreen) {
+      this.preGameScreen.startCountdown(COUNTDOWN_SECONDS, () => {
+        // 카운트다운 완료 → 인게임으로
+        engine.startNight()
+        this._showGrimoire()
+      })
+    }
+
+    // 카운트다운 후 GAME_START 브로드캐스트
+    setTimeout(() => {
+      this.p2p.broadcast('GAME_START', {
+        players: playerList,
+        script:  'trouble-brewing',
+      })
+    }, COUNTDOWN_SECONDS * 1000)
   }
 
   _showGrimoire() {
     this._clearScreen()
+    this.preGameScreen = null
     this.doneSteps = []
     const grimoire = new Grimoire({
       engine,
@@ -118,10 +152,8 @@ export class HostApp {
     this.currentScreen = grimoire
 
     // 엔진 이벤트 구독
-    engine.on('stateChanged', () => grimoire.refresh())
-    engine.on('nightResolved', ({ deaths }) => {
-      this._broadcastDeaths(deaths)
-    })
+    engine.on('stateChanged',   () => grimoire.refresh())
+    engine.on('nightResolved',  ({ deaths }) => this._broadcastDeaths(deaths))
   }
 
   _handleStartNight() {
@@ -145,12 +177,10 @@ export class HostApp {
   _handleNextNightStep() {
     const step = engine.state.currentNightStep
     if (!step) {
-      // 밤 순서 완료 → 낮으로
       this._handleStartDay()
       return
     }
 
-    // NightAction 처리
     if (!this.nightAction) {
       this.nightAction = new NightAction({
         engine,
@@ -185,7 +215,6 @@ export class HostApp {
   _showVictory(winner, reason) {
     this._clearScreen()
 
-    // GAME_END 브로드캐스트
     this.p2p.broadcast('GAME_END', {
       winner,
       reason,
@@ -198,6 +227,8 @@ export class HostApp {
       reason,
       onNewGame: () => {
         engine.reset()
+        this.pendingPlayers = []
+        this._gameStarting  = false
         this._showSetup()
       },
     })
@@ -206,9 +237,7 @@ export class HostApp {
   }
 
   _handlePlayerAction(action, actorId) {
-    if (action === 'slayer') {
-      // DayFlow에서 처리
-    }
+    // DayFlow에서 처리
   }
 
   // ─────────────────────────────────────
@@ -221,22 +250,50 @@ export class HostApp {
     }
 
     this.p2p.onPeerLeft = (peerId) => {
-      if (this.lobby) this.lobby.removePlayer(peerId)
+      // 아직 게임 시작 전이면 착석 목록에서 제거
+      if (!this._gameStarting) {
+        this.pendingPlayers = this.pendingPlayers.filter(p => p.peerId !== peerId)
+        if (this.preGameScreen) {
+          this.preGameScreen.updateSeats(this.pendingPlayers)
+        }
+      }
     }
 
     this.p2p.on('JOIN_REQUEST', (data, peerId) => {
-      const name = data.playerName || `플레이어${this.p2p.peers.size}`
-      if (this.lobby) this.lobby.addPlayer(peerId, name)
+      // 이미 게임 시작 중이면 무시
+      if (this._gameStarting) return
 
+      // 중복 착석 방지
+      if (this.pendingPlayers.find(p => p.peerId === peerId)) return
+
+      const name = data.playerName || `플레이어${this.pendingPlayers.length + 1}`
+      this.pendingPlayers.push({ peerId, name })
+
+      // 착석 화면 업데이트
+      if (this.preGameScreen) {
+        this.preGameScreen.updateSeats(this.pendingPlayers)
+      }
+
+      // JOIN_RESPONSE 응답
       this.p2p.sendToPeer(peerId, 'JOIN_RESPONSE', {
-        ok: true,
-        roomCode: this.p2p.roomCode,
+        ok:         true,
+        roomCode:   this.p2p.roomCode,
         playerName: name,
       })
+
+      // 전원 착석 현황 브로드캐스트
+      this.p2p.broadcast('SEAT_UPDATE', {
+        seated: this.pendingPlayers.map((p, i) => ({ name: p.name, seatNum: i + 1 })),
+        total:  this.pendingPlayerCount,
+      })
+
+      // 전원 착석 완료 → 게임 시작
+      if (this.pendingPlayers.length >= this.pendingPlayerCount) {
+        this._startGameWithCountdown()
+      }
     })
 
-    this.p2p.on('EMOJI', (data, fromPeerId) => {
-      // 이모지 중계: 지정 수신자에게 전달
+    this.p2p.on('EMOJI', (data) => {
       const { targetId, emoji, fromId } = data
       if (targetId === 'all') {
         this.p2p.broadcast('EMOJI', data)
@@ -262,4 +319,3 @@ export class HostApp {
     })
   }
 }
-

@@ -391,3 +391,37 @@ body {
 .gap-6 { gap: 6px; }
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
+
+/* ── 참가자 카운트다운 오버레이 ── */
+.player-countdown {
+  position: fixed;
+  inset: 0;
+  background: rgba(11,10,24,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+.player-countdown__box {
+  text-align: center;
+}
+.player-countdown__num {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--gold2);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(212,168,40,0.6);
+  animation: cdwn-pulse 1s ease-in-out infinite;
+}
+.player-countdown__label {
+  font-size: 1rem;
+  color: var(--text3);
+  margin-top: 12px;
+  letter-spacing: 0.05em;
+}
+@keyframes cdwn-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.75; transform: scale(0.92); }
+}

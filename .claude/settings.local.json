@@ -20,7 +20,8 @@
       "Bash(printf %s:*)",
       "Bash(printf %s\\\\n:*)",
       "Bash(echo gh not found:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cd:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

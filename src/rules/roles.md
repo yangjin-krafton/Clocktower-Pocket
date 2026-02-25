@@ -1,0 +1,50 @@
+# 역할 분류
+
+역할은 4가지 팀으로 나뉩니다. 게임 시작 전 각자 자신의 역할만 확인합니다.
+
+---
+
+## ![](../asset/editions/tb-townsfolk.png) 마을 주민 (Townsfolk) — 선 팀
+
+정보를 모으거나 동료를 보호하는 **선 팀**의 핵심입니다.
+Trouble Brewing에는 **13종**이 있습니다.
+
+→ [마을 주민 역할 목록](townsfolk.md)
+
+---
+
+## ![](../asset/editions/tb-outsider.png) 아웃사이더 (Outsider) — 선 팀
+
+선 팀 소속이지만 **선 팀에 불리한 특수 조건**을 지닌 역할입니다.
+Trouble Brewing에는 **4종**이 있습니다.
+
+→ [아웃사이더 역할 목록](outsider.md)
+
+---
+
+## ![](../asset/editions/tb-minion.png) 미니언 (Minion) — 악 팀
+
+데몬을 보좌하며 선 팀 조사를 방해합니다.
+첫날 밤에 서로와 데몬을 확인합니다.
+
+→ [미니언 역할 목록](minion.md)
+
+---
+
+## ![](../asset/editions/tb-demon.png) 데몬 (Demon) — 악 팀
+
+악 팀의 우두머리. 매 밤 플레이어를 죽입니다.
+Trouble Brewing의 데몬은 ![](../asset/icons/imp.png) **임프(Imp)** 뿐입니다.
+
+→ [데몬 역할 목록](demon.md)
+
+---
+
+## 팀별 정보 범위
+
+- **악 팀**끼리는 서로 팀원을 압니다 (첫날 밤에 공개).
+- **선 팀**은 서로를 모릅니다. 정보형 역할이 간접 단서를 얻습니다.
+- ![](../asset/icons/spy.png) 스파이는 예외적으로 그리모어(역할 배정표)를 봅니다.
+
+→ [상태 이상 (중독·취함)](statuses.md) — 선 팀 정보가 오작동할 수 있습니다.
+→ [인원 구성표](index.md)

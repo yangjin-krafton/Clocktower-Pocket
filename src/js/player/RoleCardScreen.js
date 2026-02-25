@@ -5,11 +5,10 @@ import { renderRoleCard } from '../components/RoleCard.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 export class RoleCardScreen {
-  constructor({ roleId, team, seatInfo = null }) {
-    this.roleId   = roleId
-    this.team     = team
-    this.seatInfo = seatInfo // { seated: number, total: number } | null
-    this.el       = null
+  constructor({ roleId, team }) {
+    this.roleId = roleId
+    this.team   = team
+    this.el     = null
   }
 
   mount(container) {
@@ -25,11 +24,7 @@ export class RoleCardScreen {
     this.el.innerHTML = ''
     const role = ROLES_BY_ID[this.roleId]
     if (!role) {
-      // 역할 배정 대기 중 상태
-      const si = this.seatInfo
-      const seatText = si
-        ? `${si.seated} / ${si.total}명 입장`
-        : '연결 중...'
+      // 역할 배정 대기 — 착석 현황은 상단 LobbyBanner가 표시
       this.el.innerHTML = `
         <div class="rolecard-waiting">
           <div class="rolecard-waiting__icon">🏰</div>
@@ -39,8 +34,10 @@ export class RoleCardScreen {
             <div class="rolecard-waiting__dot" style="animation-delay:0.2s"></div>
             <div class="rolecard-waiting__dot" style="animation-delay:0.4s"></div>
           </div>
-          <div class="rolecard-waiting__seat">${seatText}</div>
-          <div class="rolecard-waiting__hint">모든 플레이어가 입장하면<br>역할이 자동으로 배정됩니다</div>
+          <div class="rolecard-waiting__hint">
+            모든 플레이어가 입장하면<br>역할이 자동으로 배정됩니다<br><br>
+            <span style="color:var(--text3)">지금 아래 탭에서<br>캐릭터 사전을 미리 확인하세요</span>
+          </div>
         </div>
       `
       return
@@ -134,11 +131,6 @@ if (!document.getElementById('rolecard-screen-style')) {
   border-radius: 50%;
   background: var(--pu-base);
   animation: dot-pulse 1.2s infinite;
-}
-.rolecard-waiting__seat {
-  font-size: 0.82rem;
-  color: var(--tl-light);
-  font-weight: 600;
 }
 .rolecard-waiting__hint {
   font-size: 0.68rem;

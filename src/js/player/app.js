@@ -1,36 +1,40 @@
 /**
  * 참가자 앱 — 진입점
- * 탭 라우팅 + P2P 연결 관리
  *
  * 흐름:
- *   Join → 방 접속 → 즉시 게임 탭 화면 진입 (매칭은 백그라운드)
- *       → ROLE_ASSIGN 수신: 역할 카드 업데이트
- *       → COUNTDOWN 수신: 카운트다운 오버레이
- *       → GAME_START 수신: 플레이어 목록 갱신
+ *   Join → 방 접속 → 즉시 게임 탭 전체 진입
+ *                   + LobbyBanner 상단 고정 (착석 현황)
+ *        → SEAT_UPDATE: LobbyBanner.updateSeats()
+ *        → ROLE_ASSIGN: 역할 탭 갱신
+ *        → COUNTDOWN:   LobbyBanner.startCountdown()
+ *        → GAME_START:  LobbyBanner.dismiss(), 플레이어 목록 확정
  */
-import { P2PManager }       from '../p2p.js'
-import { Join }             from './Join.js'
-import { RoleCardScreen }   from './RoleCardScreen.js'
-import { PlayerTracker }    from './PlayerTracker.js'
-import { EmojiPanel }       from './EmojiPanel.js'
-import { Memo }             from './Memo.js'
-import { CharacterDict }    from './CharacterDict.js'
+import { P2PManager }     from '../p2p.js'
+import { LobbyBanner }    from '../components/LobbyBanner.js'
+import { Join }           from './Join.js'
+import { RoleCardScreen } from './RoleCardScreen.js'
+import { PlayerTracker }  from './PlayerTracker.js'
+import { EmojiPanel }     from './EmojiPanel.js'
+import { Memo }           from './Memo.js'
+import { CharacterDict }  from './CharacterDict.js'
 
 export class PlayerApp {
   constructor() {
-    this.p2p          = new P2PManager()
-    this.myPlayerId   = null
-    this.myRole       = null
-    this.myTeam       = null
-    this.players      = []
-    this.gameState    = null
-    this.scriptRoles  = null
-    this.currentTab   = 'role'
-    this.screens      = {}
-    this.seatInfo     = null // { seated: number, total: number }
+    this.p2p         = new P2PManager()
+    this.myPlayerId  = null
+    this.myRole      = null
+    this.myTeam      = null
+    this.players     = []
+    this.gameState   = null
+    this.scriptRoles = null
+    this.currentTab  = 'role'
+    this.screens     = {}
 
-    this.content   = document.getElementById('app-content')
-    this.tabBar    = document.getElementById('tab-bar')
+    this.content    = document.getElementById('app-content')
+    this.tabBar     = document.getElementById('tab-bar')
+    this.bannerSlot = document.getElementById('lobby-banner')
+
+    this.lobbyBanner = null
   }
 
   init() {
@@ -45,6 +49,7 @@ export class PlayerApp {
   _showJoin() {
     this.content.innerHTML = ''
     this.tabBar.style.display = 'none'
+    this._dismissLobbyBanner()
     const screen = new Join({
       onJoin: (name, code) => this._handleJoin(name, code),
     })
@@ -62,11 +67,28 @@ export class PlayerApp {
     }
   }
 
-  /** 방 접속 즉시 게임 탭 화면 진입 */
-  _showGame() {
+  /** 방 접속 즉시 탭 + LobbyBanner */
+  _showGame(roomCode) {
+    // LobbyBanner 마운트 (roomCode 가 없으면 p2p에서 가져옴)
+    const code = roomCode || this.p2p.roomCode || '------'
+    this._mountLobbyBanner(code)
+
     this.tabBar.style.display = 'flex'
     this._buildTabs()
     this._switchTab('role')
+  }
+
+  _mountLobbyBanner(roomCode) {
+    this._dismissLobbyBanner()
+    this.lobbyBanner = new LobbyBanner({ roomCode, total: 1 })
+    this.lobbyBanner.mount(this.bannerSlot)
+  }
+
+  _dismissLobbyBanner() {
+    if (this.lobbyBanner) {
+      this.lobbyBanner.dismiss()
+      this.lobbyBanner = null
+    }
   }
 
   // ─────────────────────────────────────
@@ -82,7 +104,6 @@ export class PlayerApp {
       { id: 'memo',    icon: '📝', label: '메모' },
       { id: 'dict',    icon: '📖', label: '사전' },
     ]
-
     tabs.forEach(tab => {
       const btn = document.createElement('button')
       btn.className = 'tab-item' + (tab.id === this.currentTab ? ' active' : '')
@@ -96,7 +117,6 @@ export class PlayerApp {
   _switchTab(tabId) {
     this.currentTab = tabId
     this.content.innerHTML = ''
-
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId)
     })
@@ -104,11 +124,7 @@ export class PlayerApp {
     let screen
     switch (tabId) {
       case 'role':
-        screen = new RoleCardScreen({
-          roleId:   this.myRole,
-          team:     this.myTeam,
-          seatInfo: this.seatInfo,
-        })
+        screen = new RoleCardScreen({ roleId: this.myRole, team: this.myTeam })
         break
       case 'tracker':
         screen = new PlayerTracker({ players: this.players, gameState: this.gameState })
@@ -129,7 +145,6 @@ export class PlayerApp {
         screen = new CharacterDict({ scriptRoles: this.scriptRoles })
         break
     }
-
     if (screen) screen.mount(this.content)
   }
 
@@ -138,43 +153,13 @@ export class PlayerApp {
   }
 
   // ─────────────────────────────────────
-  // 카운트다운 오버레이
-  // ─────────────────────────────────────
-
-  _showCountdown(seconds) {
-    document.getElementById('player-countdown')?.remove()
-
-    const overlay = document.createElement('div')
-    overlay.id = 'player-countdown'
-    overlay.className = 'player-countdown'
-    overlay.innerHTML = `
-      <div class="player-countdown__box">
-        <div class="player-countdown__num">${seconds}</div>
-        <div class="player-countdown__label">초 후 게임 시작</div>
-      </div>
-    `
-    document.body.appendChild(overlay)
-
-    let remaining = seconds
-    const timer = setInterval(() => {
-      remaining--
-      if (remaining <= 0) {
-        clearInterval(timer)
-        overlay.remove()
-      } else {
-        overlay.querySelector('.player-countdown__num').textContent = remaining
-      }
-    }, 1000)
-  }
-
-  // ─────────────────────────────────────
   // P2P 핸들러
   // ─────────────────────────────────────
 
   _setupP2PHandlers() {
-    // 방 접속 즉시 게임 화면 진입
-    this.p2p.onRoomJoined = () => {
-      this._showGame()
+    // 방 접속 즉시 게임 탭 + LobbyBanner
+    this.p2p.onRoomJoined = (roomCode) => {
+      this._showGame(roomCode)
     }
 
     this.p2p.onPeerJoined = (peerId) => {
@@ -184,14 +169,14 @@ export class PlayerApp {
     this.p2p.on('JOIN_RESPONSE', (data) => {
       if (data.ok) {
         this._playerName = data.playerName || this._playerName
+        // 방 코드 확인 후 배너 업데이트 (혹시 roomCode 가 달라진 경우)
       }
     })
 
-    // 착석 현황 업데이트 (역할 탭 대기 화면 갱신)
+    // 착석 현황 갱신 → LobbyBanner
     this.p2p.on('SEAT_UPDATE', (data) => {
-      this.seatInfo = { seated: data.seated?.length ?? 0, total: data.total }
-      if (this.currentTab === 'role' && !this.myRole) {
-        this._switchTab('role')
+      if (this.lobbyBanner) {
+        this.lobbyBanner.updateSeats(data.seated || [], data.total)
       }
     })
 
@@ -200,27 +185,28 @@ export class PlayerApp {
       this.myPlayerId = data.playerId
       this.myRole     = data.role
       this.myTeam     = data.team
-      // 역할 탭이 열려 있으면 즉시 갱신
       if (this.currentTab === 'role') {
         this._switchTab('role')
       }
     })
 
-    // 카운트다운 — 플레이어 목록도 미리 수신
+    // 카운트다운 → LobbyBanner에 표시
     this.p2p.on('COUNTDOWN', (data) => {
       if (data.players) this.players = data.players
-      this._showCountdown(data.seconds || 5)
-      // 역할 탭 갱신 (역할이 이미 배정됐을 경우)
+      if (this.lobbyBanner) {
+        this.lobbyBanner.startCountdown(data.seconds || 5)
+      }
+      // 역할 탭이 열려 있으면 역할 카드 갱신 (ROLE_ASSIGN 이미 수신 후)
       if (this.currentTab === 'role') {
         this._switchTab('role')
       }
     })
 
-    // 게임 시작 — 플레이어 목록 최종 갱신
+    // 게임 시작 → LobbyBanner 제거 + 플레이어 목록 확정
     this.p2p.on('GAME_START', (data) => {
       this.players     = data.players || []
       this.scriptRoles = null
-      // 이미 화면에 있으므로 현재 탭만 갱신
+      this._dismissLobbyBanner()
       this._switchTab(this.currentTab)
     })
 
@@ -258,6 +244,7 @@ export class PlayerApp {
   }
 
   _showGameEnd(winner, reason) {
+    this._dismissLobbyBanner()
     this.tabBar.style.display = 'none'
     this.content.innerHTML = ''
 

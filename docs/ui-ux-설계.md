@@ -5,21 +5,33 @@
 
 ---
 
-## 설계 원칙
+## 핵심 설계 철학
 
-> 컴포넌트는 **데이터만 받아서 렌더링**한다.
-> 화면(Screen)은 **컴포넌트를 조립**한 것이다.
-> 같은 컴포넌트가 호스트/참가자 앱 양쪽에서 재사용된다.
+> **대기(Waiting)는 화면이 아니라 게임 화면 안의 상태(phase)다.**
+
+기존 설계의 문제:
+- 호스트 → `Lobby` 화면에서 멈춤. 인원이 차야만 Grimoire로 이동.
+- 참가자 → `Waiting` 화면에서 멈춤. 호스트가 시작해야만 탭이 열림.
+- 결과: 인원이 다 모일 때까지 **모두 아무것도 못 하고 기다림**.
+
+새 설계의 목표:
+- 호스트는 방 생성 즉시 Grimoire 진입. 빈 자리는 인원이 들어올수록 채워짐.
+- 참가자는 방 참가 즉시 모든 탭 진입. 역할 탭은 배정 전까지 대기 상태 표시.
+- **대기 시간 동안 캐릭터 사전, 메모, 시그널 등을 미리 사용 가능.**
+- 매칭(P2P 연결 + 착석)은 백그라운드에서 진행.
+- 전원 착석 → 자동으로 역할 배정 → 카운트다운 → 게임 시작.
 
 ```
-데이터 모델 → 컴포넌트(Module) → 화면(Screen)
+설계 원칙:
+  컴포넌트는 데이터만 받아서 렌더링한다.
+  화면(Screen)은 컴포넌트를 조립한 것이다.
+  같은 컴포넌트가 호스트/참가자 앱 양쪽에서 재사용된다.
+  lobby 는 별도 화면이 아닌 game phase 중 하나다.
 ```
 
 ---
 
 ## 1. 데이터 모델
-
-화면을 조립하기 전에 흐르는 데이터 구조.
 
 ### Player
 ```js
@@ -53,15 +65,28 @@
 ### GameState
 ```js
 {
-  phase: 'lobby'|'day'|'night',
-  round: number,          // 1부터 시작
-  players: Player[],
-  nominations: [          // 당일 지목 목록
-    { nominatorId, targetId, votes: number }
-  ],
-  executedToday: number|null,   // 오늘 처형된 player.id
-  nightOrder: string[],         // 남은 밤 순서 (role id 배열)
-  currentNightStep: string|null // 현재 처리 중인 role id
+  phase: 'lobby'|'night'|'day',
+  // lobby  = 방 생성 후 ~ 전원 착석 전. 인게임 화면은 이미 열려 있음.
+  // night  = 첫 번째 밤부터 게임 진행
+  // day    = 낮 진행
+  round: number,
+  players: Player[],      // lobby 중에는 착석 완료된 플레이어만 포함
+  nominations: [{ nominatorId, targetId, votes: number }],
+  executedToday: number|null,
+  nightOrder: string[],
+  currentNightStep: string|null,
+}
+```
+
+### LobbyState (phase==='lobby' 동안 추가 상태)
+```js
+{
+  seatedCount: number,   // 현재 착석 인원
+  totalCount: number,    // 목표 인원 (Setup에서 설정)
+  seats: [               // 자리 배열
+    { seatNum: number, name: string|null }
+    // name이 null이면 아직 비어 있는 자리
+  ]
 }
 ```
 
@@ -70,9 +95,9 @@
 {
   round: number,
   roleId: string,
-  actorId: number,     // 행동한 player.id
-  targetIds: number[], // 선택한 대상들
-  infoSent: any        // 전달한 정보 스냅샷
+  actorId: number,
+  targetIds: number[],
+  infoSent: any
 }
 ```
 
@@ -91,7 +116,7 @@
 | `player.name` | 닉네임 |
 | `player.status` | alive → 일반 / dead → 흐림+취소선 / executed → 빨간 테두리 |
 | `player.isPoisoned` | 독 아이콘 |
-| `selectable: boolean` | 선택 가능 여부 (탭 가능한 상태) |
+| `selectable: boolean` | 선택 가능 여부 |
 | `selected: boolean` | 선택됨 강조 |
 
 재사용 위치: Grimoire, SelectPanel, PlayerTracker, EmojiPanel 전부
@@ -131,11 +156,11 @@ PlayerChip 목록을 그리드로 배치.
 
 | 입력 데이터 | 표시 내용 |
 |------------|----------|
-| `phase` | Day / Night 아이콘 + 텍스트 |
-| `round` | N일째 / N번째 밤 |
-| `aliveCount` | 생존자 수 |
+| `phase` | lobby → "입장 대기 중" / day / night |
+| `round` | N일째 / N번째 밤 / lobby 중에는 "N/M명" |
+| `aliveCount` | 생존자 수 (lobby 중에는 표시 안 함) |
 
-재사용 위치: 호스트 모든 화면 상단, 참가자 PlayerTracker 상단
+재사용 위치: 호스트 Grimoire 상단, 참가자 PlayerTracker 상단
 
 ---
 
@@ -146,10 +171,8 @@ PlayerChip 목록을 그리드로 배치.
 |------------|----------|
 | `title` | 역할 이름 (예: "Empath") |
 | `message` | 전달 정보 텍스트 (예: "이웃 중 악 1명") |
-| `players[]` | 관련 플레이어 PlayerChip 표시 (Washerwoman 등) |
+| `players[]` | 관련 플레이어 PlayerChip 표시 |
 | `onConfirm: fn()` | 확인 버튼 → 호스트 복귀 |
-
-> 큰 글씨, 어두운 배경. 참가자가 읽기 쉽게. 확인 누르면 호스트 화면으로 복귀.
 
 ---
 
@@ -222,41 +245,83 @@ PlayerChip 목록을 그리드로 배치.
 
 ---
 
+### C-12 `LobbyBanner` (신규)
+인게임 화면 상단에 붙어 있는 **인라인 대기 배너**.
+별도 화면 전환 없이 게임 화면 안에서 착석 상황을 보여줌.
+
+| 입력 데이터 | 표시 내용 |
+|------------|----------|
+| `seats[]` | 전체 자리 목록 `{ seatNum, name\|null }` |
+| `totalCount` | 목표 인원 수 |
+| `roomCode` | 방 코드 (참가자에게 공유용) |
+| `countdown\|null` | 카운트다운 숫자. null이면 미표시. |
+
+- **상단 고정 배너**: 게임 화면 콘텐츠 위에 작게 붙음. 축소/확장 토글 가능.
+- 빈 자리는 회색 슬롯. 착석하면 이름이 채워지면서 하이라이트.
+- 전원 착석 → 카운트다운 숫자로 전환.
+- 카운트다운 0 → 배너 사라짐. 게임 진행.
+
+```
+┌─────────────────────────────────────────┐
+│  🏰 ABCD12  · 3/7명 입장 중  [▼ 펼치기] │   ← 최소화 상태
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  방 코드: ABCD12  ·  3 / 7명 입장       │
+│  [1 Alice] [2 Bob] [3 Carol] [4 –] [5 –]│
+│  [6 –]    [7 –]                         │
+└─────────────────────────────────────────┘
+
+// 전원 착석 후
+┌─────────────────────────────────────────┐
+│  ⚔️ 전원 착석 완료  ·  게임 시작까지  5  │   ← 카운트다운
+└─────────────────────────────────────────┘
+```
+
+재사용 위치: 호스트 Grimoire 상단, 참가자 모든 탭 상단
+
+---
+
 ## 3. 호스트 화면 목록
+
+> **H-02 Lobby는 제거됨.**
+> 방 생성 즉시 H-03 Grimoire 진입. 대기 상태는 LobbyBanner가 인라인 처리.
 
 ### H-01 Setup (게임 설정)
 **조립**: 입력 폼
 **기능**: 스크립트 선택(현재 TB 고정), 인원 수 설정, 방 생성 버튼
-**전환**: 완료 → H-02
+**전환**: 방 생성 완료 → **즉시 H-03** (phase: lobby)
 
 ---
 
-### H-02 Lobby (대기실)
-**조립**: `RoomCodeDisplay` + `PlayerGrid(selectable=false)` + 시작 버튼
-**기능**: 방 코드 표시, 참가자 연결 확인, 인원 충족 시 시작 가능
-**전환**: 시작 버튼 → H-03
+### H-03 Grimoire (메인 상태판) ← 방 생성 직후부터 진입
+**조립**: `LobbyBanner`(phase=lobby일 때) + `PhaseHeader` + `PlayerGrid` + 액션 버튼 그룹 + `NightOrderList`(밤만) + `LogEntry` 목록
 
----
+**lobby phase 동작**:
+- `LobbyBanner` 상단 고정: 방 코드 + 착석 현황 실시간 표시
+- PlayerGrid: 착석한 플레이어만 표시 (빈 자리는 "–" 슬롯)
+- 액션 버튼: **모두 활성** (호스트가 미리 탐색 가능)
+- 전원 착석 → 자동으로 역할 배정 + 카운트다운 진행
 
-### H-03 Grimoire (메인 상태판)
-**조립**: `PhaseHeader` + `PlayerGrid` + 액션 버튼 그룹 + `NightOrderList`(밤만) + `LogEntry` 목록
-**기능**: 전체 플레이어 상태 한눈에 확인, 페이즈 전환, 상태 수동 수정
-**전환**: 밤 시작 → H-04 / 낮 시작 → H-06
+**game phase 동작** (기존과 동일):
+- `LobbyBanner` 사라짐
+- 전체 플레이어 상태 확인, 페이즈 전환, 상태 수동 수정
 
 ```
-┌─────────────────────────────┐
-│  PhaseHeader (Night 2)      │
-├─────────────────────────────┤
-│  NightOrderList             │
-│  ✓ Poisoner  ← current Monk │
-│  □ Imp  □ Empath ...        │
-├─────────────────────────────┤
-│  PlayerGrid                 │
-│  [1 Alice ●] [2 Bob ○] ...  │
-├─────────────────────────────┤
-│  [다음 역할] [낮으로]        │
-└─────────────────────────────┘
+┌──────────────────────────────────┐
+│  🏰 ABCD12 · 4/7명 입장  [▼]    │  ← LobbyBanner (lobby phase)
+├──────────────────────────────────┤
+│  PhaseHeader (대기 중)           │
+├──────────────────────────────────┤
+│  PlayerGrid                      │
+│  [1 Alice ●] [2 Bob ●] [3 –] …  │
+├──────────────────────────────────┤
+│  [밤 진행 시작]  [낮으로 전환]   │  ← 버튼 활성 (탐색 가능)
+└──────────────────────────────────┘
 ```
+
+**전환**: phase 자동 변경(night) → LobbyBanner 제거 → Grimoire 유지
+**전환**: 밤 시작 → H-04 / 낮 시작 → H-06 / 승리 → H-07
 
 ---
 
@@ -265,17 +330,15 @@ PlayerChip 목록을 그리드로 배치.
 
 #### H-04a 정보 전달 역할 (Empath, FT, Undertaker 등)
 **조립**: `InfoPanel` (전체화면)
-**기능**: 계산된 정보 텍스트 + 관련 PlayerChip 표시 → 참가자에게 화면 돌려 보여줌
-**전환**: 확인 → H-03 (다음 순서로)
+**전환**: 확인 → H-03
 
 #### H-04b 선택 역할 (Poisoner, Monk, Imp 등)
 **조립**: `SelectPanel` (전체화면)
-**기능**: 참가자가 대상 탭 → 확인 → 호스트 내부 기록
-**전환**: 확인 → H-03 (다음 순서로)
+**전환**: 확인 → H-03
 
 ---
 
-### H-05 Night Result (밤 결과 처리) — 내부 처리
+### H-05 Night Result — 내부 처리
 **화면 없음.** Grimoire에서 자동 계산.
 - Monk vs Imp 충돌 판정
 - 사망자 확정
@@ -286,8 +349,6 @@ PlayerChip 목록을 그리드로 배치.
 
 ### H-06 Day Flow (낮 진행)
 **조립**: `PhaseHeader` + `PlayerGrid` + `VoteBar` + 처형 확정 버튼
-**기능**: 지목 등록(이름 탭), 투표 수 입력, 처형 처리, 특수 능력 트리거(Virgin·Slayer·Saint)
-**전환**: 밤으로 → H-04 / 승리 조건 충족 → H-07
 
 ```
 ┌─────────────────────────────┐
@@ -302,77 +363,98 @@ PlayerChip 목록을 그리드로 배치.
 └─────────────────────────────┘
 ```
 
+**전환**: 밤으로 → H-04 / 승리 조건 충족 → H-07
+
 ---
 
 ### H-07 Victory (게임 종료)
 **조립**: 결과 배너 + `PlayerGrid(전체 역할 공개)`
-**기능**: 선/악 승리 선언, 전체 역할 공개, 로그 요약
 **전환**: 새 게임 → H-01
 
 ---
 
 ## 4. 참가자 화면 목록
 
+> **P-02 Waiting은 제거됨.**
+> 방 참가 즉시 P-03~P-07 탭 진입. 대기 상태는 각 탭 안에서 인라인 처리.
+
 ### P-01 Join (방 참가)
 **조립**: 닉네임 입력 + 방 코드 입력 + 참가 버튼
-**기능**: URL 파라미터 `?code=` 자동 감지 (기존 구현 유지)
-**전환**: 참가 완료 → P-02
+**기능**: URL 파라미터 `?code=` 자동 감지
+**전환**: 방 접속 완료 → **즉시 P 탭 화면 전체 진입** (phase: lobby)
 
 ---
 
-### P-02 Waiting (대기)
-**조립**: 방 코드 표시 + 연결 상태 배지 + 참가자 수
-**기능**: 호스트가 게임 시작할 때까지 대기
-**전환**: `PHASE_CHANGE` 수신 → P-03
+### P-03 내 역할 탭 ← 방 참가 직후부터 탭 열림
 
----
+**lobby phase 상태**:
+- 역할 미배정 → `LobbyBanner` + "역할 배정 대기 중" 인라인 메시지
+- 착석 현황 (`seatedCount / totalCount명 입장`) 실시간 표시
+- 캐릭터 사전, 메모 탭으로 이동해서 **미리 게임 준비 가능**
 
-### P-03 Role Card (내 역할 카드)
-**조립**: `RoleCard(compact=false)` + 탭 네비게이션
-**기능**: 본인 역할 이름·팀·능력 상시 확인. 낮 동안 탭으로 언제든 열람.
-**탭 이동**: PlayerTracker / Memo / RoleCard / 캐릭터사전
+**game phase 상태** (기존과 동일):
+- `LobbyBanner` 사라짐
+- `RoleCard(compact=false)` + 팀 배너 + 밤 행동 팁
+
+```
+// lobby phase — 역할 탭
+┌──────────────────────────────────┐
+│  🏰 ABCD12 · 4/7명 입장  [▼]    │  ← LobbyBanner
+├──────────────────────────────────┤
+│                                  │
+│         🏰                       │
+│    역할 배정 대기 중              │
+│    · · ·                         │
+│    4 / 7명 입장                  │
+│                                  │
+│  ※ 아래 탭에서 캐릭터 사전을    │
+│     미리 확인할 수 있습니다      │
+└──────────────────────────────────┘
+
+// game phase — 역할 탭
+┌──────────────────────────────────┐
+│  [내 역할]                        │
+│  ┌──────────────────────────┐    │
+│  │  🔮 Fortune Teller       │    │
+│  │  Townsfolk               │    │
+│  │  능력: ...               │    │
+│  └──────────────────────────┘    │
+│  🕊️ 선 팀 (Good)                  │
+└──────────────────────────────────┘
+```
 
 ---
 
 ### P-04 Player Tracker (플레이어 추적)
-**조립**: `PhaseHeader` + `PlayerGrid` + 플레이어별 주석 입력
-**기능**:
-- 각 플레이어 칩 탭 → 상세 편집 열림
-- 주장 역할 기록 (예: "자신이 Fortune Teller라고 함")
-- 의심 기록 (예: "Imp 의심")
-- 생존/사망 상태 표기 (참고용. 정본은 호스트)
 
-```
-┌─────────────────────────────┐
-│  PhaseHeader (Day 2)  생존7 │
-├─────────────────────────────┤
-│  [1 Alice ●] 주장: FT       │
-│  [2 Bob ○]   의심: Imp ★    │
-│  [3 Carol ●] 메모 없음      │
-│  ...                        │
-└─────────────────────────────┘
-```
+**lobby phase 상태**:
+- `LobbyBanner` 상단 고정
+- 착석한 플레이어 목록 표시 (비어 있으면 "아직 아무도 없음")
+- 주석 입력 기능은 **착석 후 바로 사용 가능**
+
+**game phase 상태** (기존과 동일):
+- `PhaseHeader` + `PlayerGrid` + 플레이어별 주석
 
 ---
 
 ### P-05 Emoji Panel (이모지 시그널)
-**조립**: `PlayerGrid(수신 대상 선택)` + `EmojiPicker`
-**기능**:
-1. 수신 대상 선택 (특정 1명 or 전체)
-2. 이모지 탭 → p2p `EMOJI` 전송
-3. 수신 시 `EmojiPopup` 3초 표시
+
+**lobby phase 상태**:
+- `LobbyBanner` 상단 고정
+- 착석한 플레이어에게는 이미 이모지 전송 가능
+- 수신 대상 목록이 비어 있으면 "아직 아무도 없음" 표시
 
 ---
 
 ### P-06 Memo (메모장)
-**조립**: 자유 텍스트 입력 영역
-**기능**: 개인 추리 메모. 로컬 저장(localStorage). P2P 전송 없음.
+**lobby / game phase 구분 없음**: 항상 완전 활성.
+개인 추리 메모. 로컬 저장(localStorage). P2P 전송 없음.
 
 ---
 
 ### P-07 Character Dict (캐릭터 사전)
-**조립**: `RoleCard(compact=false)` 목록
-**기능**: 이번 스크립트 전체 역할 설명 참고. 정적 데이터.
+**lobby / game phase 구분 없음**: 항상 완전 활성.
+이번 스크립트 전체 역할 설명 참고. **대기 중에 미리 읽기 최적.**
 
 ---
 
@@ -381,8 +463,10 @@ PlayerChip 목록을 그리드로 배치.
 ### 호스트 흐름
 ```
 H-01 Setup
-  → H-02 Lobby (방 생성)
-    → H-03 Grimoire (게임 시작)
+  → H-03 Grimoire [phase: lobby]  ← 방 생성 즉시
+      (백그라운드: P2P 연결 + 플레이어 착석)
+      (전원 착석 → 역할 자동 배정 → COUNTDOWN 5초)
+  → H-03 Grimoire [phase: night]  ← 카운트다운 종료 후 자동 전환
       → H-04 Night Action (밤 시작할 때마다)
         → H-03 Grimoire (각 역할 처리 완료)
       → H-06 Day Flow (낮 시작할 때마다)
@@ -393,50 +477,67 @@ H-01 Setup
 ### 참가자 흐름
 ```
 P-01 Join
-  → P-02 Waiting
-    → P-03 Role Card (게임 시작 수신)
-      ↔ P-04 Player Tracker (탭 이동)
-      ↔ P-05 Emoji Panel    (탭 이동)
-      ↔ P-06 Memo           (탭 이동)
-      ↔ P-07 Character Dict (탭 이동)
-    → (게임 종료 수신) 역할 공개 화면
+  → P 탭 전체 [phase: lobby]  ← 방 참가 즉시 (모든 탭 활성)
+      역할 탭: 대기 상태 인라인 표시
+      캐릭터 사전 / 메모: 바로 사용 가능
+      이모지: 착석 인원 범위 내에서 사용 가능
+      (백그라운드: ROLE_ASSIGN 대기)
+  → P 탭 전체 [phase: game]   ← GAME_START 수신 후 자동 전환
+      역할 탭: 역할 카드 표시
+      플레이어 탭: 전원 목록 표시
+      이모지: 전원 대상 사용 가능
+  → 게임 종료 화면 (GAME_END 수신)
+```
+
+### 자동 게임 시작 시퀀스 (백그라운드)
+```
+[Host]  모든 플레이어 착석 감지
+         → engine.initGame() 실행
+         → 각 플레이어에게 ROLE_ASSIGN 개별 전송
+         → COUNTDOWN { seconds: 5, players[] } 브로드캐스트
+         → 5초 후 GAME_START 브로드캐스트 + engine.startNight()
+
+[Client]  ROLE_ASSIGN 수신 → 역할 탭 즉시 갱신
+           COUNTDOWN 수신  → LobbyBanner에 카운트다운 표시
+           GAME_START 수신 → LobbyBanner 제거, 게임 본격 시작
 ```
 
 ---
 
 ## 6. P2P 메시지 타입 정의
 
-기존 `p2p.js` `messageTypeMap`에 추가할 타입.
-
 | 논리 타입 | 단축 (12B↓) | 방향 | 페이로드 |
 |-----------|-------------|------|----------|
 | `GAME_START` | `GAME_ST` | Host→All | `{ players[], script }` |
 | `PHASE_CHANGE` | `PHASE` | Host→All | `{ phase, round }` |
-| `ROLE_ASSIGN` | `ROLE_ASSIGN` | Host→1 | `{ role, team }` |
-| `NIGHT_INFO` | `NIGHT_INFO` | Host→1 | `{ title, message, players[] }` |
+| `ROLE_ASSIGN` | `ROLE_ASSIGN` | Host→1 | `{ playerId, role, team }` |
+| `NIGHT_INFO` | `NIGHT_INF` | Host→1 | `{ title, message, players[] }` |
 | `PLAYER_DIED` | `DIED` | Host→All | `{ playerId, cause }` |
 | `VOTE_UPDATE` | `VOTE_UPD` | Host→All | `{ targetId, votes, threshold }` |
 | `GAME_END` | `GAME_END` | Host→All | `{ winner, roles[] }` |
-| `EMOJI` | `EMOJI` | Player→Player | `{ fromId, emoji }` |
+| `EMOJI` | `EMOJI` | Player↔Player | `{ fromId, targetId, emoji }` |
+| `SEAT_UPDATE` | `SEAT_UPD` | Host→All | `{ seated[{name,seatNum}], total }` |
+| `COUNTDOWN` | `CDWN` | Host→All | `{ seconds, players[] }` |
 
 ---
 
-## 7. 파일 구조 (목표)
+## 7. 파일 구조
 
 ```
 src/
-├── index.html          # 메인 (Host/Player 선택)
-├── host.html           # 호스트 앱 진입점
-├── player.html         # 참가자 앱 진입점
+├── index.html
 ├── js/
-│   ├── p2p.js          # P2P 통신 (기존)
+│   ├── app.js           # 랜딩 (Host/Player 선택)
+│   ├── p2p.js           # P2P 통신
+│   ├── game-engine.js   # 게임 규칙 엔진
 │   ├── data/
-│   │   └── roles-tb.js # Trouble Brewing 역할 정적 데이터
-│   ├── components/     # 컴포넌트 (C-01 ~ C-11)
+│   │   └── roles-tb.js
+│   ├── components/
 │   │   ├── PlayerChip.js
 │   │   ├── RoleCard.js
 │   │   ├── PlayerGrid.js
 │   │   ├── PhaseHeader.js
+│   │   ├── LobbyBanner.js   ← 신규 (C-12)
 │   │   ├── InfoPanel.js
 │   │   ├── SelectPanel.js
 │   │   ├── VoteBar.js
@@ -444,21 +545,34 @@ src/
 │   │   ├── EmojiPopup.js
 │   │   ├── NightOrderList.js
 │   │   └── LogEntry.js
-│   ├── host/           # 호스트 화면 (H-01 ~ H-07)
+│   ├── host/
+│   │   ├── app.js
 │   │   ├── Setup.js
-│   │   ├── Lobby.js
-│   │   ├── Grimoire.js
+│   │   ├── Grimoire.js      ← lobby phase 인라인 처리 포함
 │   │   ├── NightAction.js
 │   │   ├── DayFlow.js
 │   │   └── Victory.js
-│   └── player/         # 참가자 화면 (P-01 ~ P-07)
+│   │   (Lobby.js 제거)
+│   └── player/
+│       ├── app.js
 │       ├── Join.js
-│       ├── Waiting.js
-│       ├── RoleCard.js
+│       ├── RoleCardScreen.js ← lobby 대기 상태 인라인 포함
 │       ├── PlayerTracker.js
 │       ├── EmojiPanel.js
 │       ├── Memo.js
 │       └── CharacterDict.js
-└── asset/
-    └── favicon.svg
+│       (Waiting.js 제거)
+└── css/
+    └── theme.css
 ```
+
+---
+
+## 8. Lobby Phase UX 규칙
+
+1. **LobbyBanner는 항상 최상단 고정** — 스크롤해도 따라옴
+2. **배너는 축소/확장 토글 가능** — 방 코드만 보이는 최소화 상태 제공
+3. **게임 버튼은 모두 활성** — lobby 중 눌러도 아무 일도 안 일어나지 않고, 호스트/참가자가 미리 UX 탐색 가능 (단, 게임 진행 로직은 GAME_START 이후부터만 실제 동작)
+4. **착석 순서 = 좌석 번호** — JOIN_REQUEST 도착 순서대로 1번부터 배정
+5. **카운트다운은 LobbyBanner 안에서 숫자로 표시** — 전체 화면 덮는 오버레이 없이 배너만 업데이트됨
+6. **GAME_START 수신 → LobbyBanner 즉시 사라짐** — 화면 전환 없이 인게임 상태로 자연스럽게 전환

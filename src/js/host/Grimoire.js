@@ -34,6 +34,22 @@ export class Grimoire {
     this.el.innerHTML = ''
     const state = this.engine.state
 
+    // ─ lobby phase: 대기 플레이스홀더 ─
+    if (state.phase === 'lobby') {
+      this.el.appendChild(renderPhaseHeader(state))
+
+      const waitCard = document.createElement('div')
+      waitCard.className = 'card'
+      waitCard.style.cssText = 'text-align:center;padding:28px 16px;'
+      waitCard.innerHTML = `
+        <div style="font-size:1.8rem;margin-bottom:8px">🪑</div>
+        <div style="font-size:0.88rem;color:var(--text2)">플레이어가 입장하면 자동으로 게임이 시작됩니다</div>
+        <div style="font-size:0.68rem;color:var(--text4);margin-top:6px">위 배너에서 방 코드를 공유하세요</div>
+      `
+      this.el.appendChild(waitCard)
+      return
+    }
+
     // 역할 아이콘 맵
     const roleMap = {}
     state.players.forEach(p => {

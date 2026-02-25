@@ -333,7 +333,7 @@ export class Grimoire {
     ]
 
     if (player.role === 'slayer') {
-      btns.push({ label: '🗡 학살자 선언', action: () => { overlay.remove(); this.onPlayerAction?.('slayer', player.id) } })
+      btns.push({ label: '🗡 처단자 선언', action: () => { overlay.remove(); this.onPlayerAction?.('slayer', player.id) } })
     }
 
     const btnGrid2 = document.createElement('div')

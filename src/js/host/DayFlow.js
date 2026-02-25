@@ -150,7 +150,7 @@ export class DayFlow {
     if (slayerPlayer && !this.engine.slayerUsed) {
       const slayRow = document.createElement('div')
       slayRow.className = 'dayflow__special-row'
-      slayRow.innerHTML = `<span class="dayflow__special-label">🗡 학살자 선언 (${slayerPlayer.name})</span>`
+      slayRow.innerHTML = `<span class="dayflow__special-label">🗡 처단자 선언 (${slayerPlayer.name})</span>`
       const slayGrid = renderPlayerGrid(
         state.players.filter(p => p.status === 'alive' && p.id !== slayerPlayer.id),
         {
@@ -164,7 +164,7 @@ export class DayFlow {
 
       const slayBtn = document.createElement('button')
       slayBtn.className = 'btn btn-danger btn-full mt-8'
-      slayBtn.textContent = '🗡 학살자 지목 실행'
+      slayBtn.textContent = '🗡 처단자 지목 실행'
       slayBtn.addEventListener('click', () => {
         if (this.slayerActorId) {
           const result = this.engine.slayerDeclare(slayerPlayer.id, this.slayerActorId)

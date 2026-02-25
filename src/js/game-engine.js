@@ -27,11 +27,11 @@ export class GameEngine {
     this.nightActions = []  // { round, roleId, actorId, targetIds, infoSent }
     this.pendingDeaths = [] // 이번 밤 처리할 사망자 id 목록
     this.monkProtect = null // 이번 밤 수도사 보호 대상 id
-    this.redHerring = null  // 점술사 레드 헤링 player.id
+    this.redHerring = null  // 점쟁이 레드 헤링 player.id
     this.virginTriggered = false
     this.slayerUsed = false
     this.butlerMasters = {} // { playerId: masterId }
-    this.poisonedThisNight = null // 이번 밤 독살자 대상
+    this.poisonedThisNight = null // 이번 밤 독약꾼 대상
   }
 
   // ─────────────────────────────────────
@@ -69,13 +69,13 @@ export class GameEngine {
       }
     })
 
-    // 점술사 레드 헤링 고정 선택 (선 플레이어 중 1명)
+    // 점쟁이 레드 헤링 고정 선택 (선 플레이어 중 1명)
     const goodPlayers = this.state.players.filter(p => p.team === 'good')
     if (goodPlayers.length > 0) {
       this.redHerring = goodPlayers[Math.floor(Math.random() * goodPlayers.length)].id
     }
 
-    // 술꾼: isDrunk = true 처리
+    // 주정뱅이: isDrunk = true 처리
     this.state.players.forEach(p => {
       if (p.role === 'drunk') p.isDrunk = true
     })
@@ -122,7 +122,7 @@ export class GameEngine {
         return this.state.round === 0
       }
       if (roleId === 'ravenkeeper') {
-        // 이번 밤 사망자 중 까마귀지기가 있을 때만
+        // 이번 밤 사망자 중 까마귀 사육사가 있을 때만
         return this.pendingDeaths.some(id => {
           const p = this.getPlayer(id)
           return p && p.role === 'ravenkeeper'
@@ -148,7 +148,7 @@ export class GameEngine {
     this.poisonedThisNight = null
     this.pendingDeaths = []
 
-    // 이전 밤 독 초기화 (독살자 능력: 1밤만 지속)
+    // 이전 밤 독 초기화 (독약꾼 능력: 1밤만 지속)
     this.state.players.forEach(p => { p.isPoisoned = false })
 
     const order = this.buildNightOrder()
@@ -180,7 +180,7 @@ export class GameEngine {
    * 밤 결과 처리 (내부)
    */
   _resolveNight() {
-    // 독살자 적용
+    // 독약꾼 적용
     if (this.poisonedThisNight !== null) {
       const p = this.getPlayer(this.poisonedThisNight)
       if (p) p.isPoisoned = true
@@ -204,8 +204,8 @@ export class GameEngine {
           // 수도사 보호
           this._log('night', `수도사가 ${target.name}을(를) 보호했습니다.`)
         } else if (target.role === 'soldier' && !target.isPoisoned) {
-          // 병사 면역
-          this._log('night', `병사 ${target.name}은(는) 데몬 공격에 면역입니다.`)
+          // 군인 면역
+          this._log('night', `군인 ${target.name}은(는) 데몬 공격에 면역입니다.`)
         } else if (target.role === 'mayor' && !target.isPoisoned) {
           // 시장 튕김 — 살아있는 다른 플레이어로 튕김
           this._handleMayorBounce(impKillAction.actorId, targetId)
@@ -234,7 +234,7 @@ export class GameEngine {
       if (sw) {
         sw.role = 'imp'
         sw.team = 'evil'
-        this._log('night', `${sw.name}(스칼렛 우먼)이 새 임프로 승계됩니다!`)
+        this._log('night', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
         this.emit('scarletWomanSucceeded', { playerId: sw.id })
         return
       }
@@ -364,7 +364,7 @@ export class GameEngine {
   }
 
   /**
-   * 학살자 선언
+   * 처단자 선언
    * @returns {{ hit: boolean }}
    */
   slayerDeclare(actorId, targetId) {
@@ -374,7 +374,7 @@ export class GameEngine {
     if (!actor || !target) return { hit: false }
 
     this.slayerUsed = true
-    this._log('day', `${actor.name}(학살자)이 ${target.name}을(를) 지목합니다.`)
+    this._log('day', `${actor.name}(처단자)이 ${target.name}을(를) 지목합니다.`)
 
     const isActualDemon = target.role === 'imp'
     if (isActualDemon && !actor.isPoisoned && !actor.isDrunk) {
@@ -383,7 +383,7 @@ export class GameEngine {
       this.emit('stateChanged', this.state)
       return { hit: true, ...this.checkWinCondition() }
     } else {
-      this._log('day', `학살자 빗나감.`)
+      this._log('day', `처단자 빗나감.`)
       this.emit('stateChanged', this.state)
       return { hit: false }
     }

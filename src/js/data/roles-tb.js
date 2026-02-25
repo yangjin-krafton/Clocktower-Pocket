@@ -5,7 +5,7 @@
 export const ROLES_TB = [
   // ── Townsfolk (13) ──
   {
-    id: 'washerwoman', name: '빨래꾼', team: 'townsfolk',
+    id: 'washerwoman', name: '세탁부', team: 'townsfolk',
     ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 마을 주민임을 안다.',
     firstNight: true, otherNights: false, icon: '👁️',
     nightType: 'info'
@@ -17,7 +17,7 @@ export const ROLES_TB = [
     nightType: 'info'
   },
   {
-    id: 'investigator', name: '탐정', team: 'townsfolk',
+    id: 'investigator', name: '조사관', team: 'townsfolk',
     ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 미니언임을 안다.',
     firstNight: true, otherNights: false, icon: '🔍',
     nightType: 'info'
@@ -29,13 +29,13 @@ export const ROLES_TB = [
     nightType: 'info'
   },
   {
-    id: 'empath', name: '공감자', team: 'townsfolk',
+    id: 'empath', name: '공감인', team: 'townsfolk',
     ability: '매 밤, 양옆 생존 이웃 중 악 플레이어의 수(0/1/2)를 안다.',
     firstNight: true, otherNights: true, icon: '🧪',
     nightType: 'info'
   },
   {
-    id: 'fortuneteller', name: '점술사', team: 'townsfolk',
+    id: 'fortuneteller', name: '점쟁이', team: 'townsfolk',
     ability: '매 밤 2명을 선택해 그 중 데몬이 있는지 안다. 선 플레이어 1명은 항상 데몬처럼 잡힌다.',
     firstNight: true, otherNights: true, icon: '🔮',
     nightType: 'select', maxSelect: 2
@@ -53,7 +53,7 @@ export const ROLES_TB = [
     nightType: 'select', maxSelect: 1
   },
   {
-    id: 'ravenkeeper', name: '까마귀지기', team: 'townsfolk',
+    id: 'ravenkeeper', name: '까마귀 사육사', team: 'townsfolk',
     ability: '밤에 죽으면, 그 밤 1명을 선택해 역할을 안다.',
     firstNight: false, otherNights: true, icon: '🐦‍⬛',
     nightType: 'select', maxSelect: 1
@@ -65,13 +65,13 @@ export const ROLES_TB = [
     nightType: null
   },
   {
-    id: 'slayer', name: '학살자', team: 'townsfolk',
+    id: 'slayer', name: '처단자', team: 'townsfolk',
     ability: '게임 중 1회, 낮에 1명을 지목. 그 대상이 데몬이면 즉시 사망한다.',
     firstNight: false, otherNights: false, icon: '🗡️',
     nightType: null
   },
   {
-    id: 'soldier', name: '병사', team: 'townsfolk',
+    id: 'soldier', name: '군인', team: 'townsfolk',
     ability: '데몬 공격으로는 죽지 않는다.',
     firstNight: false, otherNights: false, icon: '🛡️',
     nightType: null
@@ -91,7 +91,7 @@ export const ROLES_TB = [
     nightType: 'select', maxSelect: 1
   },
   {
-    id: 'drunk', name: '술꾼', team: 'outsider',
+    id: 'drunk', name: '주정뱅이', team: 'outsider',
     ability: '본인은 마을 주민이라 믿지만 실제로는 아웃사이더이며 능력이 오작동한다.',
     firstNight: false, otherNights: false, icon: '🍾',
     nightType: null
@@ -103,15 +103,15 @@ export const ROLES_TB = [
     nightType: null
   },
   {
-    id: 'saint', name: '성인', team: 'outsider',
-    ability: '성인이 처형되면 선 팀이 즉시 패배한다.',
+    id: 'saint', name: '성자', team: 'outsider',
+    ability: '성자가 처형되면 선 팀이 즉시 패배한다.',
     firstNight: false, otherNights: false, icon: '😇',
     nightType: null
   },
 
   // ── Minions (4) ──
   {
-    id: 'poisoner', name: '독살자', team: 'minion',
+    id: 'poisoner', name: '독약꾼', team: 'minion',
     ability: '매 밤 1명을 중독시킨다. 중독된 플레이어의 능력이 오작동한다.',
     firstNight: true, otherNights: true, icon: '☠️',
     nightType: 'select', maxSelect: 1
@@ -123,7 +123,7 @@ export const ROLES_TB = [
     nightType: 'info'
   },
   {
-    id: 'scarletwoman', name: '스칼렛 우먼', team: 'minion',
+    id: 'scarletwoman', name: '진홍의 여인', team: 'minion',
     ability: '생존자 5명 이상일 때 데몬이 죽으면 자신이 새 데몬으로 승계된다.',
     firstNight: false, otherNights: false, icon: '💋',
     nightType: null

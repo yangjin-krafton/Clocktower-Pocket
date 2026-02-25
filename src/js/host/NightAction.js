@@ -199,7 +199,7 @@ export class NightAction {
           const p2 = this.engine.getPlayer(ids[1])
           const r = ROLES_BY_ID[role.id]
           mountInfoPanel({
-            title: '점술사 결과',
+            title: '점쟁이 결과',
             roleIcon: '🔮',
             message: result ? '✅ 예, 그 중 한 명은 데몬입니다' : '❌ 아니오, 데몬이 없습니다',
             players: [p1, p2].filter(Boolean),

@@ -30,7 +30,7 @@ export class Memo {
     textarea.className = 'textarea'
     textarea.style.minHeight = '300px'
     textarea.value = saved
-    textarea.placeholder = '여기에 추리 메모를 적으세요...\n\n예)\n- 3번 Alice: 점술사 주장, 신뢰 가능\n- 7번 Bob: 임프 의심\n- Chef 결과: 이웃 악 쌍 1개'
+    textarea.placeholder = '여기에 추리 메모를 적으세요...\n\n예)\n- 3번 Alice: 점쟁이 주장, 신뢰 가능\n- 7번 Bob: 임프 의심\n- Chef 결과: 이웃 악 쌍 1개'
     textarea.addEventListener('input', () => {
       localStorage.setItem('ct-memo', textarea.value)
     })

@@ -10,6 +10,7 @@ import { renderPlayerGrid }     from '../components/PlayerGrid.js'
 import { renderNightOrderList } from '../components/NightOrderList.js'
 import { renderLogList }        from '../components/LogEntry.js'
 import { ROLES_BY_ID }          from '../data/roles-tb.js'
+import { RulesScreen }          from '../components/RulesScreen.js'
 
 export class Grimoire {
   /**
@@ -203,6 +204,14 @@ export class Grimoire {
     settingsBtn.textContent = '✏️ 인원 · 역할 설정 변경'
     settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
     configCard.appendChild(settingsBtn)
+
+    const rulesBtn = document.createElement('button')
+    rulesBtn.className = 'btn btn-full'
+    rulesBtn.style.marginTop = '6px'
+    rulesBtn.textContent = '📜 게임 규칙 보기'
+    rulesBtn.addEventListener('click', () => this._showRulesPopup())
+    configCard.appendChild(rulesBtn)
+
     this.el.appendChild(configCard)
 
     // ── 게임 시작 버튼 ───────────────────
@@ -223,6 +232,40 @@ export class Grimoire {
       hint.textContent = `※ 정식 게임은 5명 이상 권장 (${count}명으로도 시작 가능)`
       this.el.appendChild(hint)
     }
+  }
+
+  // ─────────────────────────────────────
+  // 규칙 팝업
+  // ─────────────────────────────────────
+
+  _showRulesPopup() {
+    document.getElementById('rules-popup')?.remove()
+
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    overlay.id = 'rules-popup'
+    overlay.style.alignItems = 'flex-start'
+    overlay.style.padding = '12px'
+
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.cssText = 'max-height:88vh;overflow-y:auto;padding:16px;margin-top:8px;'
+
+    const header = document.createElement('div')
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;'
+    header.innerHTML = `
+      <span style="font-family:'Noto Serif KR',serif;font-size:0.92rem;font-weight:700;color:var(--gold2)">📜 게임 규칙</span>
+      <button id="rules-close-btn" class="btn" style="padding:4px 10px;font-size:0.72rem;">닫기</button>
+    `
+    box.appendChild(header)
+
+    const rules = new RulesScreen()
+    rules.mount(box)
+
+    overlay.appendChild(box)
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+    box.querySelector('#rules-close-btn').addEventListener('click', () => overlay.remove())
+    document.body.appendChild(overlay)
   }
 
   // ─────────────────────────────────────

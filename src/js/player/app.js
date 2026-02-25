@@ -17,6 +17,7 @@ import { PlayerTracker }  from './PlayerTracker.js'
 import { EmojiPanel }     from './EmojiPanel.js'
 import { Memo }           from './Memo.js'
 import { CharacterDict }  from './CharacterDict.js'
+import { RulesScreen }    from '../components/RulesScreen.js'
 
 export class PlayerApp {
   constructor() {
@@ -103,6 +104,7 @@ export class PlayerApp {
       { id: 'emoji',   icon: '💬', label: '시그널' },
       { id: 'memo',    icon: '📝', label: '메모' },
       { id: 'dict',    icon: '📖', label: '사전' },
+      { id: 'rules',   icon: '📜', label: '규칙' },
     ]
     tabs.forEach(tab => {
       const btn = document.createElement('button')
@@ -143,6 +145,9 @@ export class PlayerApp {
         break
       case 'dict':
         screen = new CharacterDict({ scriptRoles: this.scriptRoles })
+        break
+      case 'rules':
+        screen = new RulesScreen()
         break
     }
     if (screen) screen.mount(this.content)

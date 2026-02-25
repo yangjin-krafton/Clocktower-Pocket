@@ -12,6 +12,16 @@
  */
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
+// 캐릭터 이름 → 진영 매핑
+const ROLE_TEAM_MAP = {
+  '세탁부': 'town', '사서': 'town', '조사관': 'town', '요리사': 'town',
+  '공감인': 'town', '점쟁이': 'town', '장의사': 'town', '수도사': 'town',
+  '까마귀 사육사': 'town', '처녀': 'town', '처단자': 'town', '군인': 'town', '시장': 'town',
+  '집사': 'outside', '주정뱅이': 'outside', '은둔자': 'outside', '성자': 'outside',
+  '독약꾼': 'minion', '스파이': 'minion', '진홍의 여인': 'minion', '남작': 'minion',
+  '임프': 'demon'
+}
+
 export function renderSelectPanel(data) {
   const { title, roleIcon = '🎯', players = [], maxSelect = 1, onConfirm } = data
 
@@ -39,10 +49,22 @@ export function renderSelectPanel(data) {
 
   const titleWrap = document.createElement('div')
   titleWrap.className = 'select-panel__title-wrap'
-  titleWrap.innerHTML = `
-    <div class="select-panel__title">${title}</div>
-    <div class="select-panel__hint">대상을 선택하세요</div>
-  `
+
+  const titleDiv = document.createElement('div')
+  titleDiv.className = 'select-panel__title'
+  titleDiv.textContent = title
+  // 진영별 색상 적용
+  const teamClass = ROLE_TEAM_MAP[title]
+  if (teamClass) {
+    titleDiv.classList.add(`role-name-${teamClass}`)
+  }
+
+  const hintDiv = document.createElement('div')
+  hintDiv.className = 'select-panel__hint'
+  hintDiv.textContent = '대상을 선택하세요'
+
+  titleWrap.appendChild(titleDiv)
+  titleWrap.appendChild(hintDiv)
 
   header.appendChild(iconSpan)
   header.appendChild(titleWrap)
@@ -205,6 +227,10 @@ if (!document.getElementById('select-panel-style')) {
   font-weight: 700;
   color: var(--gold2);
 }
+.select-panel__title.role-name-town { color: var(--bl-light); }
+.select-panel__title.role-name-outside { color: var(--tl-light); }
+.select-panel__title.role-name-minion { color: var(--rd-light); }
+.select-panel__title.role-name-demon { color: var(--rd-light); text-shadow: 0 0 12px rgba(110,27,31,0.6); }
 .select-panel__hint { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
 .select-panel__counter {
   font-size: 0.78rem;

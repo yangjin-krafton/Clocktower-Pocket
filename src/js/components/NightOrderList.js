@@ -57,6 +57,18 @@ export function renderNightOrderList(data, onStepClick = null) {
     const nameSpan = document.createElement('span')
     nameSpan.className = 'night-order__name'
     nameSpan.textContent = name
+    // 진영별 색상 적용
+    if (role) {
+      const teamColorClass = {
+        'townsfolk': 'role-name-town',
+        'outsider': 'role-name-outside',
+        'minion': 'role-name-minion',
+        'demon': 'role-name-demon'
+      }
+      if (teamColorClass[role.team]) {
+        nameSpan.classList.add(teamColorClass[role.team])
+      }
+    }
 
     item.appendChild(numSpan)
     item.appendChild(iconSpan)
@@ -133,6 +145,10 @@ if (!document.getElementById('night-order-style')) {
   font-size: 0.75rem;
   color: var(--text2);
 }
+.night-order__name.role-name-town { color: var(--bl-light); }
+.night-order__name.role-name-outside { color: var(--tl-light); }
+.night-order__name.role-name-minion { color: var(--rd-light); }
+.night-order__name.role-name-demon { color: var(--rd-light); }
 .night-order__item--current .night-order__name { color: var(--gold2); font-weight: 600; }
 .night-order__check { font-size: 0.72rem; color: var(--tl-base); }
 .night-order__cur-dot {

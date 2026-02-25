@@ -8,6 +8,20 @@
  *   const screen = new RulesScreen()
  *   screen.mount(container)
  */
+// 캐릭터 이름 → 진영 매핑
+const ROLE_TEAM_MAP = {
+  // Townsfolk
+  '세탁부': 'town', '사서': 'town', '조사관': 'town', '요리사': 'town',
+  '공감인': 'town', '점쟁이': 'town', '장의사': 'town', '수도사': 'town',
+  '까마귀 사육사': 'town', '처녀': 'town', '처단자': 'town', '군인': 'town', '시장': 'town',
+  // Outsider
+  '집사': 'outside', '주정뱅이': 'outside', '은둔자': 'outside', '성자': 'outside',
+  // Minion
+  '독약꾼': 'minion', '스파이': 'minion', '진홍의 여인': 'minion', '남작': 'minion',
+  // Demon
+  '임프': 'demon'
+}
+
 export class RulesScreen {
   constructor() {
     this.el = null
@@ -226,6 +240,13 @@ export class RulesScreen {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
 
+    // 캐릭터 이름 색상 적용 (이미지 처리 전에)
+    Object.keys(ROLE_TEAM_MAP).forEach(roleName => {
+      const team = ROLE_TEAM_MAP[roleName]
+      const regex = new RegExp(`\\*\\*${roleName}\\*\\*`, 'g')
+      s = s.replace(regex, `**<span class="role-name-${team}">${roleName}</span>**`)
+    })
+
     // ![alt](src) → 인라인 이미지 (링크보다 먼저 처리)
     // MD 파일은 src/rules/ 에 있으므로, ../asset/ 형태 경로를 앱 루트 기준으로 보정
     s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
@@ -394,6 +415,10 @@ if (!document.getElementById('rules-screen-style')) {
   border-bottom: 1px solid var(--lead2);
   margin-bottom: 4px;
 }
+.rules-h1 .role-name-town { color: var(--bl-light); }
+.rules-h1 .role-name-outside { color: var(--tl-light); }
+.rules-h1 .role-name-minion { color: var(--rd-light); }
+.rules-h1 .role-name-demon { color: var(--rd-light); }
 .rules-h2 {
   font-family: 'Noto Serif KR', serif;
   font-size: 1rem;
@@ -401,6 +426,10 @@ if (!document.getElementById('rules-screen-style')) {
   color: var(--tl-light);
   padding: 14px 0 4px;
 }
+.rules-h2 .role-name-town { color: var(--bl-light); }
+.rules-h2 .role-name-outside { color: var(--tl-light); }
+.rules-h2 .role-name-minion { color: var(--rd-light); }
+.rules-h2 .role-name-demon { color: var(--rd-light); }
 .rules-h3 {
   font-size: 0.88rem;
   font-weight: 700;
@@ -454,6 +483,10 @@ if (!document.getElementById('rules-screen-style')) {
 
 /* 인라인 */
 .rules-body strong { color: var(--text); font-weight: 700; }
+.role-name-town { color: var(--bl-light) !important; }
+.role-name-outside { color: var(--tl-light) !important; }
+.role-name-minion { color: var(--rd-light) !important; }
+.role-name-demon { color: var(--rd-light) !important; font-weight: 800 !important; text-shadow: 0 0 8px rgba(110,27,31,0.6); }
 .rules-code {
   background: var(--surface2);
   border: 1px solid var(--lead2);

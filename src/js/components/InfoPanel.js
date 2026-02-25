@@ -13,6 +13,16 @@
 import { renderPlayerChip } from './PlayerChip.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
+// 캐릭터 이름 → 진영 매핑
+const ROLE_TEAM_MAP = {
+  '세탁부': 'town', '사서': 'town', '조사관': 'town', '요리사': 'town',
+  '공감인': 'town', '점쟁이': 'town', '장의사': 'town', '수도사': 'town',
+  '까마귀 사육사': 'town', '처녀': 'town', '처단자': 'town', '군인': 'town', '시장': 'town',
+  '집사': 'outside', '주정뱅이': 'outside', '은둔자': 'outside', '성자': 'outside',
+  '독약꾼': 'minion', '스파이': 'minion', '진홍의 여인': 'minion', '남작': 'minion',
+  '임프': 'demon'
+}
+
 export function renderInfoPanel(data) {
   const { title, message, players = [], roleIcon = '🎴', onConfirm } = data
 
@@ -38,6 +48,11 @@ export function renderInfoPanel(data) {
   const titleEl = document.createElement('div')
   titleEl.className = 'info-panel__title'
   titleEl.textContent = title
+  // 진영별 색상 적용
+  const teamClass = ROLE_TEAM_MAP[title]
+  if (teamClass) {
+    titleEl.classList.add(`role-name-${teamClass}`)
+  }
 
   // 메시지
   const msgEl = document.createElement('div')
@@ -145,6 +160,10 @@ if (!document.getElementById('info-panel-style')) {
   line-height: 1.2;
   text-shadow: 0 0 20px rgba(212,168,40,0.4);
 }
+.info-panel__title.role-name-town { color: var(--bl-light); text-shadow: 0 0 20px rgba(46,74,143,0.5); }
+.info-panel__title.role-name-outside { color: var(--tl-light); text-shadow: 0 0 20px rgba(91,179,198,0.5); }
+.info-panel__title.role-name-minion { color: var(--rd-light); text-shadow: 0 0 20px rgba(110,27,31,0.6); }
+.info-panel__title.role-name-demon { color: var(--rd-light); text-shadow: 0 0 24px rgba(110,27,31,0.8); }
 .info-panel__message {
   font-size: 1.15rem;
   color: var(--text);

@@ -65,6 +65,7 @@ export class Victory {
       const role = ROLES_BY_ID[p.role]
       const row = document.createElement('div')
       row.className = 'victory__role-row'
+      if (role) row.dataset.team = role.team
 
       const seatSpan = document.createElement('span')
       seatSpan.className = 'victory__role-seat'
@@ -184,6 +185,10 @@ if (!document.getElementById('victory-style')) {
 }
 .victory__role-name { flex: 1; color: var(--text); font-weight: 600; }
 .victory__role-role { color: var(--text3); flex: 1; }
+.victory__role-row[data-team="townsfolk"] .victory__role-role { color: var(--bl-light); }
+.victory__role-row[data-team="outsider"] .victory__role-role { color: var(--tl-light); }
+.victory__role-row[data-team="minion"] .victory__role-role { color: var(--rd-light); }
+.victory__role-row[data-team="demon"] .victory__role-role { color: var(--rd-light); font-weight: 600; }
   `
   document.head.appendChild(style)
 }

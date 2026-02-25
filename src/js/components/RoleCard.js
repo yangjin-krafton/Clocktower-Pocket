@@ -45,6 +45,16 @@ export function renderRoleCard(role, opts = {}) {
   const nameEl = document.createElement('div')
   nameEl.className = 'role-card__name'
   nameEl.textContent = role.name
+  // 진영별 색상 적용
+  const teamColorClass = {
+    'townsfolk': 'role-name-town',
+    'outsider': 'role-name-outside',
+    'minion': 'role-name-minion',
+    'demon': 'role-name-demon'
+  }
+  if (teamColorClass[role.team]) {
+    nameEl.classList.add(teamColorClass[role.team])
+  }
 
   const badge = document.createElement('span')
   badge.className = `badge ${teamBadgeClass[role.team] || 'badge-town'}`
@@ -112,6 +122,10 @@ if (!document.getElementById('role-card-style')) {
   font-weight: 700;
   color: var(--text);
 }
+.role-card__name.role-name-town { color: var(--bl-light); }
+.role-card__name.role-name-outside { color: var(--tl-light); }
+.role-card__name.role-name-minion { color: var(--rd-light); }
+.role-card__name.role-name-demon { color: var(--rd-light); text-shadow: 0 0 8px rgba(110,27,31,0.5); }
 .role-card__ability {
   margin-top: 10px;
   padding: 8px 10px;

@@ -86,6 +86,7 @@ export class Setup {
       teamRoles.forEach(role => {
         const row = document.createElement('div')
         row.className = 'setup__role-row' + (this.selectedRoles.has(role.id) ? ' setup__role-row--selected' : '')
+        row.dataset.team = role.team
 
         const iconSpan = document.createElement('span')
         iconSpan.className = 'setup__role-icon'
@@ -258,6 +259,10 @@ if (!document.getElementById('setup-style')) {
   object-fit: contain;
 }
 .setup__role-name { flex: 1; font-size: 0.78rem; color: var(--text2); }
+.setup__role-row[data-team="townsfolk"] .setup__role-name { color: var(--bl-light); }
+.setup__role-row[data-team="outsider"] .setup__role-name { color: var(--tl-light); }
+.setup__role-row[data-team="minion"] .setup__role-name { color: var(--rd-light); }
+.setup__role-row[data-team="demon"] .setup__role-name { color: var(--rd-light); font-weight: 600; }
 .setup__role-check { font-size: 0.82rem; color: var(--tl-base); font-weight: 700; min-width: 14px; text-align: right; }
 .setup__hint { text-align: center; font-size: 0.68rem; color: var(--rd-light); padding: 4px; }
   `

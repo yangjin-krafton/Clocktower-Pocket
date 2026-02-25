@@ -136,102 +136,135 @@ export class Grimoire {
 
   // ─────────────────────────────────────
   // Lobby phase 전용 렌더
+  // 실제 인게임 레이아웃을 ghost로 뒤에 깔고
+  // 게임 준비 패널을 위에 덮는 방식
   // ─────────────────────────────────────
 
   _renderLobby() {
     const players = this.getLobbyPlayers()
     const config  = this.getLobbyConfig()
     const count   = players.length
+    const total   = config.playerCount
 
-    // ── PhaseHeader ─────────────────────
-    this.el.appendChild(renderPhaseHeader({
-      phase: 'lobby',
-      round: 0,
-      players: [],
+    this.el.classList.add('grimoire--lobby')
+
+    // ── Ghost: 실제 인게임 레이아웃 (흐릿하게 뒤에) ─────────
+    const ghost = document.createElement('div')
+    ghost.className = 'grimoire-ghost'
+
+    // Ghost PhaseHeader (Night 1 형태)
+    ghost.appendChild(renderPhaseHeader({ phase: 'night', round: 1, players: [] }))
+
+    // Ghost PlayerGrid (N개 빈 자리)
+    const ghostCard = document.createElement('div')
+    ghostCard.className = 'card'
+    ghostCard.innerHTML = '<div class="card-title">👥 플레이어</div>'
+    const ghostPlayers = Array.from({ length: Math.max(total, 5) }, (_, i) => ({
+      id: i + 1, name: `${i + 1}`, status: 'alive', isPoisoned: false, isDrunk: false,
     }))
+    ghostCard.appendChild(renderPlayerGrid(ghostPlayers, { selectable: false }))
+    ghost.appendChild(ghostCard)
 
-    // ── 현재 참가자 ──────────────────────
-    const playerCard = document.createElement('div')
-    playerCard.className = 'card'
+    // Ghost 버튼
+    const ghostBtns = document.createElement('div')
+    ghostBtns.className = 'btn-grid-2'
+    ghostBtns.innerHTML = `
+      <button class="btn btn-primary btn-grid-full" disabled>▶ 밤 진행 시작</button>
+      <button class="btn btn-grid-full" disabled>🌅 낮으로 전환</button>
+    `
+    ghost.appendChild(ghostBtns)
+    this.el.appendChild(ghost)
 
-    const playerTitle = document.createElement('div')
-    playerTitle.className = 'card-title'
-    playerTitle.textContent = `👥 현재 참가자 · ${count}명 입장 중`
-    playerCard.appendChild(playerTitle)
+    // ── Lobby 패널: 게임 준비 단계 (위에 덮음) ──────────────
+    const panel = document.createElement('div')
+    panel.className = 'grimoire-lobby-panel'
+
+    // 1) 매칭 상태 바 (PhaseHeader 위치)
+    const statusBar = document.createElement('div')
+    statusBar.className = 'phase-header phase-header--lobby grimoire-lobby-status'
+    statusBar.innerHTML = `
+      <span class="phase-header__icon">🏰</span>
+      <div class="phase-header__text">
+        <span class="phase-header__name">매칭 대기 중</span>
+        <span class="phase-header__sub">
+          ${count > 0 ? `${count}명 입장됨` : '참가자 연결 대기 중...'}
+        </span>
+      </div>
+      <div class="phase-header__alive">
+        <span class="phase-header__alive-num" style="color:var(--tl-light)">${count}</span>
+        <span class="phase-header__alive-lbl">입장</span>
+      </div>
+    `
+    panel.appendChild(statusBar)
+
+    // 2) 현재 참가자 (PlayerGrid 위치)
+    const participantsCard = document.createElement('div')
+    participantsCard.className = 'card grimoire-lobby-card'
+    participantsCard.innerHTML = '<div class="card-title">👥 현재 참가자</div>'
 
     if (count === 0) {
       const empty = document.createElement('div')
       empty.style.cssText = 'color:var(--text4);font-size:0.78rem;padding:10px 0 4px;display:flex;align-items:center;gap:8px;'
       empty.innerHTML = `<span class="lobby-wait-dot"></span> 참가자 연결 대기 중...`
-      playerCard.appendChild(empty)
+      participantsCard.appendChild(empty)
     } else {
       const chips = document.createElement('div')
       chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:7px;padding:6px 0 2px;'
       players.forEach(p => {
         const chip = document.createElement('span')
-        chip.style.cssText = `
-          background: rgba(91,179,198,0.12);
-          border: 1px solid rgba(91,179,198,0.35);
-          border-radius: 20px;
-          padding: 4px 12px;
-          font-size: 0.78rem;
-          color: var(--tl-light);
-          font-weight: 600;
-        `
+        chip.className = 'grimoire-lobby-chip'
         chip.textContent = p.name
         chips.appendChild(chip)
       })
-      playerCard.appendChild(chips)
+      participantsCard.appendChild(chips)
     }
-    this.el.appendChild(playerCard)
+    panel.appendChild(participantsCard)
 
-    // ── 게임 설정 ────────────────────────
-    const configCard = document.createElement('div')
-    configCard.className = 'card'
+    // 3) 액션 버튼 (밤 진행 / 낮 전환 버튼 위치)
+    const btnGrid = document.createElement('div')
+    btnGrid.className = 'btn-grid-2'
 
-    const configTitle = document.createElement('div')
-    configTitle.className = 'card-title'
-    configTitle.textContent = '⚙️ 게임 설정'
-    configCard.appendChild(configTitle)
-
-    const configInfo = document.createElement('div')
-    configInfo.style.cssText = 'font-size:0.78rem;color:var(--text3);margin-bottom:8px;'
-    configInfo.textContent = `인원 ${config.playerCount}인 · 역할 ${config.roleCount}개 선택됨`
-    configCard.appendChild(configInfo)
-
-    const settingsBtn = document.createElement('button')
-    settingsBtn.className = 'btn btn-full'
-    settingsBtn.textContent = '✏️ 인원 · 역할 설정 변경'
-    settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
-    configCard.appendChild(settingsBtn)
-
-    const rulesBtn = document.createElement('button')
-    rulesBtn.className = 'btn btn-full'
-    rulesBtn.style.marginTop = '6px'
-    rulesBtn.textContent = '📜 게임 규칙 보기'
-    rulesBtn.addEventListener('click', () => this._showRulesPopup())
-    configCard.appendChild(rulesBtn)
-
-    this.el.appendChild(configCard)
-
-    // ── 게임 시작 버튼 ───────────────────
     const startBtn = document.createElement('button')
-    startBtn.className = 'btn btn-gold btn-full'
-    startBtn.style.cssText = 'font-size:1rem;padding:15px;margin-top:4px;'
-    startBtn.textContent = count > 0
-      ? `🏰 게임 시작 (${count}명)`
-      : '🏰 게임 시작'
+    startBtn.className = 'btn btn-gold btn-grid-full'
+    startBtn.style.padding = '13px'
+    startBtn.textContent = count > 0 ? `🏰 게임 시작 (${count}명)` : '🏰 게임 시작'
     startBtn.disabled = count === 0
     if (count === 0) startBtn.style.opacity = '0.45'
     startBtn.addEventListener('click', () => this.onStartGame?.())
-    this.el.appendChild(startBtn)
+    btnGrid.appendChild(startBtn)
+
+    const settingsBtn = document.createElement('button')
+    settingsBtn.className = 'btn'
+    settingsBtn.innerHTML = `⚙️ 설정<span style="display:block;font-size:0.58rem;color:var(--text4)">${total}인 · ${config.roleCount}개</span>`
+    settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
+    btnGrid.appendChild(settingsBtn)
+
+    panel.appendChild(btnGrid)
 
     if (count > 0 && count < 5) {
       const hint = document.createElement('div')
-      hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);padding:4px 0 8px;'
-      hint.textContent = `※ 정식 게임은 5명 이상 권장 (${count}명으로도 시작 가능)`
-      this.el.appendChild(hint)
+      hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
+      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${count}명으로도 시작 가능`
+      panel.appendChild(hint)
     }
+
+    // 4) 규칙서 (로그 위치)
+    const rulesCard = document.createElement('div')
+    rulesCard.className = 'card grimoire-lobby-card'
+    rulesCard.innerHTML = `
+      <div class="card-title">📜 규칙서</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-bottom:8px;">
+        게임 진행 방법과 역할 판정 기준을 확인하세요
+      </div>
+    `
+    const rulesBtn2 = document.createElement('button')
+    rulesBtn2.className = 'btn btn-full'
+    rulesBtn2.textContent = '규칙 보기'
+    rulesBtn2.addEventListener('click', () => this._showRulesPopup())
+    rulesCard.appendChild(rulesBtn2)
+    panel.appendChild(rulesCard)
+
+    this.el.appendChild(panel)
   }
 
   // ─────────────────────────────────────
@@ -331,6 +364,57 @@ if (!document.getElementById('grimoire-lobby-style')) {
   const style = document.createElement('style')
   style.id = 'grimoire-lobby-style'
   style.textContent = `
+/* ── Lobby 모드 컨테이너 ── */
+.grimoire--lobby {
+  position: relative;
+}
+
+/* ── Ghost: 실제 인게임 레이아웃 (뒤에 희미하게) ── */
+.grimoire-ghost {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  filter: blur(1.5px);
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ── Lobby 패널: 게임 준비 단계 (위에 덮음) ── */
+.grimoire-lobby-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 매칭 상태 바 */
+.grimoire-lobby-status {
+  background: rgba(11, 10, 24, 0.75);
+  backdrop-filter: blur(6px);
+  border-color: rgba(122, 111, 183, 0.3);
+}
+
+/* 로비 카드 */
+.grimoire-lobby-card {
+  background: rgba(20, 18, 42, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+/* 현재 참가자 칩 */
+.grimoire-lobby-chip {
+  background: rgba(91, 179, 198, 0.12);
+  border: 1px solid rgba(91, 179, 198, 0.35);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  color: var(--tl-light);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 대기 점 */
 .lobby-wait-dot {
   display: inline-block;
   width: 8px; height: 8px;

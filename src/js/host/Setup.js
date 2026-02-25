@@ -86,11 +86,32 @@ export class Setup {
       teamRoles.forEach(role => {
         const row = document.createElement('div')
         row.className = 'setup__role-row' + (this.selectedRoles.has(role.id) ? ' setup__role-row--selected' : '')
-        row.innerHTML = `
-          <span class="setup__role-icon">${role.icon}</span>
-          <span class="setup__role-name">${role.name}</span>
-          <span class="setup__role-check">${this.selectedRoles.has(role.id) ? '✓' : ''}</span>
-        `
+
+        const iconSpan = document.createElement('span')
+        iconSpan.className = 'setup__role-icon'
+        // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+        if (role.icon && role.icon.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${role.icon}`
+          img.alt = role.name
+          img.className = 'setup__role-icon-img'
+          iconSpan.appendChild(img)
+        } else {
+          iconSpan.textContent = role.icon
+        }
+
+        const nameSpan = document.createElement('span')
+        nameSpan.className = 'setup__role-name'
+        nameSpan.textContent = role.name
+
+        const checkSpan = document.createElement('span')
+        checkSpan.className = 'setup__role-check'
+        checkSpan.textContent = this.selectedRoles.has(role.id) ? '✓' : ''
+
+        row.appendChild(iconSpan)
+        row.appendChild(nameSpan)
+        row.appendChild(checkSpan)
+
         row.addEventListener('click', () => {
           if (this.selectedRoles.has(role.id)) {
             this.selectedRoles.delete(role.id)
@@ -222,7 +243,20 @@ if (!document.getElementById('setup-style')) {
 }
 .setup__role-row:hover { background: var(--surface2); }
 .setup__role-row--selected { background: rgba(91,179,198,0.08); border-color: rgba(91,179,198,0.3); }
-.setup__role-icon { font-size: 1.1rem; flex-shrink: 0; }
+.setup__role-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.setup__role-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .setup__role-name { flex: 1; font-size: 0.78rem; color: var(--text2); }
 .setup__role-check { font-size: 0.82rem; color: var(--tl-base); font-weight: 700; min-width: 14px; text-align: right; }
 .setup__hint { text-align: center; font-size: 0.68rem; color: var(--rd-light); padding: 4px; }

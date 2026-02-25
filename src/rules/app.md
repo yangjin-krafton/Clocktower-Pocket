@@ -1,4 +1,4 @@
-# ![](../asset/editions/tb.png) 앱 사용법
+# ![](../asset/demon-head2.png) 앱 사용법
 
 ---
 

@@ -1,7 +1,8 @@
-# ![](../asset/editions/tb.png) Blood on the Clocktower
+![](../asset/demon-head2.png)
+# Blood on the Clocktower
 
 **Trouble Brewing** 에디션 기준 규칙서입니다.
-
+![](../asset/editions/tb.png)
 ---
 
 ## 게임 목표

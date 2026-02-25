@@ -65,13 +65,42 @@ export class Victory {
       const role = ROLES_BY_ID[p.role]
       const row = document.createElement('div')
       row.className = 'victory__role-row'
-      row.innerHTML = `
-        <span class="victory__role-seat">${p.id}</span>
-        <span class="victory__role-icon">${role?.icon || '?'}</span>
-        <span class="victory__role-name">${p.name}</span>
-        <span class="victory__role-role">${role?.name || p.role}</span>
-        <span class="badge ${p.status === 'alive' ? 'badge-alive' : 'badge-dead'}">${p.status === 'alive' ? '생존' : '사망'}</span>
-      `
+
+      const seatSpan = document.createElement('span')
+      seatSpan.className = 'victory__role-seat'
+      seatSpan.textContent = p.id
+
+      const iconSpan = document.createElement('span')
+      iconSpan.className = 'victory__role-icon'
+      // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+      if (role?.icon && role.icon.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/icons/${role.icon}`
+        img.alt = role.name
+        img.className = 'victory__role-icon-img'
+        iconSpan.appendChild(img)
+      } else {
+        iconSpan.textContent = role?.icon || '?'
+      }
+
+      const nameSpan = document.createElement('span')
+      nameSpan.className = 'victory__role-name'
+      nameSpan.textContent = p.name
+
+      const roleSpan = document.createElement('span')
+      roleSpan.className = 'victory__role-role'
+      roleSpan.textContent = role?.name || p.role
+
+      const badge = document.createElement('span')
+      badge.className = `badge ${p.status === 'alive' ? 'badge-alive' : 'badge-dead'}`
+      badge.textContent = p.status === 'alive' ? '생존' : '사망'
+
+      row.appendChild(seatSpan)
+      row.appendChild(iconSpan)
+      row.appendChild(nameSpan)
+      row.appendChild(roleSpan)
+      row.appendChild(badge)
+
       roleList.appendChild(row)
     })
     revealCard.appendChild(roleList)
@@ -140,7 +169,19 @@ if (!document.getElementById('victory-style')) {
   width: 18px; text-align: center;
   color: var(--text4); font-size: 0.65rem;
 }
-.victory__role-icon { font-size: 1rem; }
+.victory__role-icon {
+  font-size: 1rem;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.victory__role-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .victory__role-name { flex: 1; color: var(--text); font-weight: 600; }
 .victory__role-role { color: var(--text3); flex: 1; }
   `

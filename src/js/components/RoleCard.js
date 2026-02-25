@@ -27,7 +27,17 @@ export function renderRoleCard(role, opts = {}) {
 
   const gem = document.createElement('div')
   gem.className = `role-card__gem gem ${gemClass[role.team] || 'gem-town'}`
-  gem.textContent = role.icon || '?'
+
+  // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+  if (role.icon && role.icon.endsWith('.png')) {
+    const img = document.createElement('img')
+    img.src = `./asset/icons/${role.icon}`
+    img.alt = role.name
+    img.className = 'role-card__gem-img'
+    gem.appendChild(img)
+  } else {
+    gem.textContent = role.icon || '?'
+  }
 
   const meta = document.createElement('div')
   meta.className = 'role-card__meta'
@@ -83,6 +93,12 @@ if (!document.getElementById('role-card-style')) {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+.role-card__gem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .role-card__meta {
   flex: 1;

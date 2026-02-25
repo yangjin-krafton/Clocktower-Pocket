@@ -23,13 +23,29 @@ export function renderSelectPanel(data) {
   // 헤더
   const header = document.createElement('div')
   header.className = 'select-panel__header'
-  header.innerHTML = `
-    <span class="select-panel__icon">${roleIcon}</span>
-    <div class="select-panel__title-wrap">
-      <div class="select-panel__title">${title}</div>
-      <div class="select-panel__hint">대상을 선택하세요</div>
-    </div>
+
+  const iconSpan = document.createElement('span')
+  iconSpan.className = 'select-panel__icon'
+  // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+  if (roleIcon && roleIcon.endsWith('.png')) {
+    const img = document.createElement('img')
+    img.src = `./asset/icons/${roleIcon}`
+    img.alt = title
+    img.className = 'select-panel__icon-img'
+    iconSpan.appendChild(img)
+  } else {
+    iconSpan.textContent = roleIcon
+  }
+
+  const titleWrap = document.createElement('div')
+  titleWrap.className = 'select-panel__title-wrap'
+  titleWrap.innerHTML = `
+    <div class="select-panel__title">${title}</div>
+    <div class="select-panel__hint">대상을 선택하세요</div>
   `
+
+  header.appendChild(iconSpan)
+  header.appendChild(titleWrap)
   el.appendChild(header)
 
   // 선택 카운터
@@ -55,11 +71,30 @@ export function renderSelectPanel(data) {
         (isSelected ? ' select-panel__chip--selected' : '') +
         (!canSelect ? ' select-panel__chip--disabled' : '')
 
-      cell.innerHTML = `
-        <div class="select-panel__gem">${role ? role.icon : '?'}</div>
-        <div class="select-panel__chip-name">${p.name}</div>
-        <div class="select-panel__chip-seat">${p.id}번</div>
-      `
+      const gemDiv = document.createElement('div')
+      gemDiv.className = 'select-panel__gem'
+      // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+      if (role?.icon && role.icon.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/icons/${role.icon}`
+        img.alt = role.name
+        img.className = 'select-panel__gem-img'
+        gemDiv.appendChild(img)
+      } else {
+        gemDiv.textContent = role ? role.icon : '?'
+      }
+
+      const nameDiv = document.createElement('div')
+      nameDiv.className = 'select-panel__chip-name'
+      nameDiv.textContent = p.name
+
+      const seatDiv = document.createElement('div')
+      seatDiv.className = 'select-panel__chip-seat'
+      seatDiv.textContent = `${p.id}번`
+
+      cell.appendChild(gemDiv)
+      cell.appendChild(nameDiv)
+      cell.appendChild(seatDiv)
 
       if (canSelect) {
         cell.addEventListener('click', () => {
@@ -149,7 +184,20 @@ if (!document.getElementById('select-panel-style')) {
   gap: 12px;
   flex-shrink: 0;
 }
-.select-panel__icon { font-size: 2.2rem; }
+.select-panel__icon {
+  font-size: 2.2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.select-panel__icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .select-panel__title-wrap { flex: 1; }
 .select-panel__title {
   font-family: 'Noto Serif KR', serif;
@@ -194,7 +242,20 @@ if (!document.getElementById('select-panel-style')) {
   box-shadow: 0 0 12px rgba(212,168,40,0.35);
 }
 .select-panel__chip--disabled { opacity: 0.3; cursor: default; }
-.select-panel__gem { font-size: 1.6rem; line-height: 1; }
+.select-panel__gem {
+  font-size: 1.6rem;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.select-panel__gem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .select-panel__chip-name {
   font-size: 0.72rem;
   color: var(--text);

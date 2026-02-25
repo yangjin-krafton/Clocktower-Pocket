@@ -49,7 +49,7 @@ export class NightAction {
     if (!minions || minions.length === 0) { this._done('minion-info'); return }
     const demonPlayers = this.engine.state.players.filter(p => p.role === 'imp')
     const bluffs = this.engine.getBluffs()
-    const bluffText = bluffs.map(r => `${r.icon} ${r.name}`).join(', ')
+    const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
 
     const minionNames = minions.map(p => `${p.name}(${ROLES_BY_ID[p.role]?.name})`).join(', ')
     const demonName = demonPlayers.map(p => p.name).join(', ') || '?'
@@ -70,7 +70,7 @@ export class NightAction {
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
     const bluffs = this.engine.getBluffs()
-    const bluffText = bluffs.map(r => `${r.icon} ${r.name}`).join(', ')
+    const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
     const minionText = minions.map(p => `${p.name}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
 
     this._unmount = mountInfoPanel({
@@ -87,7 +87,7 @@ export class NightAction {
     if (!spies || spies.length === 0) { this._done('spy'); return }
     const allInfo = this.engine.state.players.map(p => {
       const role = ROLES_BY_ID[p.role]
-      return `${p.id}. ${p.name}: ${role?.icon || '?'} ${role?.name || p.role} (${p.team === 'good' ? '선' : '악'})`
+      return `${p.id}. ${p.name}: ${role?.iconEmoji || role?.icon || '?'} ${role?.name || p.role} (${p.team === 'good' ? '선' : '악'})`
     }).join('\n')
 
     this._unmount = mountInfoPanel({
@@ -121,7 +121,7 @@ export class NightAction {
       else {
         const r = ROLES_BY_ID[info.roleId]
         const p = this.engine.getPlayer(info.playerId)
-        message = `어젯밤 처형: ${p?.name || '?'} → ${r?.icon || ''} ${r?.name || info.roleId}`
+        message = `어젯밤 처형: ${p?.name || '?'} → ${r?.iconEmoji || r?.icon || ''} ${r?.name || info.roleId}`
         if (p) relatedPlayers = [p]
       }
     } else if (roleId === 'washerwoman') {
@@ -129,7 +129,7 @@ export class NightAction {
       if (target) {
         const decoy = this._pickDecoy(target.playerId)
         const r = ROLES_BY_ID[target.roleId]
-        message = `다음 중 한 명이 ${r?.icon || ''} ${r?.name || target.roleId}입니다`
+        message = `다음 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || target.roleId}입니다`
         relatedPlayers = [target.player, decoy].filter(Boolean)
       } else message = '정보 없음'
     } else if (roleId === 'librarian') {
@@ -139,7 +139,7 @@ export class NightAction {
         const target = outsiders[Math.floor(Math.random() * outsiders.length)]
         const decoy = this._pickDecoy(target.id)
         const r = ROLES_BY_ID[target.role]
-        message = `다음 중 한 명이 ${r?.icon || ''} ${r?.name || target.role}입니다`
+        message = `다음 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || target.role}입니다`
         relatedPlayers = [target, decoy].filter(Boolean)
       }
     } else if (roleId === 'investigator') {
@@ -151,7 +151,7 @@ export class NightAction {
         const target = minions[Math.floor(Math.random() * minions.length)]
         const decoy = this._pickDecoy(target.id)
         const r = ROLES_BY_ID[target.role]
-        message = `다음 중 한 명이 ${r?.icon || ''} ${r?.name || target.role}입니다`
+        message = `다음 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || target.role}입니다`
         relatedPlayers = [target, decoy].filter(Boolean)
       }
     } else {

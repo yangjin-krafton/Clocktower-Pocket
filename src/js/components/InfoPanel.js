@@ -22,7 +22,17 @@ export function renderInfoPanel(data) {
   // 역할 아이콘
   const iconEl = document.createElement('div')
   iconEl.className = 'info-panel__icon'
-  iconEl.textContent = roleIcon
+
+  // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+  if (roleIcon && roleIcon.endsWith('.png')) {
+    const img = document.createElement('img')
+    img.src = `./asset/icons/${roleIcon}`
+    img.alt = title
+    img.className = 'info-panel__icon-img'
+    iconEl.appendChild(img)
+  } else {
+    iconEl.textContent = roleIcon
+  }
 
   // 제목
   const titleEl = document.createElement('div')
@@ -113,6 +123,17 @@ if (!document.getElementById('info-panel-style')) {
 .info-panel__icon {
   font-size: 3.5rem;
   line-height: 1;
+  filter: drop-shadow(0 0 16px rgba(212,168,40,0.5));
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.info-panel__icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   filter: drop-shadow(0 0 16px rgba(212,168,40,0.5));
 }
 .info-panel__title {

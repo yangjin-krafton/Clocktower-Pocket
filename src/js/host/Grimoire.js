@@ -316,15 +316,31 @@ export class Grimoire {
     const box = document.createElement('div')
     box.className = 'popup-box'
 
-    box.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <span style="font-size:1.8rem">${role?.icon || '?'}</span>
-        <div>
-          <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--text)">${player.name} (${player.id}번)</div>
-          <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role}</div>
-        </div>
-      </div>
+    const headerDiv = document.createElement('div')
+    headerDiv.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;'
+
+    const iconSpan = document.createElement('span')
+    iconSpan.style.fontSize = '1.8rem'
+    // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+    if (role?.icon && role.icon.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/icons/${role.icon}`
+      img.alt = role.name
+      img.style.cssText = 'width:50px;height:50px;object-fit:contain;'
+      iconSpan.appendChild(img)
+    } else {
+      iconSpan.textContent = role?.icon || '?'
+    }
+
+    const infoDiv = document.createElement('div')
+    infoDiv.innerHTML = `
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--text)">${player.name} (${player.id}번)</div>
+      <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role}</div>
     `
+
+    headerDiv.appendChild(iconSpan)
+    headerDiv.appendChild(infoDiv)
+    box.appendChild(headerDiv)
 
     const btns = [
       { label: '💀 사망 처리', action: () => { this.engine.killPlayer(player.id, 'manual'); this.refresh(); overlay.remove() } },

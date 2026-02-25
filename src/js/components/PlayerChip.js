@@ -39,7 +39,17 @@ export function renderPlayerChip(player, opts = {}) {
     gemEl.style.height = '44px'
     gemEl.style.fontSize = '1.2rem'
   }
-  gemEl.textContent = roleIcon || '?'
+
+  // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+  if (roleIcon && roleIcon.endsWith('.png')) {
+    const img = document.createElement('img')
+    img.src = `./asset/icons/${roleIcon}`
+    img.alt = player.name
+    img.className = 'player-chip__gem-img'
+    gemEl.appendChild(img)
+  } else {
+    gemEl.textContent = roleIcon || '?'
+  }
 
   // 독 뱃지
   if (player.isPoisoned) {
@@ -131,6 +141,12 @@ if (!document.getElementById('player-chip-style')) {
   flex-shrink: 0;
   transition: box-shadow 0.2s, border-color 0.2s;
   line-height: 1;
+  overflow: hidden;
+}
+.player-chip__gem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .player-chip__badge {
   position: absolute;

@@ -37,13 +37,43 @@ export function renderNightOrderList(data, onStepClick = null) {
       (isCurrent ? ' night-order__item--current' : '') +
       (isDone ? ' night-order__item--done' : '')
 
-    item.innerHTML = `
-      <span class="night-order__num">${idx + 1}</span>
-      <span class="night-order__icon">${icon}</span>
-      <span class="night-order__name">${name}</span>
-      ${isDone ? '<span class="night-order__check">✓</span>' : ''}
-      ${isCurrent ? '<span class="night-order__cur-dot"></span>' : ''}
-    `
+    const numSpan = document.createElement('span')
+    numSpan.className = 'night-order__num'
+    numSpan.textContent = idx + 1
+
+    const iconSpan = document.createElement('span')
+    iconSpan.className = 'night-order__icon'
+    // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+    if (icon && icon.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/icons/${icon}`
+      img.alt = name
+      img.className = 'night-order__icon-img'
+      iconSpan.appendChild(img)
+    } else {
+      iconSpan.textContent = icon
+    }
+
+    const nameSpan = document.createElement('span')
+    nameSpan.className = 'night-order__name'
+    nameSpan.textContent = name
+
+    item.appendChild(numSpan)
+    item.appendChild(iconSpan)
+    item.appendChild(nameSpan)
+
+    if (isDone) {
+      const check = document.createElement('span')
+      check.className = 'night-order__check'
+      check.textContent = '✓'
+      item.appendChild(check)
+    }
+
+    if (isCurrent) {
+      const dot = document.createElement('span')
+      dot.className = 'night-order__cur-dot'
+      item.appendChild(dot)
+    }
 
     if (onStepClick) {
       item.style.cursor = 'pointer'
@@ -85,7 +115,19 @@ if (!document.getElementById('night-order-style')) {
   min-width: 14px;
   text-align: center;
 }
-.night-order__icon { font-size: 0.9rem; }
+.night-order__icon {
+  font-size: 0.9rem;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.night-order__icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .night-order__name {
   flex: 1;
   font-size: 0.75rem;

@@ -1,464 +1,772 @@
-# Clocktower Pocket — UI/UX 모듈 설계서
+# Clocktower Pocket — UI/UX 설계서 v3
 
 기준 스크립트: **Trouble Brewing**
-기술 스택: Vanilla JS + Trystero P2P (기존 `src/js/p2p.js` 활용)
+기술 스택: Vanilla JS · Trystero (WebRTC P2P) · localStorage
+배포 방식: **정적 웹앱** (서버 불필요, 오프라인 완전 동작)
 
 ---
 
-## 설계 원칙
+## 앱 철학
 
-> 컴포넌트는 **데이터만 받아서 렌더링**한다.
-> 화면(Screen)은 **컴포넌트를 조립**한 것이다.
-> 같은 컴포넌트가 호스트/참가자 앱 양쪽에서 재사용된다.
+> **Clocktower Pocket은 Blood on the Clocktower 보드게임의 물리적 보조 도구다.**
+>
+> 서버·계정·인터넷 없이도 완전히 동작한다.
+> P2P는 편의 기능(자동 알림·역할 배분)이지, 필수 조건이 아니다.
+> 핸드폰만 있으면 물리 게임을 더 쉽고 정확하게 진행할 수 있다.
+
+### 두 가지 사용 모드
+
+| 모드 | 역할 | 핵심 기능 |
+|------|------|-----------|
+| **호스트 (스토리텔러)** | 게임 진행·관리 | 그리모어 상태판, 밤 순서 진행, 투표 집계 |
+| **참가자 (플레이어)** | 게임 참여 | 내 역할 확인, 상황별 규칙 가이드, 메모 |
+
+### P2P 연결 없이도 동작하는 기능
+
+- 호스트: 그리모어 단독 운용 (참가자 P2P 없이 완전한 게임 관리)
+- 참가자: 역할 카드·규칙 가이드·메모·캐릭터 사전 (방 참가 없이도 열람)
+
+---
+
+## 1. 로컬 캐시 모델 (localStorage)
 
 ```
-데이터 모델 → 컴포넌트(Module) → 화면(Screen)
+ctp_user      — 유저 프로필
+ctp_rooms     — 최근 방 목록 (최대 5개)
+ctp_history   — 게임 기록 (최대 20개)
+```
+
+### UserProfile `ctp_user`
+```js
+{
+  id:        string,   // nanoid (기기 고유 식별자)
+  name:      string,   // 닉네임 (최대 12자)
+  emoji:     string,   // 대표 이모지 (예: "🦇")
+  createdAt: number,
+  updatedAt: number
+}
+```
+
+### RecentRooms `ctp_rooms`
+```js
+[{ code, role: 'host'|'player', playerNames: string[], playedAt }]
+```
+
+### GameHistory `ctp_history`
+```js
+[{
+  id, roomCode, role: 'host'|'player',
+  myRole: string|null,   // 참가자만
+  winner: 'good'|'evil'|null,
+  players: string[], rounds: number, playedAt
+}]
 ```
 
 ---
 
-## 1. 데이터 모델
-
-화면을 조립하기 전에 흐르는 데이터 구조.
+## 2. 게임 데이터 모델
 
 ### Player
 ```js
 {
-  id: number,          // 좌석 번호 (1~N)
-  peerId: string,      // Trystero 피어 ID
-  name: string,        // 닉네임
-  role: string,        // 역할 ID (예: "imp", "washerwoman")
-  team: 'good'|'evil', // 실제 정렬
-  status: 'alive'|'dead'|'executed',
-  isPoisoned: boolean,
-  isDrunk: boolean,
+  id:           number,              // 좌석 번호 (1~N)
+  peerId:       string|null,         // P2P 연결 시에만
+  name:         string,
+  emoji:        string,
+  role:         string,              // role ID
+  team:         'good'|'evil',
+  status:       'alive'|'dead'|'executed',
+  isPoisoned:   boolean,
+  isDrunk:      boolean,
   deadVoteUsed: boolean,
-  // 호스트만 알고 있는 필드 (참가자에게 비공개)
-  registeredAs: string|null  // Spy/Recluse 등록 왜곡용
+  registeredAs: string|null          // 호스트 전용 (Spy/Recluse 왜곡)
 }
 ```
 
 ### Role
 ```js
 {
-  id: string,
-  name: string,
-  team: 'townsfolk'|'outsider'|'minion'|'demon',
-  ability: string,     // 능력 설명 텍스트
-  firstNight: boolean, // 첫밤 행동 여부
-  otherNights: boolean // 이후 밤 행동 여부
+  id:          string,
+  name:        string,
+  team:        'townsfolk'|'outsider'|'minion'|'demon',
+  ability:     string,               // 능력 요약 (1줄)
+  abilityFull: string,               // 능력 상세
+  firstNight:  boolean,
+  otherNights: boolean,
+  // 규칙 가이드 데이터 (참가자용)
+  guide: {
+    whatYouKnow:   string,   // 게임 시작 시 아는 것
+    whatYouDo:     string,   // 밤에 하는 행동
+    tips:          string[], // 이 역할 플레이 팁
+    doNotReveal:   boolean,  // 공개하면 안 되는 역할 여부
+    interactsWith: string[], // 상호작용 있는 역할 ID 목록
+  }
 }
 ```
 
 ### GameState
 ```js
 {
-  phase: 'lobby'|'day'|'night',
-  round: number,          // 1부터 시작
-  players: Player[],
-  nominations: [          // 당일 지목 목록
-    { nominatorId, targetId, votes: number }
-  ],
-  executedToday: number|null,   // 오늘 처형된 player.id
-  nightOrder: string[],         // 남은 밤 순서 (role id 배열)
-  currentNightStep: string|null // 현재 처리 중인 role id
-}
-```
-
-### NightAction (호스트 내부)
-```js
-{
-  round: number,
-  roleId: string,
-  actorId: number,     // 행동한 player.id
-  targetIds: number[], // 선택한 대상들
-  infoSent: any        // 전달한 정보 스냅샷
+  phase:            'lobby'|'day'|'night',
+  round:            number,
+  players:          Player[],
+  nominations:      [{ nominatorId, targetId, votes: number }],
+  executedToday:    number|null,
+  nightOrder:       string[],
+  currentNightStep: string|null
 }
 ```
 
 ---
 
-## 2. 공통 컴포넌트 (재사용 모듈)
+## 3. 규칙 가이드 시스템 (핵심 설계)
 
-> 각 컴포넌트는 `render(data) → HTMLElement` 함수 형태로 구현.
+> 참가자가 가장 많이 쓰는 기능.
+> **"지금 내가 알아야 할 것"만 골라서 보여준다.**
+
+### 표시 계층 구조
+
+```
+전체 규칙 (언제나 열람 가능)
+└── 팀 규칙 (내 팀 기준)
+    └── 역할 규칙 (내 역할 기준)
+        └── 현재 페이즈 가이드 (밤/낮 상황별)
+```
+
+### 규칙 가이드 콘텐츠 정의
+
+#### Tier 1 — 역할 카드 (role card)
+- 역할 이름 + 팀 색상
+- 능력 1줄 요약
+- **"내가 아는 것"**: 게임 시작 시 알려준 정보 설명
+  - 예) Empath: "당신의 양쪽 이웃 중 악 진영이 몇 명인지 알고 있습니다"
+  - 예) Imp: "당신의 미니언이 누구인지 알고 있습니다"
+
+#### Tier 2 — 행동 가이드 (action guide)
+- **밤 행동**: "오늘 밤 당신이 할 일"
+  - 첫째 밤 여부 / 매 밤 여부
+  - 행동 순서 (밤 순서에서 몇 번째)
+  - 구체적 행동 설명
+- **낮 행동**: 특수 능력 사용 조건 (Slayer, Virgin 등)
+
+#### Tier 3 — 팀 가이드 (team guide)
+- **선 팀 (good)**: "악마를 찾아 처형하세요"
+  - 투표 방법, 지목 규칙
+  - 죽은 뒤에도 투표권 1회 유지
+- **악 팀 (evil)**: "생존자가 2~3명이 될 때까지 버티세요"
+  - 미니언 → 악마 이름 알고 있음
+  - 공개 발언에서 거짓말 가능
+  - 선 팀인 척 행동 팁
+
+#### Tier 4 — 전체 규칙 (full rules)
+- 게임 흐름 전체 설명
+- 밤 순서 원리
+- 투표·처형 규칙
+- 특수 상황 (동점, 성직자 처형 등)
+- 스토리텔러 판정 규칙
+
+### 선택적 표시 로직
+
+```
+참가자가 가이드 탭을 열면:
+  1. 역할 배정 전 → Tier 4만 (전체 규칙)
+  2. 역할 배정 후, 게임 전 → Tier 1 + Tier 3 + Tier 4
+  3. 게임 중 (낮) → Tier 1 + Tier 2(낮 행동) + Tier 3 + Tier 4
+  4. 게임 중 (밤, 내 역할 행동 없음) → Tier 1 + 대기 메시지 + Tier 4
+  5. 게임 중 (밤, 내 역할 행동 있음) → Tier 2(밤 행동) 강조 + 나머지
+```
+
+### 악 팀 정보 격리 원칙
+
+- 악 팀 플레이어에게만 팀원 목록 표시 (P2P로 수신 또는 호스트가 직접 보여줌)
+- 가이드에서 "Imp는 미니언이 누구인지 압니다" → 내가 Imp이면 실제 이름 표시, 다른 역할이면 설명만
+- 전체 규칙(Tier 4)은 팀 무관 동일하게 표시
+
+---
+
+## 4. 공통 컴포넌트
 
 ### C-01 `PlayerChip`
-플레이어 1명을 나타내는 가장 작은 단위.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `player.id` | 좌석 번호 |
-| `player.name` | 닉네임 |
-| `player.status` | alive → 일반 / dead → 흐림+취소선 / executed → 빨간 테두리 |
-| `player.isPoisoned` | 독 아이콘 |
-| `selectable: boolean` | 선택 가능 여부 (탭 가능한 상태) |
-| `selected: boolean` | 선택됨 강조 |
-
-재사용 위치: Grimoire, SelectPanel, PlayerTracker, EmojiPanel 전부
-
----
+`name` `emoji` `status` `isPoisoned` `selectable` `selected`
+재사용: Grimoire · SelectPanel · PlayerTracker · EmojiPanel
 
 ### C-02 `RoleCard`
-역할 1개의 정보 카드.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `role.name` | 역할 이름 |
-| `role.team` | 팀 색상 (townsfolk=파랑, outsider=청록, minion=주황, demon=빨강) |
-| `role.ability` | 능력 설명 |
-| `compact: boolean` | true면 이름+팀만, false면 능력 설명 포함 |
-
-재사용 위치: 참가자 역할 카드 화면, 캐릭터 사전, 호스트 야간 행동 패널
-
----
+`role` `compact: boolean`
+compact=false 시 `abilityFull` + `guide.whatYouKnow` 포함
 
 ### C-03 `PlayerGrid`
-PlayerChip 목록을 그리드로 배치.
-
-| 입력 데이터 | 동작 |
-|------------|------|
-| `players[]` | 좌석 순서대로 렌더링 |
-| `selectable: boolean` | 선택 모드 활성화 |
-| `maxSelect: number` | 최대 선택 수 (1 or 2) |
-| `onSelect: fn(ids[])` | 선택 완료 콜백 |
-
-재사용 위치: 호스트 Grimoire, 호스트 SelectPanel, 참가자 PlayerTracker
-
----
+`players[]` `selectable` `maxSelect` `onSelect`
 
 ### C-04 `PhaseHeader`
-현재 게임 페이즈 표시 띠.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `phase` | Day / Night 아이콘 + 텍스트 |
-| `round` | N일째 / N번째 밤 |
-| `aliveCount` | 생존자 수 |
-
-재사용 위치: 호스트 모든 화면 상단, 참가자 PlayerTracker 상단
-
----
+`phase` `round` `aliveCount`
 
 ### C-05 `InfoPanel` (호스트 전용)
-밤에 참가자에게 화면을 돌려서 보여주는 전체화면 패널.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `title` | 역할 이름 (예: "Empath") |
-| `message` | 전달 정보 텍스트 (예: "이웃 중 악 1명") |
-| `players[]` | 관련 플레이어 PlayerChip 표시 (Washerwoman 등) |
-| `onConfirm: fn()` | 확인 버튼 → 호스트 복귀 |
-
-> 큰 글씨, 어두운 배경. 참가자가 읽기 쉽게. 확인 누르면 호스트 화면으로 복귀.
-
----
+전체화면. `title` `message` `players[]` `onConfirm`
 
 ### C-06 `SelectPanel` (호스트 전용)
-밤에 참가자가 호스트 화면에서 대상을 직접 탭하는 패널.
-
-| 입력 데이터 | 동작 |
-|------------|------|
-| `title` | 역할 이름 + "대상을 선택하세요" |
-| `players[]` | 선택 가능한 PlayerGrid |
-| `maxSelect` | 최대 선택 수 |
-| `onConfirm: fn(ids[])` | 선택 완료 콜백 → 호스트 내부 기록 |
-
----
+전체화면. `title` `players[]` `maxSelect` `onConfirm`
 
 ### C-07 `VoteBar`
-현재 지목자의 투표 집계 시각화.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `targetName` | 지목된 플레이어 이름 |
-| `votes` | 현재 투표 수 |
-| `threshold` | 처형 문턱값 (생존자 과반) |
-| `isLeading` | 현재 최다 득표 여부 |
-
----
+`targetName` `votes` `threshold` `isLeading`
 
 ### C-08 `EmojiPicker` (참가자 전용)
-특정 참가자에게 이모지 시그널 전송.
+`players[]` `emojis[]` `onSend`
 
-| 입력 데이터 | 동작 |
-|------------|------|
-| `players[]` | 수신 대상 선택 목록 (전체 포함) |
-| `emojis[]` | 보낼 수 있는 이모지 목록 |
-| `onSend: fn(targetId, emoji)` | 전송 콜백 → p2p `EMOJI` 메시지 |
-
----
-
-### C-09 `EmojiPopup` (참가자 전용)
-이모지 수신 시 화면에 잠깐 표시되는 팝업.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `fromName` | 보낸 사람 이름 |
-| `emoji` | 이모지 문자 |
-| `duration` | 표시 시간 (기본 3초) |
-
----
+### C-09 `EmojiPopup`
+`fromName` `emoji` — 3초 팝업
 
 ### C-10 `NightOrderList` (호스트 전용)
-남은 밤 순서를 리스트로 표시.
-
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `nightOrder[]` | 전체 순서 |
-| `currentStep` | 현재 처리 중 (강조) |
-| `done[]` | 완료된 역할 (흐림 처리) |
-
----
+`nightOrder[]` `currentStep` `done[]`
 
 ### C-11 `LogEntry` (호스트 전용)
-판정 로그 1줄.
+`round` `phase` `event` `timestamp`
 
-| 입력 데이터 | 표시 내용 |
-|------------|----------|
-| `round` | 라운드 |
-| `phase` | day/night |
-| `event` | 이벤트 설명 텍스트 |
-| `timestamp` | 시각 |
+### C-12 `EmojiSelector`
+`options: string[]` `selected` `onSelect` — 프로필 이모지 팔레트
+
+### C-13 `RecentRoomList`
+`rooms[]` `onSelect` — 최근 방 빠른 입장
+
+### C-14 `RuleSection` (신규 — 규칙 가이드용)
+규칙 가이드 1개 섹션 블록.
+
+| 입력 | 표시 |
+|------|------|
+| `tier: 1~4` | 색상 레벨 구분 |
+| `title` | 섹션 제목 |
+| `content: string \| string[]` | 본문 텍스트 또는 bullet |
+| `highlight: boolean` | 지금 당장 해야 하는 행동 여부 강조 |
+| `badge: string` | "지금 행동" / "낮에만" 등 상태 배지 |
+
+### C-15 `GuideNav` (신규 — 규칙 가이드용)
+가이드 내 탭 네비게이션.
+
+| 탭 | 내용 |
+|----|------|
+| 내 역할 | Tier 1 역할 카드 상세 |
+| 행동 | Tier 2 현재 페이즈 행동 가이드 |
+| 팀 | Tier 3 팀 목표 + 팀원(악팀) |
+| 전체 규칙 | Tier 4 게임 전체 규칙 |
 
 ---
 
-## 3. 호스트 화면 목록
+## 5. 화면 목록
 
-### H-01 Setup (게임 설정)
-**조립**: 입력 폼
-**기능**: 스크립트 선택(현재 TB 고정), 인원 수 설정, 방 생성 버튼
-**전환**: 완료 → H-02
+### ── 공통 진입 ──
 
----
-
-### H-02 Lobby (대기실)
-**조립**: `RoomCodeDisplay` + `PlayerGrid(selectable=false)` + 시작 버튼
-**기능**: 방 코드 표시, 참가자 연결 확인, 인원 충족 시 시작 가능
-**전환**: 시작 버튼 → H-03
-
----
-
-### H-03 Grimoire (메인 상태판)
-**조립**: `PhaseHeader` + `PlayerGrid` + 액션 버튼 그룹 + `NightOrderList`(밤만) + `LogEntry` 목록
-**기능**: 전체 플레이어 상태 한눈에 확인, 페이즈 전환, 상태 수동 수정
-**전환**: 밤 시작 → H-04 / 낮 시작 → H-06
+#### S-00 Profile Setup (최초 1회)
+`ctp_user` 없을 때 자동 진입.
 
 ```
 ┌─────────────────────────────┐
-│  PhaseHeader (Night 2)      │
-├─────────────────────────────┤
-│  NightOrderList             │
-│  ✓ Poisoner  ← current Monk │
-│  □ Imp  □ Empath ...        │
-├─────────────────────────────┤
-│  PlayerGrid                 │
-│  [1 Alice ●] [2 Bob ○] ...  │
-├─────────────────────────────┤
-│  [다음 역할] [낮으로]        │
+│  🏰  Clocktower Pocket      │
+│  처음 오셨군요!              │
+│                             │
+│  대표 이모지를 고르세요      │
+│  🦇 🐍 🌙 🔮 🗡️ 🩸 🌹 🕯️   │
+│  🦉 🐉 🧙 👁️ ⚔️ 🌑 🌿 🎭   │
+│                             │
+│  선택됨: [ 🦇 ]             │
+│                             │
+│  닉네임 ________________    │
+│           (최대 12자)       │
+│                             │
+│       [ 시작하기 ]          │
 └─────────────────────────────┘
 ```
 
 ---
 
-### H-04 Night Action (밤 역할 처리)
-한 역할씩 순서대로 처리. 아래 두 패널 중 해당 역할에 맞게 조립.
-
-#### H-04a 정보 전달 역할 (Empath, FT, Undertaker 등)
-**조립**: `InfoPanel` (전체화면)
-**기능**: 계산된 정보 텍스트 + 관련 PlayerChip 표시 → 참가자에게 화면 돌려 보여줌
-**전환**: 확인 → H-03 (다음 순서로)
-
-#### H-04b 선택 역할 (Poisoner, Monk, Imp 등)
-**조립**: `SelectPanel` (전체화면)
-**기능**: 참가자가 대상 탭 → 확인 → 호스트 내부 기록
-**전환**: 확인 → H-03 (다음 순서로)
-
----
-
-### H-05 Night Result (밤 결과 처리) — 내부 처리
-**화면 없음.** Grimoire에서 자동 계산.
-- Monk vs Imp 충돌 판정
-- 사망자 확정
-- Scarlet Woman 승계 체크
-- 로그 기록
-
----
-
-### H-06 Day Flow (낮 진행)
-**조립**: `PhaseHeader` + `PlayerGrid` + `VoteBar` + 처형 확정 버튼
-**기능**: 지목 등록(이름 탭), 투표 수 입력, 처형 처리, 특수 능력 트리거(Virgin·Slayer·Saint)
-**전환**: 밤으로 → H-04 / 승리 조건 충족 → H-07
-
+#### S-01 Landing (홈)
 ```
 ┌─────────────────────────────┐
-│  PhaseHeader (Day 2)        │
+│  🦇 Alice                ✎  │  ← 내 프로필 (탭 → 프로필 편집)
 ├─────────────────────────────┤
-│  PlayerGrid (지목 탭 가능)  │
+│  ┌──────────┐ ┌──────────┐  │
+│  │  👑      │ │  🎮      │  │
+│  │스토리텔러│ │ 참가자   │  │
+│  │ 방 만들기│ │방 코드로 │  │
+│  └──────────┘ └──────────┘  │
 ├─────────────────────────────┤
-│  VoteBar                    │
-│  Bob: 4표 / 필요 5표        │
+│  📖 규칙 보기               │  ← 로그인·방 참가 없이 규칙 열람
 ├─────────────────────────────┤
-│  [처형 확정] [다음 밤]       │
+│  최근 방                    │
+│  ABC123  host   2일 전      │
+│  XYZ789  player 어제        │
 └─────────────────────────────┘
 ```
 
----
-
-### H-07 Victory (게임 종료)
-**조립**: 결과 배너 + `PlayerGrid(전체 역할 공개)`
-**기능**: 선/악 승리 선언, 전체 역할 공개, 로그 요약
-**전환**: 새 게임 → H-01
+> "📖 규칙 보기"는 역할 미배정 상태로 Tier 4 전체 규칙 열람.
+> 방 참가 없이도 게임 규칙 예습 가능.
 
 ---
 
-## 4. 참가자 화면 목록
+### ── 호스트 화면 ──
 
-### P-01 Join (방 참가)
-**조립**: 닉네임 입력 + 방 코드 입력 + 참가 버튼
-**기능**: URL 파라미터 `?code=` 자동 감지 (기존 구현 유지)
-**전환**: 참가 완료 → P-02
+#### H-01 Setup (게임 설정)
 
----
+```
+┌─────────────────────────────┐
+│  게임 설정                  │
+│                             │
+│  인원 수   [ 5 ─────── 15 ] │
+│  현재: 8명                  │
+│                             │
+│  역할 구성 (자동 추천)       │
+│  Townsfolk  ████░  5명      │
+│  Outsider   ██░░░  1명      │
+│  Minion     ██░░░  2명      │
+│  Demon      █░░░░  1명      │
+│                             │
+│  [ 역할 수동 편집 ]          │
+│                             │
+│       [ 방 만들기 ]         │
+└─────────────────────────────┘
+```
 
-### P-02 Waiting (대기)
-**조립**: 방 코드 표시 + 연결 상태 배지 + 참가자 수
-**기능**: 호스트가 게임 시작할 때까지 대기
-**전환**: `PHASE_CHANGE` 수신 → P-03
-
----
-
-### P-03 Role Card (내 역할 카드)
-**조립**: `RoleCard(compact=false)` + 탭 네비게이션
-**기능**: 본인 역할 이름·팀·능력 상시 확인. 낮 동안 탭으로 언제든 열람.
-**탭 이동**: PlayerTracker / Memo / RoleCard / 캐릭터사전
-
----
-
-### P-04 Player Tracker (플레이어 추적)
-**조립**: `PhaseHeader` + `PlayerGrid` + 플레이어별 주석 입력
 **기능**:
-- 각 플레이어 칩 탭 → 상세 편집 열림
-- 주장 역할 기록 (예: "자신이 Fortune Teller라고 함")
-- 의심 기록 (예: "Imp 의심")
-- 생존/사망 상태 표기 (참고용. 정본은 호스트)
+- 인원 수에 따른 역할 구성 자동 추천 (TB 공식 비율)
+- 역할 수동 편집: 역할 카드 목록에서 체크로 선택
+- P2P 없이도 완전 동작 (오프라인 단독 진행 가능)
+
+---
+
+#### H-02 Lobby (대기실)
 
 ```
 ┌─────────────────────────────┐
-│  PhaseHeader (Day 2)  생존7 │
+│  방 코드                    │
+│  ┌────────────────────┐     │
+│  │   A B C - 1 2 3   │     │
+│  └────────────────────┘     │
+│  [ 복사 ]  [ QR ]  [ 공유 ] │
+│                             │
+│  참가자 (3 / 8)             │
+│  🦇 Alice   ✓               │
+│  🌙 Bob     ✓               │
+│  🔮 Carol   ✓               │
+│  · · · · · (5명 대기 중)    │
+│                             │
+│  [ 게임 시작 ] ← 8명 필요   │
+└─────────────────────────────┘
+```
+
+**호스트 단독 모드**: 참가자 없이도 "오프라인 시작" 버튼으로 진행.
+→ 각 플레이어 이름만 입력, 역할은 호스트가 직접 알림.
+
+---
+
+#### H-03 Grimoire (메인 상태판)
+
+```
+┌─────────────────────────────┐
+│  🌙 Night 2    생존 6명     │
 ├─────────────────────────────┤
-│  [1 Alice ●] 주장: FT       │
-│  [2 Bob ○]   의심: Imp ★    │
-│  [3 Carol ●] 메모 없음      │
+│  밤 순서                    │
+│  ✓ Poisoner  ★ Monk  □ Imp │
+├─────────────────────────────┤
+│  [🦇Alice●] [🌙Bob ○] ...  │  ← 탭 → 플레이어 상세
+│  [🔮Carol●] [🗡️Dave●] ...  │
+├─────────────────────────────┤
+│  [다음 역할▶]  [낮으로 ☀️]  │
+└─────────────────────────────┘
+```
+
+**플레이어 탭 → 상세 팝업**:
+- 상태 변경: alive / dead / executed
+- isPoisoned / isDrunk 토글
+- 역할 확인 (호스트만)
+
+---
+
+#### H-04 Night Action
+
+**H-04a 정보 전달** (Empath·FT·Undertaker 등)
+→ `InfoPanel` 전체화면. 계산된 정보 + 관련 플레이어 칩.
+→ 화면을 해당 참가자에게 직접 보여줌.
+
+**H-04b 대상 선택** (Poisoner·Monk·Imp 등)
+→ `SelectPanel` 전체화면. 참가자가 직접 대상 탭.
+
+---
+
+#### H-05 Night Result — 화면 없음
+Grimoire 내부 자동 계산 (Monk vs Imp 충돌·사망·로그).
+
+---
+
+#### H-06 Day Flow (낮 진행)
+
+```
+┌─────────────────────────────┐
+│  ☀️ Day 2      생존 6명     │
+├─────────────────────────────┤
+│  [🦇Alice●] [🌙Bob ○] ...  │  ← 탭 → 지목 등록
+├─────────────────────────────┤
+│  지목: Bob                  │
+│  VoteBar: 3표 / 필요 4표    │
+│  [+1] [-1]  [처형 확정]     │
+├─────────────────────────────┤
+│  특수 능력                  │
+│  [Slayer] [Virgin] [Saint]  │
+├─────────────────────────────┤
+│  [다음 밤 🌙]               │
+└─────────────────────────────┘
+```
+
+---
+
+#### H-07 Victory
+
+```
+┌─────────────────────────────┐
+│  🏆 선 팀 승리!             │
+│  악마 처형으로 게임 종료    │
+│                             │
+│  전체 역할 공개             │
+│  🦇Alice — Empath (선)      │
+│  🌙Bob   — Imp    (악) 💀   │
 │  ...                        │
+│                             │
+│  [새 게임]  [홈으로]        │
+└─────────────────────────────┘
+```
+
+결과 → `ctp_history` 저장.
+
+---
+
+#### H-08 Storyteller Guide (신규 — 호스트 전용 가이드)
+호스트 탭 바 고정 메뉴.
+
+| 섹션 | 내용 |
+|------|------|
+| 밤 순서 | 각 역할 처리 방법 + 예외 상황 |
+| 역할별 판정 | 역할마다 어떻게 정보 계산하는지 |
+| 특수 상황 | 처형 동점, Scarlet Woman 승계, Butler 투표 등 |
+| 승리 조건 | Good·Evil 승리 조건 상세 |
+
+---
+
+### ── 참가자 화면 ──
+
+#### P-01 Join (방 참가)
+
+```
+┌─────────────────────────────┐
+│  🦇 Alice 로 참가합니다     │  ← 프로필 자동 사용
+│                             │
+│  방 코드                    │
+│  [ A B C 1 2 3 ]            │
+│                             │
+│  [   🚪 참가하기   ]        │
+│                             │
+│  ──── 또는 ────             │
+│  [ 📖 규칙만 보기 ]         │  ← 방 없이 가이드 열람
 └─────────────────────────────┘
 ```
 
 ---
 
-### P-05 Emoji Panel (이모지 시그널)
-**조립**: `PlayerGrid(수신 대상 선택)` + `EmojiPicker`
-**기능**:
-1. 수신 대상 선택 (특정 1명 or 전체)
-2. 이모지 탭 → p2p `EMOJI` 전송
-3. 수신 시 `EmojiPopup` 3초 표시
+#### P-02 Waiting (대기)
 
----
-
-### P-06 Memo (메모장)
-**조립**: 자유 텍스트 입력 영역
-**기능**: 개인 추리 메모. 로컬 저장(localStorage). P2P 전송 없음.
-
----
-
-### P-07 Character Dict (캐릭터 사전)
-**조립**: `RoleCard(compact=false)` 목록
-**기능**: 이번 스크립트 전체 역할 설명 참고. 정적 데이터.
-
----
-
-## 5. 화면 전환 흐름
-
-### 호스트 흐름
 ```
-H-01 Setup
-  → H-02 Lobby (방 생성)
-    → H-03 Grimoire (게임 시작)
-      → H-04 Night Action (밤 시작할 때마다)
-        → H-03 Grimoire (각 역할 처리 완료)
-      → H-06 Day Flow (낮 시작할 때마다)
-        → H-03 Grimoire (낮 종료)
-      → H-07 Victory (승리 조건 충족)
-```
-
-### 참가자 흐름
-```
-P-01 Join
-  → P-02 Waiting
-    → P-03 Role Card (게임 시작 수신)
-      ↔ P-04 Player Tracker (탭 이동)
-      ↔ P-05 Emoji Panel    (탭 이동)
-      ↔ P-06 Memo           (탭 이동)
-      ↔ P-07 Character Dict (탭 이동)
-    → (게임 종료 수신) 역할 공개 화면
+┌─────────────────────────────┐
+│  ABC123 방에 접속됨 ✓       │
+│                             │
+│  스토리텔러가 게임을        │
+│  시작할 때까지 기다리세요   │
+│                             │
+│  참가자 4명 연결됨          │
+│                             │
+│  [ 📖 규칙 미리 보기 ]      │  ← 대기 중 가이드 열람
+└─────────────────────────────┘
 ```
 
 ---
 
-## 6. P2P 메시지 타입 정의
+#### P-03 ~ P-07 게임 중 탭 화면
 
-기존 `p2p.js` `messageTypeMap`에 추가할 타입.
+탭 바 구성:
 
-| 논리 타입 | 단축 (12B↓) | 방향 | 페이로드 |
-|-----------|-------------|------|----------|
-| `GAME_START` | `GAME_ST` | Host→All | `{ players[], script }` |
-| `PHASE_CHANGE` | `PHASE` | Host→All | `{ phase, round }` |
-| `ROLE_ASSIGN` | `ROLE_ASSIGN` | Host→1 | `{ role, team }` |
-| `NIGHT_INFO` | `NIGHT_INFO` | Host→1 | `{ title, message, players[] }` |
-| `PLAYER_DIED` | `DIED` | Host→All | `{ playerId, cause }` |
-| `VOTE_UPDATE` | `VOTE_UPD` | Host→All | `{ targetId, votes, threshold }` |
-| `GAME_END` | `GAME_END` | Host→All | `{ winner, roles[] }` |
-| `EMOJI` | `EMOJI` | Player→Player | `{ fromId, emoji }` |
+| 탭 | 화면 | 우선순위 |
+|----|------|----------|
+| 🎭 역할 | P-03 Role Card | 기본 탭 |
+| 📋 가이드 | P-08 Rule Guide | **핵심** |
+| 👥 플레이어 | P-04 Player Tracker | |
+| 💬 시그널 | P-05 Emoji Panel | |
+| 📝 메모 | P-06 Memo | |
+| 📖 사전 | P-07 Character Dict | |
 
 ---
 
-## 7. 파일 구조 (목표)
+#### P-03 Role Card
+
+```
+┌─────────────────────────────┐
+│  당신의 역할                │
+│                             │
+│  ╔═══════════════════╗      │
+│  ║  🔮  Empath       ║      │
+│  ║  Townsfolk        ║      │
+│  ╠═══════════════════╣      │
+│  ║ 매 밤, 당신의 양쪽 이웃  ║ │
+│  ║ 중 악 진영이 몇 명인지  ║ │
+│  ║ 알게 됩니다.            ║ │
+│  ╚═══════════════════╝      │
+│                             │
+│  [ 📋 행동 가이드 보기 ]    │
+└─────────────────────────────┘
+```
+
+---
+
+#### P-08 Rule Guide (핵심 신규 화면)
+
+`GuideNav` 탭 + `RuleSection` 블록 조합.
+
+**탭 1 — 내 역할**
+```
+┌─────────────────────────────┐
+│  🎭 내 역할: Empath         │
+│  Townsfolk · 선 팀          │
+├─────────────────────────────┤
+│  📌 내가 아는 것            │
+│  게임 시작 시, 양쪽 이웃 중 │
+│  악 진영 수를 알게 됩니다.  │
+│  (현재 알고 있는 수: 호스트 │
+│   화면을 통해 확인)         │
+├─────────────────────────────┤
+│  ⚠️ 중독·취함 상태일 때    │
+│  받은 정보가 틀릴 수 있음   │
+└─────────────────────────────┘
+```
+
+**탭 2 — 행동** (페이즈 연동)
+```
+┌─────────────────────────────┐
+│  🌙 Night 2 — 지금 내 행동 │  ← 현재 밤이면 강조 표시
+│                             │
+│  ★ 오늘 밤 당신이 깨어납니다│
+│                             │
+│  스토리텔러가 손가락으로    │
+│  현재 이웃 중 악 진영 수를  │
+│  보여줍니다.                │
+│                             │
+│  눈을 감고 잠드세요.        │
+├─────────────────────────────┤
+│  ☀️ 낮에 할 수 있는 것     │
+│  • 받은 정보 공유 가능      │
+│  • 구체적 숫자까지 말해도 됨│
+│  • 거짓말 하면 안 됨 (선팀) │
+└─────────────────────────────┘
+```
+
+**탭 3 — 팀** (팀에 따라 다른 내용)
+
+*선 팀 버전*
+```
+┌─────────────────────────────┐
+│  🔵 선 팀 목표              │
+│  악마를 찾아 낮에 처형하세요│
+├─────────────────────────────┤
+│  투표 & 지목 규칙           │
+│  • 지목은 하루 1회만 가능   │
+│  • 처형엔 생존자 과반 필요  │
+│  • 죽어도 투표권 1회 남음   │
+├─────────────────────────────┤
+│  팁                         │
+│  • 능력 정보를 공유하세요   │
+│  • 일관성 없는 주장에 주목  │
+│  • 악마는 선 팀인 척합니다  │
+└─────────────────────────────┘
+```
+
+*악 팀 버전 (Imp 예시)*
+```
+┌─────────────────────────────┐
+│  🔴 악 팀 목표              │
+│  생존자가 2명이 될 때까지   │
+│  버티세요                   │
+├─────────────────────────────┤
+│  당신의 팀원                │
+│  🌙 Bob — Poisoner (미니언) │
+│  🎩 Dave — Scarlet Woman    │
+├─────────────────────────────┤
+│  밤 행동                    │
+│  • 매 밤 죽일 대상 1명 선택 │
+│  • 자신을 선택하면 미니언으 │
+│    로 악마 승계              │
+├─────────────────────────────┤
+│  낮 전략                    │
+│  • 선 팀인 척 정보 제공 OK  │
+│  • 과도한 침묵은 의심받음   │
+│  • 미니언이 방어해 줄 것임  │
+└─────────────────────────────┘
+```
+
+**탭 4 — 전체 규칙**
+```
+┌─────────────────────────────┐
+│  📖 전체 규칙               │
+│                             │
+│  ▶ 게임 개요                │
+│  ▶ 게임 흐름                │
+│    · 첫째 밤 순서           │
+│    · 이후 밤 순서           │
+│    · 낮 진행                │
+│    · 투표와 처형            │
+│  ▶ 특수 상황                │
+│    · 처형 동점              │
+│    · 사망 효과              │
+│    · Butler 투표 제한       │
+│  ▶ 승리 조건                │
+│    · 선 팀 승리             │
+│    · 악 팀 승리             │
+│    · 게임 종료 타이밍       │
+│  ▶ Trouble Brewing 역할 목록│
+└─────────────────────────────┘
+```
+
+---
+
+#### P-04 Player Tracker
+
+```
+┌─────────────────────────────┐
+│  ☀️ Day 2    생존 6명       │
+├─────────────────────────────┤
+│  [🦇Alice●] 주장: FT        │
+│  [🌙Bob  ○] 의심: Imp ★    │
+│  [🔮Carol●] 메모 없음  [+]  │
+└─────────────────────────────┘
+```
+
+각 플레이어 탭 → 편집 슬라이드업:
+- 주장 역할 기록 (자유 텍스트)
+- 의심 레벨 (없음 / 약간 / 강함)
+- 사망 마킹 (참고용)
+
+---
+
+#### P-05 Emoji Panel (시그널)
+
+수신 대상 선택 + `EmojiPicker`. 수신 시 `EmojiPopup` 3초 표시.
+
+---
+
+#### P-06 Memo (메모장)
+
+자유 텍스트. localStorage 자동 저장. 방·역할별로 분리 저장.
+
+---
+
+#### P-07 Character Dict (캐릭터 사전)
+
+`RoleCard(compact=false)` 전체 목록. 팀별 필터. 검색.
+
+---
+
+## 6. 화면 전환 흐름
+
+```
+앱 진입
+  ├── ctp_user 없음 ──→ S-00 Profile Setup
+  │                           ↓ 저장
+  └── ctp_user 있음 ──→ S-01 Landing
+                              │
+              ┌───────────────┼───────────────┐
+              ↓               ↓               ↓
+          호스트 선택      참가자 선택     규칙 보기
+              │               │               ↓
+           H-01 Setup      P-01 Join      Tier 4 전체 규칙
+              ↓               ↓
+           H-02 Lobby      P-02 Waiting
+              ↓               ↓ GAME_START
+           H-03 Grimoire   탭 화면 (P-03~08)
+              ↓  ↕              ↕
+           H-04 Night     P-08 Rule Guide
+           H-06 Day          (Tier 1~4 선택 표시)
+              ↓               ↓ GAME_END
+           H-07 Victory   결과 화면
+              ↓               ↓
+           S-01 Landing   S-01 Landing
+```
+
+---
+
+## 7. P2P 메시지 타입
+
+| 타입 | 방향 | 페이로드 |
+|------|------|----------|
+| `JOIN_REQUEST` | Player→Host | `{ playerName, emoji }` |
+| `JOIN_RESPONSE` | Host→Player | `{ ok, roomCode, playerName }` |
+| `GAME_START` | Host→All | `{ players[], script }` |
+| `PHASE_CHANGE` | Host→All | `{ phase, round }` |
+| `ROLE_ASSIGN` | Host→1 | `{ playerId, role, team, teamInfo }` |
+| `NIGHT_INFO` | Host→1 | `{ title, message, players[] }` |
+| `PLAYER_DIED` | Host→All | `{ playerId, cause }` |
+| `VOTE_UPDATE` | Host→All | `{ targetId, votes, threshold }` |
+| `GAME_END` | Host→All | `{ winner, reason, roles[] }` |
+| `EMOJI` | Player↔Player | `{ fromId, targetId, emoji }` |
+
+> P2P 없이 오프라인 모드에서는 호스트가 직접 화면을 보여주는 방식으로 동일 정보 전달.
+
+---
+
+## 8. 파일 구조
 
 ```
 src/
-├── index.html          # 메인 (Host/Player 선택)
-├── host.html           # 호스트 앱 진입점
-├── player.html         # 참가자 앱 진입점
+├── index.html
+├── css/
+│   └── theme.css
 ├── js/
-│   ├── p2p.js          # P2P 통신 (기존)
+│   ├── app.js                    # 진입점: 프로필 확인 → Landing
+│   ├── store.js                  # localStorage 헬퍼
+│   ├── p2p.js
+│   ├── game-engine.js
 │   ├── data/
-│   │   └── roles-tb.js # Trouble Brewing 역할 정적 데이터
-│   ├── components/     # 컴포넌트 (C-01 ~ C-11)
-│   │   ├── PlayerChip.js
-│   │   ├── RoleCard.js
-│   │   ├── PlayerGrid.js
-│   │   ├── PhaseHeader.js
-│   │   ├── InfoPanel.js
-│   │   ├── SelectPanel.js
-│   │   ├── VoteBar.js
-│   │   ├── EmojiPicker.js
-│   │   ├── EmojiPopup.js
-│   │   ├── NightOrderList.js
-│   │   └── LogEntry.js
-│   ├── host/           # 호스트 화면 (H-01 ~ H-07)
-│   │   ├── Setup.js
-│   │   ├── Lobby.js
-│   │   ├── Grimoire.js
-│   │   ├── NightAction.js
-│   │   ├── DayFlow.js
-│   │   └── Victory.js
-│   └── player/         # 참가자 화면 (P-01 ~ P-07)
-│       ├── Join.js
-│       ├── Waiting.js
-│       ├── RoleCard.js
-│       ├── PlayerTracker.js
-│       ├── EmojiPanel.js
-│       ├── Memo.js
-│       └── CharacterDict.js
+│   │   ├── roles-tb.js           # 역할 정적 데이터 (guide 필드 포함)
+│   │   └── rules-tb.js           # 전체 규칙 텍스트 (신규)
+│   ├── components/
+│   │   ├── PlayerChip.js         # C-01
+│   │   ├── RoleCard.js           # C-02
+│   │   ├── PlayerGrid.js         # C-03
+│   │   ├── PhaseHeader.js        # C-04
+│   │   ├── InfoPanel.js          # C-05
+│   │   ├── SelectPanel.js        # C-06
+│   │   ├── VoteBar.js            # C-07
+│   │   ├── EmojiPicker.js        # C-08
+│   │   ├── EmojiPopup.js         # C-09
+│   │   ├── NightOrderList.js     # C-10
+│   │   ├── LogEntry.js           # C-11
+│   │   ├── EmojiSelector.js      # C-12
+│   │   ├── RecentRoomList.js     # C-13
+│   │   ├── RuleSection.js        # C-14 신규
+│   │   └── GuideNav.js           # C-15 신규
+│   ├── screens/
+│   │   ├── ProfileSetup.js       # S-00
+│   │   └── Landing.js            # S-01
+│   ├── host/
+│   │   ├── app.js
+│   │   ├── Setup.js              # H-01
+│   │   ├── Lobby.js              # H-02
+│   │   ├── Grimoire.js           # H-03
+│   │   ├── NightAction.js        # H-04
+│   │   ├── DayFlow.js            # H-06
+│   │   ├── Victory.js            # H-07
+│   │   └── StorytelllerGuide.js  # H-08 신규
+│   └── player/
+│       ├── app.js
+│       ├── Join.js               # P-01
+│       ├── Waiting.js            # P-02
+│       ├── RoleCardScreen.js     # P-03
+│       ├── RuleGuide.js          # P-08 신규 (핵심)
+│       ├── PlayerTracker.js      # P-04
+│       ├── EmojiPanel.js         # P-05
+│       ├── Memo.js               # P-06
+│       └── CharacterDict.js      # P-07
 └── asset/
     └── favicon.svg
 ```

@@ -165,6 +165,9 @@ if (!document.getElementById('lobby-banner-style')) {
   border-bottom: 1px solid var(--lead2);
   overflow: hidden;
   transition: opacity 0.35s ease, max-height 0.35s ease;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 .lobby-banner--dismiss {
   opacity: 0;

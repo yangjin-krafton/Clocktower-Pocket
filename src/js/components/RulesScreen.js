@@ -13,12 +13,15 @@ export class RulesScreen {
     this.el = null
     this._history = []          // 방문 이력 (뒤로가기용)
     this._currentPage = null
+    this._touchStartX = 0       // 스와이프 감지용
+    this._touchStartY = 0
   }
 
   mount(container) {
     this.el = document.createElement('div')
     this.el.className = 'rules-screen'
     container.appendChild(this.el)
+    this._setupSwipeGesture()
     this._navigate('index.md')
   }
 
@@ -40,6 +43,29 @@ export class RulesScreen {
       this._currentPage = prev
       this._load(prev)
     }
+  }
+
+  _setupSwipeGesture() {
+    this.el.addEventListener('touchstart', e => {
+      this._touchStartX = e.touches[0].clientX
+      this._touchStartY = e.touches[0].clientY
+    }, { passive: true })
+
+    this.el.addEventListener('touchend', e => {
+      if (!e.changedTouches[0]) return
+
+      const touchEndX = e.changedTouches[0].clientX
+      const touchEndY = e.changedTouches[0].clientY
+      const deltaX = touchEndX - this._touchStartX
+      const deltaY = touchEndY - this._touchStartY
+
+      // 가로 스와이프가 세로보다 크고, 오른쪽으로 충분히 스와이프한 경우
+      if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 80) {
+        if (this._history.length > 0) {
+          this._goBack()
+        }
+      }
+    }, { passive: true })
   }
 
   // ─── 로드 & 렌더 ───────────────────────────────────────────
@@ -70,13 +96,13 @@ export class RulesScreen {
   _render(text) {
     this.el.innerHTML = ''
 
-    // 뒤로가기 버튼
+    // 뒤로가기 버튼 (상단)
     if (this._history.length > 0) {
-      const back = document.createElement('button')
-      back.className = 'rules-back-btn'
-      back.textContent = '← 뒤로'
-      back.addEventListener('click', () => this._goBack())
-      this.el.appendChild(back)
+      const backTop = document.createElement('button')
+      backTop.className = 'rules-back-btn'
+      backTop.textContent = '← 뒤로'
+      backTop.addEventListener('click', () => this._goBack())
+      this.el.appendChild(backTop)
     }
 
     // 마크다운 본문
@@ -84,6 +110,15 @@ export class RulesScreen {
     body.className = 'rules-body'
     body.innerHTML = this._parseMarkdown(text)
     this.el.appendChild(body)
+
+    // 뒤로가기 버튼 (하단)
+    if (this._history.length > 0) {
+      const backBottom = document.createElement('button')
+      backBottom.className = 'rules-back-btn rules-back-btn--bottom'
+      backBottom.textContent = '← 뒤로'
+      backBottom.addEventListener('click', () => this._goBack())
+      this.el.appendChild(backBottom)
+    }
 
     // 링크 이벤트 위임
     body.addEventListener('click', e => {
@@ -253,6 +288,21 @@ if (!document.getElementById('rules-screen-style')) {
 }
 .rules-back-btn:hover { background: var(--surface2); }
 .rules-back-btn:active { background: var(--surface3); }
+
+/* 하단 뒤로가기 버튼 */
+.rules-back-btn--bottom {
+  margin: 20px auto 12px;
+  display: flex;
+  width: fit-content;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  background: var(--surface2);
+  border-color: var(--lead2);
+}
+.rules-back-btn--bottom:hover {
+  background: var(--surface3);
+  border-color: var(--tl-light);
+}
 
 .rules-body {
   padding: 4px 0 24px;

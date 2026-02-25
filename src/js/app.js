@@ -5,7 +5,6 @@
  */
 
 const content = document.getElementById('app-content')
-const badge   = document.getElementById('app-badge')
 
 function showLoading() {
   content.innerHTML = `
@@ -17,9 +16,6 @@ function showLoading() {
 }
 
 function showLanding() {
-  badge.textContent = ''
-  badge.style.display = 'none'
-
   content.innerHTML = `
     <div class="landing">
       <div class="landing__logo">🏰</div>
@@ -48,17 +44,11 @@ function showLanding() {
   `
 
   document.getElementById('btn-host').addEventListener('click', () => {
-    badge.textContent = '호스트'
-    badge.className = 'app-header__badge badge--host'
-    badge.style.display = ''
     showLoading()
     import('./host/app.js').then(({ HostApp }) => new HostApp().init())
   })
 
   document.getElementById('btn-player').addEventListener('click', () => {
-    badge.textContent = '참가자'
-    badge.className = 'app-header__badge badge--player'
-    badge.style.display = ''
     showLoading()
     import('./player/app.js').then(({ PlayerApp }) => new PlayerApp().init())
   })

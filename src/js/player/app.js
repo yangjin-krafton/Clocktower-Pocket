@@ -11,7 +11,7 @@ import { EmojiPanel }       from './EmojiPanel.js'
 import { Memo }             from './Memo.js'
 import { CharacterDict }    from './CharacterDict.js'
 
-class PlayerApp {
+export class PlayerApp {
   constructor() {
     this.p2p          = new P2PManager()
     this.myPlayerId   = null
@@ -233,6 +233,3 @@ class PlayerApp {
   }
 }
 
-// 앱 초기화
-const app = new PlayerApp()
-app.init()

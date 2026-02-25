@@ -11,7 +11,7 @@ import { NightAction } from './NightAction.js'
 import { DayFlow }  from './DayFlow.js'
 import { Victory }  from './Victory.js'
 
-class HostApp {
+export class HostApp {
   constructor() {
     this.p2p = new P2PManager()
     this.currentScreen = null
@@ -263,6 +263,3 @@ class HostApp {
   }
 }
 
-// 앱 초기화
-const app = new HostApp()
-app.init()

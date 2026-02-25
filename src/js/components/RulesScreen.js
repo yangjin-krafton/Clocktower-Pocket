@@ -189,7 +189,8 @@ export class RulesScreen {
     // ![alt](src) → 인라인 이미지 (링크보다 먼저 처리)
     // MD 파일은 src/rules/ 에 있으므로, ../asset/ 형태 경로를 앱 루트 기준으로 보정
     s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
-      const resolved = new URL(src, 'x://h/rules/').pathname.slice(1)
+      // ../asset/... → asset/... (MD는 src/rules/ 위치, 앱 루트는 src/)
+      const resolved = src.replace(/^(?:\.\.\/)+/, '')
       // 이미지 종류에 따라 클래스 분기
       const cls = /\/editions\//.test(resolved) ? 'rules-icon rules-icon--badge'
                 : /\/(life|death|vote|reminder|shroud|token)\.png/.test(resolved) ? 'rules-icon rules-icon--token'

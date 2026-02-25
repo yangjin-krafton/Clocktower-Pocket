@@ -191,7 +191,16 @@ export class RulesScreen {
     s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
       // ../asset/... → asset/... (MD는 src/rules/ 위치, 앱 루트는 src/)
       const resolved = src.replace(/^(?:\.\.\/)+/, '')
-      // 이미지 종류에 따라 클래스 분기
+
+      // 역할 아이콘: token.png 배경 위에 아이콘 오버레이
+      if (/\/icons\//.test(resolved)) {
+        return `<span class="rules-token-wrap" title="${alt}">`
+          + `<img class="rules-token-bg" src="asset/token.png" alt="">`
+          + `<img class="rules-token-icon" src="${resolved}" alt="${alt}" loading="lazy">`
+          + `</span>`
+      }
+
+      // 에디션 배지 / 상태 토큰
       const cls = /\/editions\//.test(resolved) ? 'rules-icon rules-icon--badge'
                 : /\/(life|death|vote|reminder|shroud|token)\.png/.test(resolved) ? 'rules-icon rules-icon--token'
                 : 'rules-icon'
@@ -272,34 +281,50 @@ if (!document.getElementById('rules-screen-style')) {
   font-size: 0.82rem;
 }
 
-/* ── 아이콘 공통 ────────────────────────────── */
+/* ── 역할 토큰 (token.png 배경 + 아이콘 오버레이) ── */
+.rules-token-wrap {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  vertical-align: -8px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.rules-h1 .rules-token-wrap { width: 42px; height: 42px; vertical-align: -12px; margin-right: 7px; }
+.rules-h2 .rules-token-wrap { width: 36px; height: 36px; vertical-align: -10px; margin-right: 6px; }
+.rules-h3 .rules-token-wrap { width: 33px; height: 33px; vertical-align: -8px;  margin-right: 5px; }
+
+.rules-token-bg,
+.rules-token-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.rules-token-icon { object-fit: contain; }
+
+/* ── 에디션 배지 / 상태 토큰 ─────────────────── */
 .rules-icon {
   display: inline-block;
   width: 30px;
   height: 30px;
   vertical-align: -8px;
-  border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.55);
   margin-right: 4px;
 }
-
-/* H1 – 에디션 로고 */
-.rules-h1 .rules-icon       { width: 42px; height: 42px; vertical-align: -12px; margin-right: 7px; }
-/* H2 – 팀 카테고리 헤더 */
-.rules-h2 .rules-icon       { width: 36px; height: 36px; vertical-align: -10px; margin-right: 6px; }
-/* H3 – 역할 이름 */
-.rules-h3 .rules-icon       { width: 33px; height: 33px; vertical-align: -8px; margin-right: 5px; }
+.rules-h1 .rules-icon { width: 42px; height: 42px; vertical-align: -12px; margin-right: 7px; }
+.rules-h2 .rules-icon { width: 36px; height: 36px; vertical-align: -10px; margin-right: 6px; }
+.rules-h3 .rules-icon { width: 33px; height: 33px; vertical-align: -8px;  margin-right: 5px; }
 
 /* 에디션 배지 (정사각형 PNG) */
-.rules-icon--badge          { border-radius: 5px; }
+.rules-icon--badge           { border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.6); }
 .rules-h1 .rules-icon--badge { border-radius: 6px; }
-.rules-h2 .rules-icon--badge { border-radius: 5px; }
 
 /* 상태 토큰 (life / death / vote / reminder / shroud) – 투명 배경 */
 .rules-icon--token {
-  border-radius: 3px;
   box-shadow: none;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
 }

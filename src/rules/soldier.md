@@ -1,4 +1,4 @@
-# ![](../asset/icons/soldier.png) 병사 (Soldier)
+# ![](../asset/icons/soldier.png) 군인 (Soldier)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -45,7 +45,7 @@
 
 - ![](../asset/icons/imp.png) **임프**: 임프의 밤 공격을 무시합니다.
 - ![](../asset/icons/monk.png) **수도사**: 이미 면역이므로 보호 불필요.
-- ![](../asset/icons/poisoner.png) **독살자**: 중독되면 면역이 사라집니다.
+- ![](../asset/icons/poisoner.png) **독약꾼**: 중독되면 면역이 사라집니다.
 
 ---
 

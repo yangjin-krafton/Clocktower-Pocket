@@ -1,4 +1,4 @@
-# ![](../asset/icons/poisoner.png) 독살자 (Poisoner)
+# ![](../asset/icons/poisoner.png) 독약꾼 (Poisoner)
 
 **진영**: ![](../asset/editions/tb-minion.png) 미니언 (악 팀)
 
@@ -58,9 +58,9 @@
 ## 상호작용
 
 - **모든 능력**: 모든 능력을 오작동시킬 수 있습니다.
-- ![](../asset/icons/soldier.png) **병사**: 중독되면 데몬 면역이 사라집니다.
+- ![](../asset/icons/soldier.png) **군인**: 중독되면 데몬 면역이 사라집니다.
 - ![](../asset/icons/monk.png) **수도사**: 중독되면 보호가 실패합니다.
-- ![](../asset/icons/drunk.png) **취한 자**: 취한 자는 이미 오작동하므로 중독해도 의미 없습니다.
+- ![](../asset/icons/drunk.png) **주정뱅이**: 술꾼는 이미 오작동하므로 중독해도 의미 없습니다.
 
 ---
 

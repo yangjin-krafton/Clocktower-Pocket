@@ -1,4 +1,4 @@
-# ![](../asset/icons/washerwoman.png) 빨래꾼 (Washerwoman)
+# ![](../asset/icons/washerwoman.png) 세탁부 (Washerwoman)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -37,7 +37,7 @@
 
 - ![](../asset/icons/spy.png) **스파이**: 마을 주민으로 잘못 나타날 수 있습니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 조사 결과를 왜곡할 수 있습니다.
-- ![](../asset/icons/drunk.png) **취한 자**: 당신이 취했다면 정보가 틀립니다.
+- ![](../asset/icons/drunk.png) **주정뱅이**: 당신이 취했다면 정보가 틀립니다.
 
 ---
 

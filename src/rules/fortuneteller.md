@@ -1,4 +1,4 @@
-# ![](../asset/icons/fortuneteller.png) 점술사 (Fortune Teller)
+# ![](../asset/icons/fortuneteller.png) 점쟁이 (Fortune Teller)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -47,7 +47,7 @@
 
 - ![](../asset/icons/imp.png) **임프**: 당신의 주요 타겟입니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 데몬으로 등록되어 추가 오탐이 될 수 있습니다.
-- ![](../asset/icons/scarletwoman.png) **붉은 여인**: 데몬 승계 시 새 데몬으로 조사됩니다.
+- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 데몬 승계 시 새 데몬으로 조사됩니다.
 
 ---
 

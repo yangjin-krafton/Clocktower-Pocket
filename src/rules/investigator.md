@@ -1,4 +1,4 @@
-# ![](../asset/icons/investigator.png) 탐정 (Investigator)
+# ![](../asset/icons/investigator.png) 조사관 (Investigator)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -30,10 +30,10 @@
 1. **빠른 정보 공유**: 미니언 정보는 게임 초반에 매우 강력합니다.
 2. **교차 검증**: ![](../asset/icons/chef.png) 요리사, ![](../asset/icons/empath.png) 공감자 정보와 비교하세요.
 3. **미니언 종류 추리**: 어떤 미니언인지에 따라 전략이 달라집니다.
-   - ![](../asset/icons/poisoner.png) **독살자**: 매일 밤 누군가 중독됩니다.
+   - ![](../asset/icons/poisoner.png) **독약꾼**: 매일 밤 누군가 중독됩니다.
    - ![](../asset/icons/spy.png) **스파이**: 그리모어를 보고 선으로 등록됩니다.
-   - ![](../asset/icons/scarletwoman.png) **붉은 여인**: 데몬이 죽으면 승계할 수 있습니다.
-   - ![](../asset/icons/baron.png) **바론**: 아웃사이더를 늘립니다.
+   - ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 데몬이 죽으면 승계할 수 있습니다.
+   - ![](../asset/icons/baron.png) **남작**: 아웃사이더를 늘립니다.
 
 ---
 
@@ -41,7 +41,7 @@
 
 - ![](../asset/icons/spy.png) **스파이**: 선으로 등록되어 조사에서 빠집니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 미니언으로 잘못 나타날 수 있습니다.
-- ![](../asset/icons/drunk.png) **취한 자**: 당신이 취했다면 정보가 틀립니다.
+- ![](../asset/icons/drunk.png) **주정뱅이**: 당신이 취했다면 정보가 틀립니다.
 
 ---
 

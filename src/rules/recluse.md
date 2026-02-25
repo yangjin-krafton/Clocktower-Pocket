@@ -22,12 +22,12 @@
 
 은둔자는 다음 조사에서 **악으로 나타날 수 있습니다**:
 
-- ![](../asset/icons/washerwoman.png) **빨래꾼**: 다른 Townsfolk로 나타날 수 있음
+- ![](../asset/icons/washerwoman.png) **세탁부**: 다른 Townsfolk로 나타날 수 있음
 - ![](../asset/icons/librarian.png) **사서**: Outsider로 정확히 나타남
-- ![](../asset/icons/investigator.png) **탐정**: **미니언**으로 나타날 수 있음
+- ![](../asset/icons/investigator.png) **조사관**: **미니언**으로 나타날 수 있음
 - ![](../asset/icons/chef.png) **요리사**: 악 쌍 수를 늘릴 수 있음
-- ![](../asset/icons/empath.png) **공감자**: 악으로 카운트될 수 있음
-- ![](../asset/icons/fortuneteller.png) **점술사**: **데몬**으로 나타날 수 있음
+- ![](../asset/icons/empath.png) **공감인**: 악으로 카운트될 수 있음
+- ![](../asset/icons/fortuneteller.png) **점쟁이**: **데몬**으로 나타날 수 있음
 - ![](../asset/icons/undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
 
 ### 주의할 점
@@ -49,7 +49,7 @@
 
 - **모든 정보형**: 당신을 악으로 등록할 수 있습니다.
 - ![](../asset/icons/spy.png) **스파이**: 스파이도 선으로 등록되므로 혼란이 가중됩니다.
-- ![](../asset/icons/slayer.png) **학살자**: 당신을 데몬으로 조사해도 **죽지 않습니다** (진짜 데몬이 아님).
+- ![](../asset/icons/slayer.png) **처단자**: 당신을 데몬으로 조사해도 **죽지 않습니다** (진짜 데몬이 아님).
 
 ---
 

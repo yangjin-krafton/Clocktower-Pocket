@@ -22,16 +22,16 @@
 ### 공격 대상 우선순위
 
 1. **강력한 정보형**
-   - ![](../asset/icons/fortuneteller.png) **점술사**: 당신을 찾을 수 있음
-   - ![](../asset/icons/empath.png) **공감자**: 악 위치를 파악함
+   - ![](../asset/icons/fortuneteller.png) **점쟁이**: 당신을 찾을 수 있음
+   - ![](../asset/icons/empath.png) **공감인**: 악 위치를 파악함
    - ![](../asset/icons/undertaker.png) **장의사**: 처형 결과로 악을 찾음
 
 2. **위협적인 역할**
-   - ![](../asset/icons/slayer.png) **학살자**: 당신을 즉시 죽일 수 있음
+   - ![](../asset/icons/slayer.png) **처단자**: 당신을 즉시 죽일 수 있음
    - ![](../asset/icons/virgin.png) **처녀**: 능력 사용 전에 제거
 
 3. **공격 불가**
-   - ![](../asset/icons/soldier.png) **병사**: 공격해도 안 죽음
+   - ![](../asset/icons/soldier.png) **군인**: 공격해도 안 죽음
    - ![](../asset/icons/monk.png) **수도사 보호 대상**: 보호받으면 안 죽음
 
 ### 자살 승계 (Star Pass)
@@ -68,11 +68,11 @@
 
 임프는 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/icons/empath.png) **공감자**: 거짓 정보로 선 팀을 혼란시킴
-- ![](../asset/icons/fortuneteller.png) **점술사**: 거짓 데몬 조사로 의심 전환
+- ![](../asset/icons/empath.png) **공감인**: 거짓 정보로 선 팀을 혼란시킴
+- ![](../asset/icons/fortuneteller.png) **점쟁이**: 거짓 데몬 조사로 의심 전환
 - ![](../asset/icons/undertaker.png) **장의사**: 처형 결과 거짓말
 - ![](../asset/icons/monk.png) **수도사**: 보호 실패 변명 가능
-- ![](../asset/icons/ravenkeeper.png) **까마귀지기**: 밤에 안 죽으면 블러프 유지
+- ![](../asset/icons/ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지
 
 ### 블러프 주의사항
 
@@ -84,12 +84,12 @@
 
 ## 상호작용
 
-- ![](../asset/icons/soldier.png) **병사**: 공격해도 죽지 않습니다.
+- ![](../asset/icons/soldier.png) **군인**: 공격해도 죽지 않습니다.
 - ![](../asset/icons/monk.png) **수도사**: 보호받은 대상은 죽지 않습니다.
 - ![](../asset/icons/mayor.png) **시장**: 공격이 다른 사람에게 튕길 수 있습니다.
-- ![](../asset/icons/slayer.png) **학살자**: 당신을 즉시 죽일 수 있습니다.
-- ![](../asset/icons/fortuneteller.png) **점술사**: 당신을 찾을 수 있습니다.
-- ![](../asset/icons/scarletwoman.png) **붉은 여인**: 당신이 죽으면 승계할 수 있습니다.
+- ![](../asset/icons/slayer.png) **처단자**: 당신을 즉시 죽일 수 있습니다.
+- ![](../asset/icons/fortuneteller.png) **점쟁이**: 당신을 찾을 수 있습니다.
+- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 당신이 죽으면 승계할 수 있습니다.
 
 ---
 
@@ -97,10 +97,10 @@
 
 - **첫날 밤**: 미니언들을 확인합니다.
 - **정보 공유**: 미니언과 블러프를 조율하세요.
-- ![](../asset/icons/poisoner.png) **독살자**: 어떤 역할을 중독할지 조율하세요.
+- ![](../asset/icons/poisoner.png) **독약꾼**: 어떤 역할을 중독할지 조율하세요.
 - ![](../asset/icons/spy.png) **스파이**: 모든 역할 정보를 공유받으세요.
-- ![](../asset/icons/scarletwoman.png) **붉은 여인**: 5명 이상에서 죽으면 승계됩니다.
-- ![](../asset/icons/baron.png) **바론**: 아웃사이더가 늘어나 선 팀이 약합니다.
+- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 5명 이상에서 죽으면 승계됩니다.
+- ![](../asset/icons/baron.png) **남작**: 아웃사이더가 늘어나 선 팀이 약합니다.
 
 ---
 

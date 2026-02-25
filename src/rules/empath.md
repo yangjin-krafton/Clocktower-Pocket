@@ -1,4 +1,4 @@
-# ![](../asset/icons/empath.png) 공감자 (Empath)
+# ![](../asset/icons/empath.png) 공감인 (Empath)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -43,7 +43,7 @@
 
 ## 상호작용
 
-- ![](../asset/icons/poisoner.png) **독살자**: 중독되면 틀린 정보를 받습니다.
+- ![](../asset/icons/poisoner.png) **독약꾼**: 중독되면 틀린 정보를 받습니다.
 - ![](../asset/icons/spy.png) **스파이**: 선으로 등록되면 악 수가 줄어듭니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 악으로 등록되면 악 수가 늘어납니다.
 

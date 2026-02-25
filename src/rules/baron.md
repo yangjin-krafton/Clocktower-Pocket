@@ -1,4 +1,4 @@
-# ![](../asset/icons/baron.png) 바론 (Baron)
+# ![](../asset/icons/baron.png) 남작 (Baron)
 
 **진영**: ![](../asset/editions/tb-minion.png) 미니언 (악 팀)
 
@@ -40,9 +40,9 @@
 아웃사이더가 늘어나면:
 
 - ![](../asset/icons/butler.png) **집사**: 투표 제약
-- ![](../asset/icons/drunk.png) **취한 자**: 능력 오작동
+- ![](../asset/icons/drunk.png) **주정뱅이**: 능력 오작동
 - ![](../asset/icons/recluse.png) **은둔자**: 조사 왜곡
-- ![](../asset/icons/saint.png) **성인**: 처형 시 즉시 패배
+- ![](../asset/icons/saint.png) **성자**: 처형 시 즉시 패배
 
 → 선 팀의 정보 수집과 능력이 약해집니다!
 
@@ -65,7 +65,7 @@
 
 바론은 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/icons/empath.png) **공감자**: 거짓 정보로 혼란 유발
+- ![](../asset/icons/empath.png) **공감인**: 거짓 정보로 혼란 유발
 - ![](../asset/icons/chef.png) **요리사**: 악 쌍 수 정보로 신뢰 획득
 - ![](../asset/icons/undertaker.png) **장의사**: 처형 조사 거짓말
 - ![](../asset/icons/monk.png) **수도사**: 보호 실패 변명 가능

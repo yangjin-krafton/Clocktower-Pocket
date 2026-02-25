@@ -44,7 +44,7 @@
 
 - ![](../asset/icons/spy.png) **스파이**: 선으로 등록되면 쌍 수를 줄입니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 악으로 등록되면 쌍 수를 늘립니다.
-- ![](../asset/icons/drunk.png) **취한 자**: 당신이 취했다면 정보가 틀립니다.
+- ![](../asset/icons/drunk.png) **주정뱅이**: 당신이 취했다면 정보가 틀립니다.
 
 ---
 

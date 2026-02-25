@@ -23,19 +23,19 @@
 
 스파이는 다음을 모두 압니다:
 - **모든 플레이어의 역할**
-- **취한 자의 진짜 역할**
+- **주정뱅이의 진짜 역할**
 - **밤마다 일어나는 일** (선택 사항)
 
 ### 등록 왜곡
 
 스파이는 다음 조사에서 **선으로 나타날 수 있습니다**:
 
-- ![](../asset/icons/washerwoman.png) **빨래꾼**: Townsfolk로 나타날 수 있음
+- ![](../asset/icons/washerwoman.png) **세탁부**: Townsfolk로 나타날 수 있음
 - ![](../asset/icons/librarian.png) **사서**: Outsider로 나타날 수 있음
-- ![](../asset/icons/investigator.png) **탐정**: 미니언으로 **안 나타날** 수 있음
+- ![](../asset/icons/investigator.png) **조사관**: 미니언으로 **안 나타날** 수 있음
 - ![](../asset/icons/chef.png) **요리사**: 악 쌍 수를 줄일 수 있음
-- ![](../asset/icons/empath.png) **공감자**: 선으로 카운트될 수 있음
-- ![](../asset/icons/fortuneteller.png) **점술사**: 선으로 나타날 수 있음
+- ![](../asset/icons/empath.png) **공감인**: 선으로 카운트될 수 있음
+- ![](../asset/icons/fortuneteller.png) **점쟁이**: 선으로 나타날 수 있음
 - ![](../asset/icons/undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
 
 ### 전략 팁
@@ -63,8 +63,8 @@
 
 ### 블러프 예시
 
-- ![](../asset/icons/washerwoman.png) **빨래꾼**: 거짓 정보로 혼란 유발
-- ![](../asset/icons/empath.png) **공감자**: 선으로 등록되면 신뢰도 상승
+- ![](../asset/icons/washerwoman.png) **세탁부**: 거짓 정보로 혼란 유발
+- ![](../asset/icons/empath.png) **공감인**: 선으로 등록되면 신뢰도 상승
 - ![](../asset/icons/butler.png) **집사**: 투표 제약 거짓말로 의심 회피
 - ![](../asset/icons/recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능
 
@@ -74,7 +74,7 @@
 
 - **모든 정보형**: 선으로 등록되어 조사를 피할 수 있습니다.
 - ![](../asset/icons/recluse.png) **은둔자**: 은둔자가 있으면 둘 다 왜곡되어 혼란이 가중됩니다.
-- ![](../asset/icons/drunk.png) **취한 자**: 취한 자의 진짜 역할도 압니다.
+- ![](../asset/icons/drunk.png) **주정뱅이**: 술꾼의 진짜 역할도 압니다.
 
 ---
 

@@ -21,7 +21,12 @@
       "Bash(printf %s\\\\n:*)",
       "Bash(echo gh not found:*)",
       "WebSearch",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "WebFetch(domain:arca.live)",
+      "Bash(for file in baron.md butler.md chef.md investigator.md poisoner.md spy.md undertaker.md washerwoman.md)",
+      "Bash(do sed -i 's/취한 자/술꾼/g' \"$file\")",
+      "Bash(for file in demon.md fortuneteller.md imp.md investigator.md mayor.md minion.md scarletwoman.md slayer.md)",
+      "Bash(do sed -i 's/붉은 여인/스칼렛 우먼/g' \"$file\")"
     ],
     "additionalDirectories": [
       "\\tmp"

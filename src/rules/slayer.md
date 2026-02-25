@@ -1,4 +1,4 @@
-# ![](../asset/icons/slayer.png) 학살자 (Slayer)
+# ![](../asset/icons/slayer.png) 처단자 (Slayer)
 
 **진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
 
@@ -45,7 +45,7 @@
 ## 상호작용
 
 - ![](../asset/icons/imp.png) **임프**: 성공하면 즉시 죽이고 선 팀 승리.
-- ![](../asset/icons/scarletwoman.png) **붉은 여인**: 생존자 5명 이상이면 승계될 수 있으니 주의.
+- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 생존자 5명 이상이면 승계될 수 있으니 주의.
 - ![](../asset/icons/recluse.png) **은둔자**: 데몬으로 등록되어도 능력은 발동 안 됨.
 
 ---

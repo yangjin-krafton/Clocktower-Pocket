@@ -7,14 +7,14 @@
 
 ## 첫날 밤 정보형
 
-### ![](../asset/icons/washerwoman.png) [빨래꾼 (Washerwoman)](washerwoman.md)
+### ![](../asset/icons/washerwoman.png) [세탁부 (Washerwoman)](washerwoman.md)
 두 플레이어를 제시받고, 그 중 한 명이 **특정 마을 주민**임을 안다.
 
 ### ![](../asset/icons/librarian.png) [사서 (Librarian)](librarian.md)
 두 플레이어를 제시받고, 그 중 한 명이 **특정 아웃사이더**임을 안다.
 아웃사이더가 없으면 그렇다고 안다.
 
-### ![](../asset/icons/investigator.png) [탐정 (Investigator)](investigator.md)
+### ![](../asset/icons/investigator.png) [조사관 (Investigator)](investigator.md)
 두 플레이어를 제시받고, 그 중 한 명이 **특정 미니언**임을 안다.
 
 ### ![](../asset/icons/chef.png) [요리사 (Chef)](chef.md)
@@ -24,10 +24,10 @@
 
 ## 매 밤 정보형
 
-### ![](../asset/icons/empath.png) [공감자 (Empath)](empath.md)
+### ![](../asset/icons/empath.png) [공감인 (Empath)](empath.md)
 양옆 **생존 이웃** 중 악 플레이어 수(0/1/2)를 매 밤 안다.
 
-### ![](../asset/icons/fortuneteller.png) [점술사 (Fortune Teller)](fortuneteller.md)
+### ![](../asset/icons/fortuneteller.png) [점쟁이 (Fortune Teller)](fortuneteller.md)
 매 밤 2명을 선택. 그 중 **데몬이 있는지** 안다.
 단, 선 플레이어 1명은 항상 데몬처럼 잡힌다 (오탐).
 
@@ -42,17 +42,17 @@
 ### ![](../asset/icons/monk.png) [수도사 (Monk)](monk.md)
 매 밤, 자신 제외 1명을 보호. 그 밤 **데몬 공격**으로부터 지킨다.
 
-### ![](../asset/icons/ravenkeeper.png) [까마귀지기 (Ravenkeeper)](ravenkeeper.md)
+### ![](../asset/icons/ravenkeeper.png) [까마귀 사육사 (Ravenkeeper)](ravenkeeper.md)
 **밤에 죽으면**, 즉시 1명을 선택해 그 역할을 안다.
 
 ### ![](../asset/icons/virgin.png) [처녀 (Virgin)](virgin.md)
 처음 자신을 지목한 사람이 **마을 주민이면** 그 지목자가 즉시 처형될 수 있다.
 → [지목 규칙](day.md)
 
-### ![](../asset/icons/slayer.png) [학살자 (Slayer)](slayer.md)
+### ![](../asset/icons/slayer.png) [처단자 (Slayer)](slayer.md)
 게임 중 **1회**, 낮에 1명을 지목. 대상이 데몬이면 즉시 사망.
 
-### ![](../asset/icons/soldier.png) [병사 (Soldier)](soldier.md)
+### ![](../asset/icons/soldier.png) [군인 (Soldier)](soldier.md)
 **데몬 공격**으로는 죽지 않는다.
 
 ### ![](../asset/icons/mayor.png) [시장 (Mayor)](mayor.md)

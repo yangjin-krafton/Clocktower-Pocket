@@ -41,7 +41,9 @@ export class PlayerApp {
 
   init() {
     this._setupP2PHandlers()
-    this._showJoin()
+    // 탭바가 이미 표시되어 있으므로 참가자용 탭으로 재구성
+    this._buildTabs()
+    this._switchTab('role')  // Join 화면 표시
   }
 
   // ─────────────────────────────────────
@@ -50,7 +52,6 @@ export class PlayerApp {
 
   _showJoin() {
     this.content.innerHTML = ''
-    this.tabBar.style.display = 'none'
     this._dismissLobbyBanner()
     const screen = new Join({
       onJoin: (name, code) => this._handleJoin(name, code),
@@ -65,7 +66,7 @@ export class PlayerApp {
       await this.p2p.joinRoom(code, name)
     } catch (e) {
       alert('참가 실패: ' + e.message)
-      this._showJoin()
+      this._switchTab('role')  // Join 화면으로 돌아감
     }
   }
 
@@ -75,7 +76,7 @@ export class PlayerApp {
     const code = roomCode || this.p2p.roomCode || '------'
     this._mountLobbyBanner(code)
 
-    this.tabBar.style.display = 'flex'
+    // 탭바가 이미 표시되어 있으므로 참가자용 탭으로 재구성
     this._buildTabs()
     this._switchTab('role')
   }
@@ -112,7 +113,7 @@ export class PlayerApp {
       btn.className = 'tab-item' + (tab.id === this.currentTab ? ' active' : '')
       btn.dataset.tab = tab.id
       btn.innerHTML = `<span class="tab-icon">${tab.icon}</span><span class="tab-label">${tab.label}</span>`
-      btn.addEventListener('click', () => this._switchTab(tab.id))
+      btn.addEventListener('click', () => window.switchTab(tab.id))
       this.tabBar.appendChild(btn)
     })
   }
@@ -129,9 +130,25 @@ export class PlayerApp {
       btn.classList.toggle('active', btn.dataset.tab === tabId)
     })
 
+    // 게임 참가 전에는 role과 rules만 접근 가능
+    if (!this.myPlayerId && tabId !== 'role' && tabId !== 'rules' && tabId !== 'dict') {
+      this.content.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:12px">🔒</div>
+          <div>게임 참가 후 이용 가능합니다</div>
+        </div>
+      `
+      return
+    }
+
     let screen
     switch (tabId) {
       case 'role':
+        // 역할이 없으면 Join 화면 표시
+        if (!this.myRole) {
+          this._showJoin()
+          return
+        }
         screen = new RoleCardScreen({ roleId: this.myRole, team: this.myTeam })
         break
       case 'tracker':

@@ -61,8 +61,7 @@ export class HostApp {
       // ① LobbyBanner 상단 마운트
       this._mountLobbyBanner(roomCode, DEFAULT_PLAYER_COUNT)
 
-      // ② 탭바 표시 및 초기화
-      this.tabBar.style.display = 'flex'
+      // ② 탭바가 이미 표시되어 있으므로 호스트용 탭으로 재구성
       this._buildTabs()
       this._switchTab('role')
 
@@ -176,7 +175,7 @@ export class HostApp {
       btn.className = 'tab-item' + (tab.id === this.currentTab ? ' active' : '')
       btn.dataset.tab = tab.id
       btn.innerHTML = `<span class="tab-icon">${tab.icon}</span><span class="tab-label">${tab.label}</span>`
-      btn.addEventListener('click', () => this._switchTab(tab.id))
+      btn.addEventListener('click', () => window.switchTab(tab.id))
       this.tabBar.appendChild(btn)
     })
   }
@@ -191,13 +190,13 @@ export class HostApp {
 
     if (tabId === 'role') {
       // 현재 게임 상태에 따라 적절한 화면 표시
-      const phase = engine.state.phase
+      const phase = engine.state?.phase || 'lobby'
       if (phase === 'lobby' || phase === 'night') {
         this._showGrimoire()
       } else if (phase === 'day') {
         this._showDayFlow()
-      } else if (phase === 'victory') {
-        // Victory 화면은 별도 처리
+      } else {
+        // Victory 또는 기타 상태
         this._showGrimoire()
       }
     } else if (tabId === 'rules') {

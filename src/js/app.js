@@ -5,6 +5,51 @@
  */
 
 const content = document.getElementById('app-content')
+const tabBar = document.getElementById('tab-bar')
+
+let currentTab = 'role'
+let appInstance = null
+
+function buildTabs() {
+  tabBar.innerHTML = ''
+  const tabs = [
+    { id: 'role',    icon: '🎭', label: '내 역할' },
+    { id: 'rules',   icon: '📜', label: '규칙' },
+  ]
+
+  tabs.forEach(tab => {
+    const btn = document.createElement('button')
+    btn.className = 'tab-item' + (tab.id === currentTab ? ' active' : '')
+    btn.dataset.tab = tab.id
+    btn.innerHTML = `<span class="tab-icon">${tab.icon}</span><span class="tab-label">${tab.label}</span>`
+    btn.addEventListener('click', () => window.switchTab(tab.id))
+    tabBar.appendChild(btn)
+  })
+}
+
+function switchTab(tabId) {
+  currentTab = tabId
+
+  // 앱이 로드되었으면 앱의 switchTab 호출
+  if (appInstance && appInstance._switchTab) {
+    appInstance._switchTab(tabId)
+    return
+  }
+
+  // 앱이 로드되지 않았으면 기본 탭 처리
+  tabBar.querySelectorAll('.tab-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId)
+  })
+
+  if (tabId === 'role') {
+    showLanding()
+  } else if (tabId === 'rules') {
+    showRules()
+  }
+}
+
+// 앱이 탭바를 재빌드할 때 이 함수를 사용하도록 export
+window.switchTab = switchTab
 
 function showLoading() {
   content.innerHTML = `
@@ -45,13 +90,32 @@ function showLanding() {
 
   document.getElementById('btn-host').addEventListener('click', () => {
     showLoading()
-    import('./host/app.js').then(({ HostApp }) => new HostApp().init())
+    import('./host/app.js').then(({ HostApp }) => {
+      const app = new HostApp()
+      appInstance = app
+      app.init()
+    })
   })
 
   document.getElementById('btn-player').addEventListener('click', () => {
     showLoading()
-    import('./player/app.js').then(({ PlayerApp }) => new PlayerApp().init())
+    import('./player/app.js').then(({ PlayerApp }) => {
+      const app = new PlayerApp()
+      appInstance = app
+      app.init()
+    })
   })
 }
 
+function showRules() {
+  import('./components/RulesScreen.js').then(({ RulesScreen }) => {
+    content.innerHTML = ''
+    const rules = new RulesScreen()
+    rules.mount(content)
+  })
+}
+
+// 초기화
+tabBar.style.display = 'flex'
+buildTabs()
 showLanding()

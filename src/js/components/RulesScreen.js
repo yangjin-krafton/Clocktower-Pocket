@@ -168,7 +168,9 @@ export class RulesScreen {
           rows.push(lines[i])
           i++
         }
-        result.push(this._parseTable(rows))
+        const table = this._parseTable(rows)
+        console.log('[RulesScreen] 테이블 감지:', rows.length, '행')
+        result.push(table)
         continue
       }
       // 리스트 블록
@@ -196,9 +198,12 @@ export class RulesScreen {
 
   /** 테이블 파서: | 로 구분된 행을 HTML table로 변환 */
   _parseTable(rows) {
+    if (rows.length === 0) return ''
+
     const cells = rows.map(r =>
       r.split('|').slice(1, -1).map(c => c.trim())
     )
+
     const head = cells[0]
     // 두 번째 행이 구분선(---) 이면 제거
     const body = (cells[1] && cells[1].every(c => /^-+$/.test(c)))
@@ -463,21 +468,53 @@ if (!document.getElementById('rules-screen-style')) {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.78rem;
-  margin: 8px 0;
+  margin: 12px 0;
+  background: var(--surface);
+  border: 1px solid var(--lead2);
+  border-radius: 8px;
+  overflow: hidden;
 }
 .rules-table th {
-  text-align: left;
-  color: var(--text3);
+  text-align: center;
+  color: var(--text);
   font-weight: 600;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--lead2);
+  padding: 10px 6px;
+  background: var(--surface2);
+  border-bottom: 2px solid var(--lead2);
+  vertical-align: middle;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  word-break: keep-all;
+  min-width: 60px;
+}
+.rules-table th:first-child {
+  text-align: left;
+  padding-left: 12px;
+}
+.rules-table th img,
+.rules-table td img {
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin-right: 3px;
+  margin-bottom: 1px;
 }
 .rules-table td {
   color: var(--text2);
-  padding: 3px 8px;
+  padding: 8px 6px;
+  text-align: center;
   border-bottom: 1px solid color-mix(in srgb, var(--lead2) 50%, transparent);
+  vertical-align: middle;
 }
 .rules-table tr:last-child td { border-bottom: none; }
+.rules-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+  padding-left: 12px;
+}
 
 /* 여백 */
 .rules-spacer { height: 4px; }

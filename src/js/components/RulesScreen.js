@@ -275,22 +275,22 @@ if (!document.getElementById('rules-screen-style')) {
 /* ── 아이콘 공통 ────────────────────────────── */
 .rules-icon {
   display: inline-block;
-  width: 20px;
-  height: 20px;
-  vertical-align: -4px;
+  width: 30px;
+  height: 30px;
+  vertical-align: -8px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.55);
-  margin-right: 3px;
+  margin-right: 4px;
 }
 
 /* H1 – 에디션 로고 */
-.rules-h1 .rules-icon       { width: 28px; height: 28px; vertical-align: -6px; margin-right: 5px; }
+.rules-h1 .rules-icon       { width: 42px; height: 42px; vertical-align: -12px; margin-right: 7px; }
 /* H2 – 팀 카테고리 헤더 */
-.rules-h2 .rules-icon       { width: 24px; height: 24px; vertical-align: -5px; margin-right: 4px; }
+.rules-h2 .rules-icon       { width: 36px; height: 36px; vertical-align: -10px; margin-right: 6px; }
 /* H3 – 역할 이름 */
-.rules-h3 .rules-icon       { width: 22px; height: 22px; vertical-align: -4px; margin-right: 4px; }
+.rules-h3 .rules-icon       { width: 33px; height: 33px; vertical-align: -8px; margin-right: 5px; }
 
 /* 에디션 배지 (정사각형 PNG) */
 .rules-icon--badge          { border-radius: 5px; }

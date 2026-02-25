@@ -23,10 +23,11 @@ const ROLE_TEAM_MAP = {
 }
 
 export class RulesScreen {
-  constructor() {
+  constructor({ initialPage = 'index.md' } = {}) {
     this.el = null
     this._history = []          // 방문 이력 (뒤로가기용)
     this._currentPage = null
+    this._initialPage = initialPage
     this._touchStartX = 0       // 스와이프 감지용
     this._touchStartY = 0
   }
@@ -36,7 +37,13 @@ export class RulesScreen {
     this.el.className = 'rules-screen'
     container.appendChild(this.el)
     this._setupSwipeGesture()
-    this._navigate('index.md')
+
+    // 초기 페이지가 index.md가 아니면 index.md를 히스토리에 추가 (뒤로가기 지원)
+    if (this._initialPage !== 'index.md') {
+      this._history.push('index.md')
+    }
+
+    this._navigate(this._initialPage)
   }
 
   unmount() { this.el?.remove() }

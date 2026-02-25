@@ -30,6 +30,7 @@ export class PlayerApp {
     this.scriptRoles = null
     this.currentTab  = 'role'
     this.screens     = {}
+    this.pendingRulesPage = null  // 규칙 탭으로 전환 시 표시할 초기 페이지
 
     this.content    = document.getElementById('app-content')
     this.tabBar     = document.getElementById('tab-bar')
@@ -116,6 +117,11 @@ export class PlayerApp {
     })
   }
 
+  navigateToRoleDetail(roleId) {
+    this.pendingRulesPage = `${roleId}.md`
+    this._switchTab('rules')
+  }
+
   _switchTab(tabId) {
     this.currentTab = tabId
     this.content.innerHTML = ''
@@ -144,10 +150,15 @@ export class PlayerApp {
         screen = new Memo()
         break
       case 'dict':
-        screen = new CharacterDict({ scriptRoles: this.scriptRoles })
+        screen = new CharacterDict({
+          scriptRoles: this.scriptRoles,
+          onRoleClick: (roleId) => this.navigateToRoleDetail(roleId)
+        })
         break
       case 'rules':
-        screen = new RulesScreen()
+        const initialPage = this.pendingRulesPage || 'index.md'
+        this.pendingRulesPage = null  // 초기화
+        screen = new RulesScreen({ initialPage })
         break
     }
     if (screen) screen.mount(this.content)

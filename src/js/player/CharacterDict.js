@@ -6,9 +6,10 @@ import { ROLES_TB } from '../data/roles-tb.js'
 import { renderRoleCard } from '../components/RoleCard.js'
 
 export class CharacterDict {
-  constructor({ scriptRoles = null }) {
+  constructor({ scriptRoles = null, onRoleClick = null }) {
     // scriptRoles: 이번 게임에 포함된 역할 id 목록 (null이면 전체)
     this.scriptRoles = scriptRoles
+    this.onRoleClick = onRoleClick
     this.el = null
     this.filter = 'all'
   }
@@ -59,7 +60,17 @@ export class CharacterDict {
     }
 
     roles.forEach(role => {
-      this.el.appendChild(renderRoleCard(role, { compact: false }))
+      const card = renderRoleCard(role, { compact: false })
+
+      // 클릭 이벤트 추가
+      if (this.onRoleClick) {
+        card.classList.add('role-card--clickable')
+        card.addEventListener('click', () => {
+          this.onRoleClick(role.id)
+        })
+      }
+
+      this.el.appendChild(card)
     })
   }
 }
@@ -89,6 +100,18 @@ if (!document.getElementById('dict-style')) {
   background: rgba(122,111,183,0.2);
   border-color: var(--pu-base);
   color: var(--text);
+}
+.role-card--clickable {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.role-card--clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.role-card--clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
   `
   document.head.appendChild(style)

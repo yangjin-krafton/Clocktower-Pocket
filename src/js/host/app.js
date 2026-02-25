@@ -10,6 +10,7 @@
 import { P2PManager }    from '../p2p.js'
 import { engine }        from '../game-engine.js'
 import { LobbyBanner }   from '../components/LobbyBanner.js'
+import { RulesScreen }   from '../components/RulesScreen.js'
 import { Setup }         from './Setup.js'
 import { Grimoire }      from './Grimoire.js'
 import { NightAction }   from './NightAction.js'
@@ -28,6 +29,7 @@ export class HostApp {
     this.doneSteps      = []
     this.container      = document.getElementById('app-content')
     this.bannerSlot     = document.getElementById('lobby-banner')
+    this.tabBar         = document.getElementById('tab-bar')
 
     this.pendingPlayers     = []  // { peerId, name }  — 현재 방 안에 있는 사람
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
@@ -35,6 +37,7 @@ export class HostApp {
     this._gameStarting      = false
     this.lobbyBanner        = null
     this._grimoire          = null  // lobby refresh 용 참조
+    this.currentTab         = 'role'
   }
 
   async init() {
@@ -58,9 +61,10 @@ export class HostApp {
       // ① LobbyBanner 상단 마운트
       this._mountLobbyBanner(roomCode, DEFAULT_PLAYER_COUNT)
 
-      // ② 즉시 Grimoire 진입 (lobby phase)
-      //    설정·참가자 현황·시작 버튼이 Grimoire 안에 있음
-      this._showGrimoire()
+      // ② 탭바 표시 및 초기화
+      this.tabBar.style.display = 'flex'
+      this._buildTabs()
+      this._switchTab('role')
 
     } catch (e) {
       alert('방 생성 실패: ' + e.message)
@@ -158,6 +162,52 @@ export class HostApp {
   }
 
   // ─────────────────────────────────────
+  // 탭 시스템
+  // ─────────────────────────────────────
+
+  _buildTabs() {
+    this.tabBar.innerHTML = ''
+    const tabs = [
+      { id: 'role',  icon: '🎭', label: '그리모아' },
+      { id: 'rules', icon: '📜', label: '규칙' },
+    ]
+    tabs.forEach(tab => {
+      const btn = document.createElement('button')
+      btn.className = 'tab-item' + (tab.id === this.currentTab ? ' active' : '')
+      btn.dataset.tab = tab.id
+      btn.innerHTML = `<span class="tab-icon">${tab.icon}</span><span class="tab-label">${tab.label}</span>`
+      btn.addEventListener('click', () => this._switchTab(tab.id))
+      this.tabBar.appendChild(btn)
+    })
+  }
+
+  _switchTab(tabId) {
+    this.currentTab = tabId
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId)
+    })
+
+    this._clearScreen()
+
+    if (tabId === 'role') {
+      // 현재 게임 상태에 따라 적절한 화면 표시
+      const phase = engine.state.phase
+      if (phase === 'lobby' || phase === 'night') {
+        this._showGrimoire()
+      } else if (phase === 'day') {
+        this._showDayFlow()
+      } else if (phase === 'victory') {
+        // Victory 화면은 별도 처리
+        this._showGrimoire()
+      }
+    } else if (tabId === 'rules') {
+      const rulesScreen = new RulesScreen()
+      rulesScreen.mount(this.container)
+      this.currentScreen = rulesScreen
+    }
+  }
+
+  // ─────────────────────────────────────
   // 화면 전환
   // ─────────────────────────────────────
 
@@ -249,6 +299,11 @@ export class HostApp {
       this.lobbyBanner.startCountdown(COUNTDOWN_SECONDS, () => {
         this._dismissLobbyBanner()
         engine.startNight()
+        // 탭을 'role'로 유지
+        this.currentTab = 'role'
+        this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === 'role')
+        })
         this._showGrimoire()
       })
     }
@@ -265,6 +320,11 @@ export class HostApp {
     engine.startNight()
     this.doneSteps = []
     this._broadcastPhase()
+    // 탭을 'role'로 유지
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
     this._showGrimoire()
   }
 
@@ -276,6 +336,11 @@ export class HostApp {
       this._showVictory(winCheck.winner, winCheck.reason)
       return
     }
+    // 탭을 'role'로 유지
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
     this._showDayFlow()
   }
 
@@ -318,6 +383,11 @@ export class HostApp {
 
   _showVictory(winner, reason) {
     this._clearScreen()
+    // 탭을 'role'로 유지
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
     this.p2p.broadcast('GAME_END', {
       winner,
       reason,

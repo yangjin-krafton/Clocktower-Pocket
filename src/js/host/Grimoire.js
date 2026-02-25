@@ -248,22 +248,6 @@ export class Grimoire {
       panel.appendChild(hint)
     }
 
-    // 4) 규칙서 (로그 위치)
-    const rulesCard = document.createElement('div')
-    rulesCard.className = 'card grimoire-lobby-card'
-    rulesCard.innerHTML = `
-      <div class="card-title">📜 규칙서</div>
-      <div style="font-size:0.72rem;color:var(--text3);margin-bottom:8px;">
-        게임 진행 방법과 역할 판정 기준을 확인하세요
-      </div>
-    `
-    const rulesBtn2 = document.createElement('button')
-    rulesBtn2.className = 'btn btn-full'
-    rulesBtn2.textContent = '규칙 보기'
-    rulesBtn2.addEventListener('click', () => this._showRulesPopup())
-    rulesCard.appendChild(rulesBtn2)
-    panel.appendChild(rulesCard)
-
     this.el.appendChild(panel)
   }
 

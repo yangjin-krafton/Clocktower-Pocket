@@ -65,3 +65,8 @@ function showLanding() {
 }
 
 showLanding()
+
+// 개발 환경에서만 dev 콘솔 활성화 (localhost 또는 127.0.0.1)
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  import('./dev-console.js').catch(e => console.warn('[DEV] dev-console 로드 실패:', e))
+}

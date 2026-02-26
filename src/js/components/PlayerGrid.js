@@ -13,7 +13,7 @@ export function renderPlayerGrid(players, opts = {}) {
     selectedIds = [],
     onSelect = null,
     showRole = false,
-    roleMap = {},   // { playerId: { icon, name } }
+    roleMap = {},   // { playerId: { icon, iconEmoji, name, team } }
   } = opts
 
   const selected = new Set(selectedIds)
@@ -25,13 +25,15 @@ export function renderPlayerGrid(players, opts = {}) {
     el.innerHTML = ''
     players.forEach(player => {
       const isSelected = selected.has(player.id)
-      const roleInfo = roleMap[player.id] || {}
+      const roleInfo   = roleMap[player.id] || {}
 
       const chip = renderPlayerChip(player, {
         selectable,
-        selected: isSelected,
+        selected:      isSelected,
         showRole,
-        roleIcon: roleInfo.icon || '?',
+        roleIcon:      roleInfo.icon      || '',
+        roleIconEmoji: roleInfo.iconEmoji || '',
+        roleTeam:      roleInfo.team      || null,
         onClick: selectable ? (id) => handleSelect(id) : undefined,
       })
       el.appendChild(chip)
@@ -65,8 +67,8 @@ if (!document.getElementById('player-grid-style')) {
   style.textContent = `
 .player-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 8px;
   padding: 4px 0;
 }
   `

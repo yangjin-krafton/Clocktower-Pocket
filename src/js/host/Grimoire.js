@@ -9,7 +9,7 @@ import { renderPhaseHeader }    from '../components/PhaseHeader.js'
 import { renderPlayerGrid }     from '../components/PlayerGrid.js'
 import { renderNightOrderList } from '../components/NightOrderList.js'
 import { renderLogList }        from '../components/LogEntry.js'
-import { ROLES_BY_ID, ROLES_TB } from '../data/roles-tb.js'
+import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode }           from '../room-code.js'
@@ -74,7 +74,12 @@ export class Grimoire {
     const roleMap = {}
     state.players.forEach(p => {
       const role = ROLES_BY_ID[p.role]
-      roleMap[p.id] = { icon: role ? role.icon : '?', name: role ? role.name : p.role }
+      roleMap[p.id] = {
+        icon:      role ? role.icon      : '?',
+        iconEmoji: role ? role.iconEmoji : null,
+        name:      role ? role.name      : p.role,
+        team:      role ? role.team      : 'townsfolk',
+      }
     })
 
     this.el.appendChild(renderPhaseHeader(state))

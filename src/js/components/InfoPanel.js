@@ -70,7 +70,9 @@ export function renderInfoPanel(data) {
     players.forEach(p => {
       const role = ROLES_BY_ID[p.role]
       const chip = renderPlayerChip(p, {
-        roleIcon: role ? role.icon : '?',
+        roleIcon:      role ? role.icon      : '',
+        roleIconEmoji: role ? role.iconEmoji : '',
+        roleTeam:      role ? role.team      : null,
         showRole: true,
       })
       playersEl.appendChild(chip)

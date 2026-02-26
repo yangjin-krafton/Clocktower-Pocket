@@ -53,7 +53,12 @@ export class Victory {
     const roleMap = {}
     state.players.forEach(p => {
       const role = ROLES_BY_ID[p.role]
-      roleMap[p.id] = { icon: role ? role.icon : '?', name: role ? role.name : p.role }
+      roleMap[p.id] = {
+        icon:      role ? role.icon      : '?',
+        iconEmoji: role ? role.iconEmoji : null,
+        name:      role ? role.name      : p.role,
+        team:      role ? role.team      : 'townsfolk',
+      }
     })
 
     revealCard.appendChild(renderPlayerGrid(state.players, { roleMap, showRole: true }))

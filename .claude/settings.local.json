@@ -35,7 +35,8 @@
       "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\src\\\\js\\\\config.js\":*)",
       "Bash(mkdir:*)",
       "Bash(gh run:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "WebFetch(domain:yangjin-krafton.github.io)"
     ],
     "additionalDirectories": [
       "\\tmp"

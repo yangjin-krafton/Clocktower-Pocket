@@ -14,7 +14,7 @@ function buildTabs() {
   const tabs = [
     { id: 'role',    icon: '🏠', label: '홈' },
     { id: 'memo',    icon: '📝', label: '메모' },
-    { id: 'dict',    icon: '📖', label: '사전' },
+    { id: 'dict',    icon: '🃏', label: '역할' },
     { id: 'rules',   icon: '📜', label: '규칙' },
   ]
 

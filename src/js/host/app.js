@@ -95,7 +95,7 @@ export class HostApp {
       { id: 'role',  icon: '🎭', label: '그리모아' },
       { id: 'seats', icon: '🪑', label: '자리배치' },
       { id: 'memo',  icon: '📝', label: '메모' },
-      { id: 'dict',  icon: '📖', label: '사전' },
+      { id: 'dict',  icon: '🃏', label: '역할' },
       { id: 'rules', icon: '📜', label: '규칙' },
     ]
     tabs.forEach(tab => {

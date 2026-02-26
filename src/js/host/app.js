@@ -262,12 +262,23 @@ export class HostApp {
         roleCount:   this.pendingRoleIds.length,
         roleIds:     this.pendingRoleIds,
       }),
-      onStartGame:    () => this._handleManualStart(),
-      onOpenSettings: () => this._showSetupPopup(),
-      onStartNight:   () => this._handleStartNight(),
-      onStartDay:     () => this._handleStartDay(),
-      onNextNightStep:() => this._handleNextNightStep(),
-      onPlayerAction: (action, id) => this._handlePlayerAction(action, id),
+      onStartGame:          () => this._handleManualStart(),
+      onOpenSettings:       () => this._showSetupPopup(),
+      onStartNight:         () => this._handleStartNight(),
+      onStartDay:           () => this._handleStartDay(),
+      onNextNightStep:      () => this._handleNextNightStep(),
+      onPlayerAction:       (action, id) => this._handlePlayerAction(action, id),
+      onPlayerCountChange:  (n) => {
+        this.pendingPlayerCount = Math.max(5, Math.min(15, n))
+        if (this.lobbyBanner) this.lobbyBanner.updateTotal(this.pendingPlayerCount)
+        this._grimoire?.refresh()
+      },
+      onRoleToggle: (roleId) => {
+        const idx = this.pendingRoleIds.indexOf(roleId)
+        if (idx === -1) this.pendingRoleIds.push(roleId)
+        else            this.pendingRoleIds.splice(idx, 1)
+        this._grimoire?.refresh()
+      },
     })
 
     grimoire.mount(this.container)

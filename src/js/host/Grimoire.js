@@ -9,7 +9,7 @@ import { renderPhaseHeader }    from '../components/PhaseHeader.js'
 import { renderPlayerGrid }     from '../components/PlayerGrid.js'
 import { renderNightOrderList } from '../components/NightOrderList.js'
 import { renderLogList }        from '../components/LogEntry.js'
-import { ROLES_BY_ID }          from '../data/roles-tb.js'
+import { ROLES_BY_ID, ROLES_TB } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 
@@ -31,17 +31,20 @@ export class Grimoire {
     getLobbyPlayers, getLobbyConfig,
     onStartGame, onOpenSettings,
     onStartNight, onStartDay, onNextNightStep, onPlayerAction,
+    onPlayerCountChange, onRoleToggle,
   }) {
-    this.engine           = engine
-    this.getLobbyPlayers  = getLobbyPlayers  || (() => [])
-    this.getLobbyConfig   = getLobbyConfig   || (() => ({ playerCount: 7, roleCount: 0 }))
-    this.onStartGame      = onStartGame      || null
-    this.onOpenSettings   = onOpenSettings   || null
-    this.onStartNight     = onStartNight     || null
-    this.onStartDay       = onStartDay       || null
-    this.onNextNightStep  = onNextNightStep  || null
-    this.onPlayerAction   = onPlayerAction   || null
-    this.el               = null
+    this.engine               = engine
+    this.getLobbyPlayers      = getLobbyPlayers      || (() => [])
+    this.getLobbyConfig       = getLobbyConfig       || (() => ({ playerCount: 7, roleCount: 0, roleIds: [] }))
+    this.onStartGame          = onStartGame          || null
+    this.onOpenSettings       = onOpenSettings       || null
+    this.onStartNight         = onStartNight         || null
+    this.onStartDay           = onStartDay           || null
+    this.onNextNightStep      = onNextNightStep       || null
+    this.onPlayerAction       = onPlayerAction       || null
+    this.onPlayerCountChange  = onPlayerCountChange  || null
+    this.onRoleToggle         = onRoleToggle         || null
+    this.el                   = null
   }
 
   mount(container) {
@@ -142,16 +145,18 @@ export class Grimoire {
   // ─────────────────────────────────────
 
   _renderLobby() {
-    const players = this.getLobbyPlayers()
-    const config  = this.getLobbyConfig()
-    const count   = players.length
-    const total   = config.playerCount
+    const players   = this.getLobbyPlayers()
+    const config    = this.getLobbyConfig()
+    const joined    = players.length
+    const total     = config.playerCount
+    const selectedSet = new Set(config.roleIds || [])
+    const roleMatch = selectedSet.size === total
 
     this.el.classList.add('grimoire--lobby')
 
     const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
 
-    // ── 1) 상단 헤더: 매칭 상태 + 설정 버튼 ──────────────────
+    // ── 1) 상단 헤더: 참가자 상태 + 인원 선택기 ──────────────
     const header = document.createElement('div')
     header.className = 'gl-header'
 
@@ -159,23 +164,42 @@ export class Grimoire {
     headerLeft.className = 'gl-header__left'
     headerLeft.innerHTML = `
       <span class="gl-header__title">🏰 게임 준비</span>
-      <span class="gl-header__sub">${count > 0 ? `${count}명 입장됨` : '참가자 연결 대기 중...'}</span>
+      <span class="gl-header__sub">${joined > 0 ? `${joined}명 입장됨` : '참가자 연결 대기 중...'}</span>
     `
 
-    const settingsBtn = document.createElement('button')
-    settingsBtn.className = 'btn gl-header__settings'
-    settingsBtn.innerHTML = `⚙️ 설정<span style="display:block;font-size:0.55rem;color:var(--text4)">${total}인 · ${config.roleCount}개</span>`
-    settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
+    // 인원 선택기
+    const countSel = document.createElement('div')
+    countSel.className = 'gl-count-sel'
+
+    const decBtn = document.createElement('button')
+    decBtn.className = 'gl-count-btn'
+    decBtn.textContent = '−'
+    decBtn.disabled = total <= 5
+    decBtn.addEventListener('click', () => this.onPlayerCountChange?.(total - 1))
+
+    const countLabel = document.createElement('span')
+    countLabel.className = 'gl-count-val'
+    countLabel.textContent = `${total}인`
+
+    const incBtn = document.createElement('button')
+    incBtn.className = 'gl-count-btn'
+    incBtn.textContent = '+'
+    incBtn.disabled = total >= 15
+    incBtn.addEventListener('click', () => this.onPlayerCountChange?.(total + 1))
+
+    countSel.appendChild(decBtn)
+    countSel.appendChild(countLabel)
+    countSel.appendChild(incBtn)
 
     header.appendChild(headerLeft)
-    header.appendChild(settingsBtn)
+    header.appendChild(countSel)
     this.el.appendChild(header)
 
     // ── 2) 참가자 칩 ─────────────────────────────────────────
     const participantsRow = document.createElement('div')
     participantsRow.className = 'gl-participants'
 
-    if (count === 0) {
+    if (joined === 0) {
       participantsRow.innerHTML = `<span class="lobby-wait-dot"></span><span style="color:var(--text4);font-size:0.75rem;margin-left:6px">대기 중...</span>`
     } else {
       players.forEach(p => {
@@ -187,77 +211,73 @@ export class Grimoire {
     }
     this.el.appendChild(participantsRow)
 
-    // ── 3) 역할 토큰 그리드 ───────────────────────────────────
-    if (config.roleIds && config.roleIds.length > 0) {
-      const rolesByTeam = { townsfolk: [], outsider: [], minion: [], demon: [] }
-      config.roleIds.forEach(id => {
-        const role = ROLES_BY_ID[id]
-        if (role && rolesByTeam[role.team]) rolesByTeam[role.team].push(role)
+    // ── 3) 역할 선택 상태 표시 ────────────────────────────────
+    const roleStatus = document.createElement('div')
+    roleStatus.className = 'gl-role-status' + (roleMatch ? ' gl-role-status--ok' : '')
+    roleStatus.textContent = roleMatch
+      ? `✓ ${selectedSet.size}개 선택됨 (${total}인 완성)`
+      : `${selectedSet.size}개 선택 / ${total}인 필요`
+    this.el.appendChild(roleStatus)
+
+    // ── 4) 역할 토큰 그리드 (전체 표시 · 클릭으로 ON/OFF) ────
+    ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
+      const teamRoles = ROLES_TB.filter(r => r.team === team)
+      if (teamRoles.length === 0) return
+
+      const section = document.createElement('div')
+      section.className = 'dict__section'
+
+      const heading = document.createElement('div')
+      heading.className = `dict__section-title dict__section-title--${team}`
+      heading.textContent = TEAM_LABEL[team]
+      section.appendChild(heading)
+
+      const grid = document.createElement('div')
+      grid.className = 'dict__grid'
+
+      teamRoles.forEach(role => {
+        const isSelected = selectedSet.has(role.id)
+        const btn = document.createElement('button')
+        btn.className = `dict__token dict__token--${role.team}` + (isSelected ? ' dict__token--on' : ' dict__token--off')
+
+        const iconDiv = document.createElement('div')
+        iconDiv.className = 'dict__token-icon'
+        if (role.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${role.icon}`
+          img.alt = role.name
+          iconDiv.appendChild(img)
+        } else {
+          iconDiv.textContent = role.iconEmoji || role.icon || '?'
+        }
+
+        const nameDiv = document.createElement('div')
+        nameDiv.className = 'dict__token-name'
+        nameDiv.textContent = role.name
+
+        btn.appendChild(iconDiv)
+        btn.appendChild(nameDiv)
+        btn.addEventListener('click', () => this.onRoleToggle?.(role.id))
+        grid.appendChild(btn)
       })
 
-      ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
-        const teamRoles = rolesByTeam[team]
-        if (teamRoles.length === 0) return
+      section.appendChild(grid)
+      this.el.appendChild(section)
+    })
 
-        const section = document.createElement('div')
-        section.className = 'dict__section'
-
-        const heading = document.createElement('div')
-        heading.className = `dict__section-title dict__section-title--${team}`
-        heading.textContent = TEAM_LABEL[team]
-        section.appendChild(heading)
-
-        const grid = document.createElement('div')
-        grid.className = 'dict__grid'
-
-        teamRoles.forEach(role => {
-          const btn = document.createElement('button')
-          btn.className = `dict__token dict__token--${role.team}`
-
-          const iconDiv = document.createElement('div')
-          iconDiv.className = 'dict__token-icon'
-          if (role.icon?.endsWith('.png')) {
-            const img = document.createElement('img')
-            img.src = `./asset/icons/${role.icon}`
-            img.alt = role.name
-            iconDiv.appendChild(img)
-          } else {
-            iconDiv.textContent = role.iconEmoji || role.icon || '?'
-          }
-
-          const nameDiv = document.createElement('div')
-          nameDiv.className = 'dict__token-name'
-          nameDiv.textContent = role.name
-
-          btn.appendChild(iconDiv)
-          btn.appendChild(nameDiv)
-          btn.addEventListener('click', () => this._showRoleModal(role))
-          grid.appendChild(btn)
-        })
-
-        section.appendChild(grid)
-        this.el.appendChild(section)
-      })
-    } else {
-      const empty = document.createElement('div')
-      empty.className = 'gl-empty'
-      empty.innerHTML = `<div style="font-size:1.8rem;margin-bottom:10px">⚙️</div><div>설정에서 역할을 구성해주세요</div>`
-      this.el.appendChild(empty)
-    }
-
-    // ── 4) 시작 버튼 ─────────────────────────────────────────
+    // ── 5) 시작 버튼 ─────────────────────────────────────────
     const startBtn = document.createElement('button')
     startBtn.className = 'btn btn-gold gl-start-btn'
-    startBtn.textContent = count > 0 ? `🏰 게임 시작 (${count}명)` : '🏰 게임 시작'
-    startBtn.disabled = count === 0
-    if (count === 0) startBtn.style.opacity = '0.45'
+    startBtn.disabled = joined === 0
+    if (joined === 0) startBtn.style.opacity = '0.45'
+    startBtn.textContent = joined > 0 ? `🏰 게임 시작 (${joined}명)` : '🏰 참가자 대기 중...'
     startBtn.addEventListener('click', () => this.onStartGame?.())
     this.el.appendChild(startBtn)
 
-    if (count > 0 && count < 5) {
+    if (joined > 0 && joined < 5) {
       const hint = document.createElement('div')
       hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-top:4px;'
-      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${count}명으로도 시작 가능`
+      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${joined}명으로도 시작 가능`
       this.el.appendChild(hint)
     }
   }
@@ -415,10 +435,57 @@ if (!document.getElementById('grimoire-lobby-style')) {
   font-size: 0.68rem;
   color: var(--text3);
 }
-.gl-header__settings {
-  padding: 7px 12px;
-  font-size: 0.72rem;
+
+/* ── 인원 선택기 ── */
+.gl-count-sel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gl-count-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--lead2);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.12s;
+}
+.gl-count-btn:disabled { opacity: 0.3; cursor: default; }
+.gl-count-btn:not(:disabled):active { background: var(--surface3, var(--lead2)); }
+.gl-count-val {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--gold2);
+  min-width: 30px;
   text-align: center;
+}
+
+/* ── 역할 선택 상태 표시 ── */
+.gl-role-status {
+  font-size: 0.68rem;
+  color: var(--text4);
+  text-align: center;
+  padding: 3px 0 2px;
+}
+.gl-role-status--ok {
+  color: var(--tl-light);
+}
+
+/* ── 역할 토큰 선택 상태 ── */
+.dict__token--on {
+  opacity: 1;
+}
+.dict__token--off {
+  opacity: 0.22;
+  filter: grayscale(0.5);
 }
 
 /* ── 참가자 칩 행 ── */

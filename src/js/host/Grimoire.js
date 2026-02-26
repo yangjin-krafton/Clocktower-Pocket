@@ -292,9 +292,6 @@ export class Grimoire {
     const oval = document.createElement('div')
     oval.className = 'gl-seat-oval'
 
-    // 17인 이상 → 지그재그 이중 궤도 (짝수=외곽, 홀수=내곽)
-    const zigzag = total >= 17
-
     // 인원수별 슬롯 크기
     const slotPx =
       total <= 6  ? 60 :
@@ -323,14 +320,8 @@ export class Grimoire {
 
       // 각도: 12시 방향 시작, 시계 방향
       const angle = (2 * Math.PI * i) / total - Math.PI / 2
-
-      // 지그재그: 짝수 인덱스 = 외곽, 홀수 = 내곽 (76%)
-      const scale = zigzag ? (i % 2 === 0 ? 1.0 : 0.76) : 1.0
-      const rx = RX * scale
-      const ry = RY * scale
-
-      const x = 50 + rx * Math.cos(angle)   // % of width
-      const y = 50 + ry * Math.sin(angle)   // % of height
+      const x = 50 + RX * Math.cos(angle)   // % of width
+      const y = 50 + RY * Math.sin(angle)   // % of height
 
       const borderColor = isSelected
         ? 'var(--gold2)'

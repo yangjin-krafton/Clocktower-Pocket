@@ -29,7 +29,6 @@ export function renderPlayerGrid(players, opts = {}) {
     el.className = 'player-ring'
 
     const total   = players.length
-    const zigzag  = total >= 17
     const compact = total > 12   // 13인 이상은 이름 숨김
 
     // 슬롯 너비 (chipPx × chipPx 정방형 카드)
@@ -55,9 +54,8 @@ export function renderPlayerGrid(players, opts = {}) {
         const roleInfo   = roleMap[player.id] || {}
 
         const angle = (2 * Math.PI * i) / total - Math.PI / 2
-        const scale = zigzag ? (i % 2 === 0 ? 1.0 : 0.76) : 1.0
-        const x = 50 + RX * scale * Math.cos(angle)
-        const y = 50 + RY * scale * Math.sin(angle)
+        const x = 50 + RX * Math.cos(angle)
+        const y = 50 + RY * Math.sin(angle)
 
         const chip = renderPlayerChip(player, {
           selectable,

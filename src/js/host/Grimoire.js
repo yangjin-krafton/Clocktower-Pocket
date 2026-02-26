@@ -164,7 +164,7 @@ export class Grimoire {
     headerLeft.className = 'gl-header__left'
     headerLeft.innerHTML = `
       <span class="gl-header__title">🏰 게임 준비</span>
-      <span class="gl-header__sub">${joined > 0 ? `${joined}명 입장됨` : '참가자 연결 대기 중...'}</span>
+      <span class="gl-header__sub">${total}인 게임</span>
     `
 
     // 인원 선택기
@@ -195,21 +195,6 @@ export class Grimoire {
     header.appendChild(countSel)
     this.el.appendChild(header)
 
-    // ── 2) 참가자 칩 ─────────────────────────────────────────
-    const participantsRow = document.createElement('div')
-    participantsRow.className = 'gl-participants'
-
-    if (joined === 0) {
-      participantsRow.innerHTML = `<span class="lobby-wait-dot"></span><span style="color:var(--text4);font-size:0.75rem;margin-left:6px">대기 중...</span>`
-    } else {
-      players.forEach(p => {
-        const chip = document.createElement('span')
-        chip.className = 'grimoire-lobby-chip'
-        chip.textContent = p.name
-        participantsRow.appendChild(chip)
-      })
-    }
-    this.el.appendChild(participantsRow)
 
     // ── 3) 역할 선택 상태 표시 ────────────────────────────────
     const roleStatus = document.createElement('div')
@@ -268,16 +253,16 @@ export class Grimoire {
     // ── 5) 시작 버튼 ─────────────────────────────────────────
     const startBtn = document.createElement('button')
     startBtn.className = 'btn btn-gold gl-start-btn'
-    startBtn.disabled = joined === 0
-    if (joined === 0) startBtn.style.opacity = '0.45'
-    startBtn.textContent = joined > 0 ? `🏰 게임 시작 (${joined}명)` : '🏰 참가자 대기 중...'
+    startBtn.disabled = !roleMatch
+    if (!roleMatch) startBtn.style.opacity = '0.45'
+    startBtn.textContent = roleMatch ? `🏰 게임 시작 (${total}명)` : '🏰 역할 선택 미완료'
     startBtn.addEventListener('click', () => this.onStartGame?.())
     this.el.appendChild(startBtn)
 
-    if (joined > 0 && joined < 5) {
+    if (total < 5) {
       const hint = document.createElement('div')
       hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-top:4px;'
-      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${joined}명으로도 시작 가능`
+      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${total}명으로도 시작 가능`
       this.el.appendChild(hint)
     }
   }

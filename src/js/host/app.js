@@ -1,15 +1,12 @@
 /**
- * 호스트 앱 — 진입점
+ * 호스트 앱 — 진입점 (오프라인 전용)
  *
  * 흐름:
- *   진입 → 방 자동 생성 → 즉시 Grimoire (lobby phase) + LobbyBanner
- *          Grimoire 안에서: 참가자 현황 확인 · 설정 변경 · 게임 시작 버튼
- *          플레이어는 자유롭게 입퇴장 (아무 제한 없음)
- *          호스트가 "게임 시작" 누르면 → 역할 배정 → 카운트다운 → 정식 시작
+ *   진입 → 즉시 Grimoire (lobby phase)
+ *          Grimoire 안에서: 인원/역할 설정 · 게임 시작 버튼
+ *          호스트가 "게임 시작" 누르면 → 역할 배정 → 밤 페이즈 시작
  */
-import { P2PManager }    from '../p2p.js'
 import { engine }        from '../game-engine.js'
-import { LobbyBanner }   from '../components/LobbyBanner.js'
 import { RulesScreen }   from '../components/RulesScreen.js'
 import { Setup }         from './Setup.js'
 import { Grimoire }      from './Grimoire.js'
@@ -18,56 +15,28 @@ import { DayFlow }       from './DayFlow.js'
 import { Victory }       from './Victory.js'
 import { ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 
-const COUNTDOWN_SECONDS    = 5
 const DEFAULT_PLAYER_COUNT = 7
 
 export class HostApp {
   constructor() {
-    this.p2p            = new P2PManager()
     this.currentScreen  = null
     this.nightAction    = null
     this.doneSteps      = []
     this.container      = document.getElementById('app-content')
-    this.bannerSlot     = document.getElementById('lobby-banner')
     this.tabBar         = document.getElementById('tab-bar')
 
-    this.pendingPlayers     = []  // { peerId, name }  — 현재 방 안에 있는 사람
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
     this.pendingRoleIds     = []
     this._gameStarting      = false
-    this.lobbyBanner        = null
-    this._grimoire          = null  // lobby refresh 용 참조
+    this._grimoire          = null
     this.currentTab         = 'role'
   }
 
-  async init() {
-    this._setupP2PHandlers()
-
-    this.container.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--text3)">
-        <div style="font-size:2rem;margin-bottom:10px">🏰</div>
-        <div>방 생성 중...</div>
-      </div>
-    `
-
-    const roomCode = P2PManager.generateRoomCode()
-    try {
-      await this.p2p.createRoom(roomCode)
-
-      // 기본 설정
-      this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
-      this.pendingRoleIds     = this._autoRoles(DEFAULT_PLAYER_COUNT)
-
-      // ① LobbyBanner 상단 마운트
-      this._mountLobbyBanner(roomCode, DEFAULT_PLAYER_COUNT)
-
-      // ② 탭바가 이미 표시되어 있으므로 호스트용 탭으로 재구성
-      this._buildTabs()
-      this._switchTab('role')
-
-    } catch (e) {
-      alert('방 생성 실패: ' + e.message)
-    }
+  init() {
+    this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
+    this.pendingRoleIds     = this._autoRoles(DEFAULT_PLAYER_COUNT)
+    this._buildTabs()
+    this._switchTab('role')
   }
 
   // ─────────────────────────────────────
@@ -114,14 +83,11 @@ export class HostApp {
       onCreateRoom: (playerCount, roleIds) => {
         this.pendingPlayerCount = playerCount
         this.pendingRoleIds     = roleIds
-        if (this.lobbyBanner) this.lobbyBanner.updateTotal(playerCount)
         overlay.remove()
-        // Grimoire lobby 갱신
         this._grimoire?.refresh()
       },
     })
 
-    // "방 생성하기" → "설정 완료"로 버튼 텍스트 변경
     const origRender = setup._render.bind(setup)
     setup._render = function () {
       origRender()
@@ -131,7 +97,6 @@ export class HostApp {
 
     setup.mount(box)
 
-    // 배경 클릭 → 기본값 유지하고 닫기
     overlay.addEventListener('click', e => {
       if (e.target === overlay) {
         overlay.remove()
@@ -144,35 +109,16 @@ export class HostApp {
   }
 
   // ─────────────────────────────────────
-  // LobbyBanner 관리
-  // ─────────────────────────────────────
-
-  _mountLobbyBanner(roomCode, total) {
-    this._dismissLobbyBanner()
-    this.lobbyBanner = new LobbyBanner({ roomCode, total })
-    this.lobbyBanner.mount(this.bannerSlot)
-  }
-
-  _dismissLobbyBanner() {
-    if (this.lobbyBanner) {
-      this.lobbyBanner.dismiss()
-      this.lobbyBanner = null
-    }
-  }
-
-  // ─────────────────────────────────────
   // 탭 시스템
   // ─────────────────────────────────────
 
   _buildTabs() {
     this.tabBar.innerHTML = ''
     const tabs = [
-      { id: 'role',    icon: '🎭', label: '그리모아' },
-      { id: 'tracker', icon: '👥', label: '플레이어' },
-      { id: 'emoji',   icon: '💬', label: '시그널' },
-      { id: 'memo',    icon: '📝', label: '메모' },
-      { id: 'dict',    icon: '📖', label: '사전' },
-      { id: 'rules',   icon: '📜', label: '규칙' },
+      { id: 'role',  icon: '🎭', label: '그리모아' },
+      { id: 'memo',  icon: '📝', label: '메모' },
+      { id: 'dict',  icon: '📖', label: '사전' },
+      { id: 'rules', icon: '📜', label: '규칙' },
     ]
     tabs.forEach(tab => {
       const btn = document.createElement('button')
@@ -193,14 +139,12 @@ export class HostApp {
     this._clearScreen()
 
     if (tabId === 'role') {
-      // 현재 게임 상태에 따라 적절한 화면 표시
       const phase = engine.state?.phase || 'lobby'
       if (phase === 'lobby' || phase === 'night') {
         this._showGrimoire()
       } else if (phase === 'day') {
         this._showDayFlow()
       } else {
-        // Victory 또는 기타 상태
         this._showGrimoire()
       }
     } else if (tabId === 'rules') {
@@ -228,14 +172,6 @@ export class HostApp {
         dict.mount(this.container)
         this.currentScreen = dict
       })
-    } else {
-      // tracker, emoji — 참가자 전용 기능
-      this.container.innerHTML = `
-        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
-          <div style="font-size:2rem;margin-bottom:12px">🎮</div>
-          <div>참가자 전용 기능입니다</div>
-        </div>
-      `
     }
   }
 
@@ -256,7 +192,10 @@ export class HostApp {
 
     const grimoire = new Grimoire({
       engine,
-      getLobbyPlayers: () => this.pendingPlayers,
+      getLobbyPlayers: () => Array.from(
+        { length: this.pendingPlayerCount },
+        (_, i) => ({ name: `플레이어${i + 1}` })
+      ),
       getLobbyConfig:  () => ({
         playerCount: this.pendingPlayerCount,
         roleCount:   this.pendingRoleIds.length,
@@ -270,7 +209,6 @@ export class HostApp {
       onPlayerAction:       (action, id) => this._handlePlayerAction(action, id),
       onPlayerCountChange:  (n) => {
         this.pendingPlayerCount = Math.max(5, Math.min(15, n))
-        if (this.lobbyBanner) this.lobbyBanner.updateTotal(this.pendingPlayerCount)
         this._grimoire?.refresh()
       },
       onRoleToggle: (roleId) => {
@@ -285,86 +223,36 @@ export class HostApp {
     this.currentScreen = grimoire
     this._grimoire     = grimoire
 
-    engine.on('stateChanged',  () => grimoire.refresh())
-    engine.on('nightResolved', ({ deaths }) => this._broadcastDeaths(deaths))
+    engine.on('stateChanged', () => grimoire.refresh())
   }
 
   // ─────────────────────────────────────
-  // 게임 시작 — 호스트가 수동으로 버튼 클릭
+  // 게임 시작
   // ─────────────────────────────────────
 
   _handleManualStart() {
     if (this._gameStarting) return
-    if (this.pendingPlayers.length === 0) return
-
-    const actualCount = this.pendingPlayers.length
-
-    // 역할 수가 실제 인원과 다르면 자동 재선택
-    if (this.pendingRoleIds.length !== actualCount) {
-      this.pendingRoleIds = this._autoRoles(actualCount)
-    }
-
-    this._startGameWithCountdown()
-  }
-
-  _startGameWithCountdown() {
-    if (this._gameStarting) return
     this._gameStarting = true
 
-    const names   = this.pendingPlayers.map(p => p.name)
-    const peerIds = this.pendingPlayers.map(p => p.peerId)
+    const names = Array.from(
+      { length: this.pendingPlayerCount },
+      (_, i) => `플레이어${i + 1}`
+    )
 
     engine.reset()
     engine.initGame(names, this.pendingRoleIds)
+    engine.startNight()
 
-    engine.state.players.forEach((p, idx) => {
-      if (peerIds[idx]) p.peerId = peerIds[idx]
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
     })
-
-    // 역할 개별 전송
-    engine.state.players.forEach(p => {
-      if (p.peerId) {
-        this.p2p.sendToPeer(p.peerId, 'ROLE_ASSIGN', {
-          playerId: p.id,
-          role:     p.role,
-          team:     p.team,
-        })
-      }
-    })
-
-    const playerList = engine.state.players.map(p => ({ id: p.id, name: p.name }))
-
-    this.p2p.broadcast('COUNTDOWN', {
-      seconds: COUNTDOWN_SECONDS,
-      players: playerList,
-    })
-
-    if (this.lobbyBanner) {
-      this.lobbyBanner.startCountdown(COUNTDOWN_SECONDS, () => {
-        this._dismissLobbyBanner()
-        engine.startNight()
-        // 탭을 'role'로 유지
-        this.currentTab = 'role'
-        this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.tab === 'role')
-        })
-        this._showGrimoire()
-      })
-    }
-
-    setTimeout(() => {
-      this.p2p.broadcast('GAME_START', {
-        players: playerList,
-        script:  'trouble-brewing',
-      })
-    }, COUNTDOWN_SECONDS * 1000)
+    this._showGrimoire()
   }
 
   _handleStartNight() {
     engine.startNight()
     this.doneSteps = []
-    this._broadcastPhase()
-    // 탭을 'role'로 유지
     this.currentTab = 'role'
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === 'role')
@@ -374,13 +262,11 @@ export class HostApp {
 
   _handleStartDay() {
     engine.startDay()
-    this._broadcastPhase()
     const winCheck = engine.checkWinCondition()
     if (winCheck.gameOver) {
       this._showVictory(winCheck.winner, winCheck.reason)
       return
     }
-    // 탭을 'role'로 유지
     this.currentTab = 'role'
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === 'role')
@@ -427,15 +313,9 @@ export class HostApp {
 
   _showVictory(winner, reason) {
     this._clearScreen()
-    // 탭을 'role'로 유지
     this.currentTab = 'role'
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === 'role')
-    })
-    this.p2p.broadcast('GAME_END', {
-      winner,
-      reason,
-      roles: engine.state.players.map(p => ({ id: p.id, role: p.role })),
     })
     const victory = new Victory({
       engine,
@@ -443,9 +323,9 @@ export class HostApp {
       reason,
       onNewGame: () => {
         engine.reset()
-        this.pendingPlayers = []
         this._gameStarting  = false
-        this.init()
+        this.pendingRoleIds = this._autoRoles(this.pendingPlayerCount)
+        this._switchTab('role')
       },
     })
     victory.mount(this.container)
@@ -453,82 +333,4 @@ export class HostApp {
   }
 
   _handlePlayerAction(action, actorId) {}
-
-  // ─────────────────────────────────────
-  // P2P 핸들러
-  // ─────────────────────────────────────
-
-  _setupP2PHandlers() {
-    this.p2p.onPeerJoined = (peerId) => {
-      console.log('[Host] Peer joined:', peerId)
-    }
-
-    this.p2p.onPeerLeft = (peerId) => {
-      // 게임 시작 전: 퇴장 처리
-      if (!this._gameStarting) {
-        this.pendingPlayers = this.pendingPlayers.filter(p => p.peerId !== peerId)
-        const seatedList = this.pendingPlayers.map((p, i) => ({ name: p.name, seatNum: i + 1 }))
-        if (this.lobbyBanner) {
-          this.lobbyBanner.updateSeats(seatedList, this.pendingPlayerCount)
-        }
-        this.p2p.broadcast('SEAT_UPDATE', {
-          seated: seatedList,
-          total:  this.pendingPlayerCount,
-        })
-        // Grimoire 참가자 목록 갱신
-        this._grimoire?.refresh()
-      }
-    }
-
-    this.p2p.on('JOIN_REQUEST', (data, peerId) => {
-      if (this._gameStarting) return
-      if (this.pendingPlayers.find(p => p.peerId === peerId)) return
-
-      const name = data.playerName || `플레이어${this.pendingPlayers.length + 1}`
-      this.pendingPlayers.push({ peerId, name })
-
-      // JOIN_RESPONSE
-      this.p2p.sendToPeer(peerId, 'JOIN_RESPONSE', {
-        ok:         true,
-        roomCode:   this.p2p.roomCode,
-        playerName: name,
-      })
-
-      // 착석 현황 전체 브로드캐스트
-      const seatedList = this.pendingPlayers.map((p, i) => ({ name: p.name, seatNum: i + 1 }))
-      this.p2p.broadcast('SEAT_UPDATE', {
-        seated: seatedList,
-        total:  this.pendingPlayerCount,
-      })
-
-      // LobbyBanner + Grimoire 갱신
-      if (this.lobbyBanner) {
-        this.lobbyBanner.updateSeats(seatedList, this.pendingPlayerCount)
-      }
-      this._grimoire?.refresh()
-    })
-
-    this.p2p.on('EMOJI', (data) => {
-      const { targetId } = data
-      if (targetId === 'all') {
-        this.p2p.broadcast('EMOJI', data)
-      } else {
-        const target = engine.getPlayer(targetId)
-        if (target?.peerId) this.p2p.sendToPeer(target.peerId, 'EMOJI', data)
-      }
-    })
-  }
-
-  _broadcastPhase() {
-    this.p2p.broadcast('PHASE_CHANGE', {
-      phase: engine.state.phase,
-      round: engine.state.round,
-    })
-  }
-
-  _broadcastDeaths(deathIds) {
-    deathIds.forEach(id => {
-      this.p2p.broadcast('PLAYER_DIED', { playerId: id, cause: 'night' })
-    })
-  }
 }

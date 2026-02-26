@@ -1,21 +1,6 @@
 /**
- * 참가자 앱 — 진입점
- *
- * 흐름:
- *   Join → 방 접속 → 즉시 게임 탭 전체 진입
- *                   + LobbyBanner 상단 고정 (착석 현황)
- *        → SEAT_UPDATE: LobbyBanner.updateSeats()
- *        → ROLE_ASSIGN: 역할 탭 갱신
- *        → COUNTDOWN:   LobbyBanner.startCountdown()
- *        → GAME_START:  LobbyBanner.dismiss(), 플레이어 목록 확정
+ * 참가자 앱 — 미사용 (오프라인 전용으로 전환됨)
  */
-import { P2PManager }     from '../p2p.js'
-import { LobbyBanner }    from '../components/LobbyBanner.js'
-import { Join }           from './Join.js'
-import { Waiting }        from './Waiting.js'
-import { RoleCardScreen } from './RoleCardScreen.js'
-import { PlayerTracker }  from './PlayerTracker.js'
-import { EmojiPanel }     from './EmojiPanel.js'
 import { Memo }           from './Memo.js'
 import { CharacterDict }  from './CharacterDict.js'
 import { RulesScreen }    from '../components/RulesScreen.js'

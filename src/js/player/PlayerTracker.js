@@ -150,12 +150,13 @@ if (!document.getElementById('tracker-style')) {
 .tracker__row--dead { opacity: 0.5; }
 .tracker__left { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
 .tracker__seat {
-  width: 20px; height: 20px;
+  width: 28px; height: 28px;
   border-radius: 50%;
-  background: var(--lead2);
+  background: rgba(212,168,40,0.1);
+  border: 1px solid rgba(212,168,40,0.35);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.6rem;
-  color: var(--text3);
+  font-size: 0.82rem;
+  color: var(--gold2);
   font-weight: 700;
   flex-shrink: 0;
 }

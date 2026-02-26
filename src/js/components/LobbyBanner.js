@@ -219,14 +219,11 @@ if (!document.getElementById('lobby-banner-style')) {
 }
 .lobby-banner__chip {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   white-space: nowrap;
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .lobby-banner__chip--filled {
   background: rgba(91,179,198,0.15);

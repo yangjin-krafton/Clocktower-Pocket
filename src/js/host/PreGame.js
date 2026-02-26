@@ -158,17 +158,19 @@ if (!document.getElementById('pregame-style')) {
 .pregame__seat--empty   { opacity: 0.45; }
 
 .pregame__seat-num {
-  width: 22px; height: 22px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   background: var(--lead2);
+  border: 1px solid rgba(92,83,137,0.4);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.65rem; font-weight: 700;
+  font-size: 0.88rem; font-weight: 700;
   color: var(--text3);
   flex-shrink: 0;
 }
 .pregame__seat--filled .pregame__seat-num {
-  background: var(--tl-base);
-  color: #fff;
+  background: rgba(212,168,40,0.15);
+  border-color: rgba(212,168,40,0.5);
+  color: var(--gold2);
 }
 .pregame__seat-status {
   font-size: 0.78rem;

@@ -172,8 +172,9 @@ if (!document.getElementById('victory-style')) {
   font-size: 0.75rem;
 }
 .victory__role-seat {
-  width: 18px; text-align: center;
-  color: var(--text4); font-size: 0.65rem;
+  min-width: 28px; text-align: center;
+  color: var(--gold2); font-size: 0.88rem;
+  font-weight: 700;
 }
 .victory__role-icon {
   font-size: 1rem;

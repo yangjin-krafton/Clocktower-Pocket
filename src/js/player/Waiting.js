@@ -53,8 +53,8 @@ export class Waiting {
         const stroke = isMe ? '#f0d060' : '#9b7ec8'
         return `
           <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
-          <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
-            font-size="10" font-weight="700" fill="white" font-family="sans-serif">${seatNum}</text>
+          <text x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}" text-anchor="middle"
+            font-size="13" font-weight="700" fill="${isMe ? '#f0cc60' : '#fff'}" font-family="sans-serif">${seatNum}</text>
         `
       } else {
         return `

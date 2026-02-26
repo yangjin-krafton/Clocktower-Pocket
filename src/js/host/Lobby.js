@@ -153,15 +153,16 @@ if (!document.getElementById('lobby-style')) {
 }
 .lobby__player-row:last-child { border-bottom: none; }
 .lobby__seat {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--lead2);
+  background: rgba(212,168,40,0.12);
+  border: 1px solid rgba(212,168,40,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
-  color: var(--text3);
+  font-size: 0.88rem;
+  color: var(--gold2);
   font-weight: 700;
   flex-shrink: 0;
 }

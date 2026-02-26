@@ -36,7 +36,8 @@
       "Bash(mkdir:*)",
       "Bash(gh run:*)",
       "Bash(git remote:*)",
-      "WebFetch(domain:yangjin-krafton.github.io)"
+      "WebFetch(domain:yangjin-krafton.github.io)",
+      "Bash(git:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

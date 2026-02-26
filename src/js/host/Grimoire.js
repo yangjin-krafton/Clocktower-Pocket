@@ -265,16 +265,6 @@ export class Grimoire {
     // ── 2) 원형 자리 배치 휠 ─────────────────────────────────
     this._renderSeatWheel(total, seats)
 
-    // ── 3) 자동 배정 버튼 ──────────────────────────────────────
-    const autoBtn = document.createElement('button')
-    autoBtn.className = 'btn btn-full'
-    autoBtn.style.cssText = 'font-size:0.78rem;padding:9px;margin:0 0 2px;color:var(--text3);'
-    autoBtn.textContent = '🎲 역할 자동 배정'
-    autoBtn.addEventListener('click', () => {
-      this._selectedSeat = null
-      this.onAutoAssign?.()
-    })
-    this.el.appendChild(autoBtn)
 
     // ── 4) 역할 선택 패널 (자리 선택 시) ──────────────────────
     if (this._selectedSeat !== null) {
@@ -375,8 +365,86 @@ export class Grimoire {
       oval.appendChild(slot)
     })
 
+    // ── 타원 중앙 조작 UI ────────────────────────────────────
+    const { valid, shortMsg, counts, filledCnt } = this._validateSeats(total, seats)
+
+    const center = document.createElement('div')
+    center.className = 'gl-oval-center'
+
+    // 인원 + 상태 한 줄
+    const statusEl = document.createElement('div')
+    statusEl.className = 'gl-oval-center__status' + (valid ? ' gl-oval-center__status--ok' : '')
+    statusEl.textContent = `${total}인 · ${shortMsg}`
+    center.appendChild(statusEl)
+
+    // 구성 현황 배지 (배정된 역할이 있을 때)
+    if (filledCnt > 0) {
+      const badgeRow = document.createElement('div')
+      badgeRow.className = 'gl-oval-center__badges'
+      const BADGE = { townsfolk:['badge-town','마을'], outsider:['badge-outside','아웃'], minion:['badge-minion','미니언'], demon:['badge-minion','데몬'] }
+      Object.entries(counts).forEach(([team, cnt]) => {
+        if (!cnt) return
+        const [cls, label] = BADGE[team]
+        const b = document.createElement('span')
+        b.className = `badge ${cls}`
+        b.style.fontSize = '0.55rem'
+        b.textContent = `${label}${cnt}`
+        badgeRow.appendChild(b)
+      })
+      center.appendChild(badgeRow)
+    }
+
+    // 자동 배정 버튼
+    const autoBtn = document.createElement('button')
+    autoBtn.className = 'btn gl-oval-center__btn'
+    autoBtn.textContent = '🎲 자동 배정'
+    autoBtn.addEventListener('click', () => {
+      this._selectedSeat = null
+      this.onAutoAssign?.()
+    })
+    center.appendChild(autoBtn)
+
+    // 게임 시작 버튼
+    const startBtn = document.createElement('button')
+    startBtn.className = 'btn btn-gold gl-oval-center__btn'
+    startBtn.disabled = !valid
+    if (!valid) startBtn.style.opacity = '0.45'
+    startBtn.textContent = valid ? '🏰 게임 시작' : '🏰 미완성'
+    startBtn.addEventListener('click', () => this.onStartGame?.())
+    center.appendChild(startBtn)
+
+    oval.appendChild(center)
+
     wrap.appendChild(oval)
     this.el.appendChild(wrap)
+  }
+
+  /** 자리 배정 유효성 검사 — 결과 반환 */
+  _validateSeats(total, seats) {
+    const counts    = { townsfolk: 0, outsider: 0, minion: 0, demon: 0 }
+    const filledCnt = seats.filter(Boolean).length
+    seats.forEach(r => {
+      const role = r ? ROLES_BY_ID[r] : null
+      if (role) counts[role.team] = (counts[role.team] || 0) + 1
+    })
+    const comp     = PLAYER_COUNTS[total]
+    const hasBaron = seats.includes('baron')
+    let valid = false, msg = '', shortMsg = ''
+
+    if (filledCnt < total) {
+      msg = shortMsg = `${filledCnt}/${total} 배정`
+    } else if (comp) {
+      const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
+      const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
+      if (counts.demon < 1)                 { msg = '데몬 1개 필요';                          shortMsg = '데몬 필요' }
+      else if (counts.minion < comp.minion) { msg = `미니언 ${comp.minion}개 필요`;          shortMsg = `미니언 부족` }
+      else if (counts.townsfolk < needTown) { msg = `마을주민 ${needTown}개 필요`;           shortMsg = `마을 부족` }
+      else if (counts.outsider  < needOut)  { msg = `아웃사이더 ${needOut}개 필요`;          shortMsg = `아웃 부족` }
+      else                                  { valid = true; msg = `✓ ${total}인 완성`;        shortMsg = `✓ 완성` }
+    } else {
+      if (filledCnt === total) { valid = true; msg = shortMsg = `✓ ${total}인 완성` }
+    }
+    return { valid, msg, shortMsg, counts, filledCnt }
   }
 
   _renderRolePanel(seats) {
@@ -466,60 +534,19 @@ export class Grimoire {
   }
 
   _renderLobbyFooter(total, seats) {
-    const counts     = { townsfolk: 0, outsider: 0, minion: 0, demon: 0 }
-    const filledCnt  = seats.filter(Boolean).length
-    seats.forEach(r => {
-      const role = r ? ROLES_BY_ID[r] : null
-      if (role) counts[role.team] = (counts[role.team] || 0) + 1
-    })
+    // 자리 선택 중일 때는 역할 패널이 이미 표시되므로 footer 최소화
+    if (this._selectedSeat !== null) return
 
-    const comp     = PLAYER_COUNTS[total]
-    const hasBaron = seats.includes('baron')
-    let valid = false
-    let msg   = ''
+    const { msg, valid } = this._validateSeats(total, seats)
 
-    if (filledCnt < total) {
-      msg = `${filledCnt} / ${total} 자리 배정 완료`
-    } else if (comp) {
-      const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
-      const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
-      if (counts.demon < 1)              msg = '데몬 1개 필요'
-      else if (counts.minion < comp.minion) msg = `미니언 ${comp.minion}개 필요 (현재 ${counts.minion})`
-      else if (counts.townsfolk < needTown) msg = `마을주민 ${needTown}개 필요 (현재 ${counts.townsfolk})`
-      else if (counts.outsider  < needOut)  msg = `아웃사이더 ${needOut}개 필요 (현재 ${counts.outsider})`
-      else { valid = true; msg = `✓ ${total}인 구성 완성` }
-    } else {
-      if (filledCnt === total) { valid = true; msg = `✓ ${total}인 구성 완성` }
+    // 상세 상태 텍스트 (중앙 패널 보조)
+    if (!valid) {
+      const status = document.createElement('div')
+      status.className = 'gl-role-status'
+      status.style.textAlign = 'center'
+      status.textContent = msg
+      this.el.appendChild(status)
     }
-
-    // 구성 현황 배지
-    if (filledCnt > 0) {
-      const compRow = document.createElement('div')
-      compRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;'
-      const BADGE = { townsfolk:['badge-town','마을'], outsider:['badge-outside','아웃'], minion:['badge-minion','미니언'], demon:['badge-minion','데몬'] }
-      Object.entries(counts).forEach(([team, cnt]) => {
-        if (!cnt) return
-        const [cls, label] = BADGE[team]
-        const b = document.createElement('span')
-        b.className = `badge ${cls}`
-        b.textContent = `${label} ${cnt}`
-        compRow.appendChild(b)
-      })
-      this.el.appendChild(compRow)
-    }
-
-    const status = document.createElement('div')
-    status.className = 'gl-role-status' + (valid ? ' gl-role-status--ok' : '')
-    status.textContent = msg
-    this.el.appendChild(status)
-
-    const startBtn = document.createElement('button')
-    startBtn.className = 'btn btn-gold gl-start-btn'
-    startBtn.disabled  = !valid
-    if (!valid) startBtn.style.opacity = '0.45'
-    startBtn.textContent = valid ? `🏰 방코드 생성 & 게임 시작 (${total}명)` : `🏰 ${msg}`
-    startBtn.addEventListener('click', () => this.onStartGame?.())
-    this.el.appendChild(startBtn)
   }
 
   // ─────────────────────────────────────
@@ -793,6 +820,46 @@ if (!document.getElementById('grimoire-lobby-style')) {
 
 .gl-role-panel {
   margin-top: 4px;
+}
+
+/* ── 타원 중앙 조작 패널 ── */
+.gl-oval-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  z-index: 5;
+  pointer-events: none;
+  width: 120px;
+}
+.gl-oval-center > * { pointer-events: auto; }
+
+.gl-oval-center__status {
+  font-size: 0.62rem;
+  color: var(--text4);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.gl-oval-center__status--ok { color: var(--tl-light); }
+
+.gl-oval-center__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.gl-oval-center__btn {
+  width: 100%;
+  font-size: 0.72rem;
+  padding: 8px 6px;
+  white-space: nowrap;
+  border-radius: 8px;
 }
 
 /* ── 참가자 칩 행 ── */

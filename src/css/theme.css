@@ -389,14 +389,11 @@ body {
 /* ── 카운트다운 스타일은 LobbyBanner.js 내부에서 관리 ── */
 
 /* ── 반응형: 600px 이상 (태블릿 / 넓은 폰) ── */
+/* body padding/align 변경 금지 — tab-bar는 position:fixed 뷰포트 기준이므로
+   body에 padding을 주면 앱과 탭바 사이 gap이 생김 */
 @media (min-width: 600px) {
-  body {
-    align-items: center;
-    padding: 20px 0;
-  }
   .app {
     border-radius: var(--radius-lg);
-    min-height: calc(100vh - 40px);
   }
 }
 

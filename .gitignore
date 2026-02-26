@@ -1,5 +1,3 @@
 # 환경 변수 (절대 커밋 금지)
 .env
 
-# 자동 생성 설정 파일 (GitHub Actions 또는 로컬 스크립트로 생성)
-src/js/config.js

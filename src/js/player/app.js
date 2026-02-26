@@ -278,7 +278,10 @@ export class PlayerApp {
 
   _showGameEnd(winner, reason) {
     this._dismissLobbyBanner()
-    this.tabBar.style.display = 'none'
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
     this.content.innerHTML = ''
 
     const el = document.createElement('div')

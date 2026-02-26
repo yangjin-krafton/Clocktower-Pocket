@@ -1,17 +1,25 @@
 /**
- * P-07 CharacterDict — 캐릭터 사전
- * 이번 스크립트 전체 역할 설명 (정적 데이터)
+ * P-07 CharacterDict — 캐릭터 사전 (그리드 토큰 뷰)
+ *
+ * - 그리드 레이아웃: 4열, 진영별 섹션
+ * - 토큰 클릭 → 역할 상세 모달 (큰 화면)
+ * - 모달 안: 아이콘·이름·진영·능력 + 규칙 바로가기 버튼
+ * - 배경 클릭 or ✕ → 모달 닫기
  */
 import { ROLES_TB } from '../data/roles-tb.js'
-import { renderRoleCard } from '../components/RoleCard.js'
+
+const TEAM_LABEL  = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+const TEAM_COLOR  = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)' }
+const GEM_CLASS   = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'gem-minion', demon: 'gem-demon' }
+const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
 
 export class CharacterDict {
-  constructor({ scriptRoles = null, onRoleClick = null }) {
-    // scriptRoles: 이번 게임에 포함된 역할 id 목록 (null이면 전체)
+  constructor({ scriptRoles = null, onRoleClick = null } = {}) {
     this.scriptRoles = scriptRoles
-    this.onRoleClick = onRoleClick
-    this.el = null
+    this.onRoleClick = onRoleClick  // (roleId) => 규칙 탭 해당 페이지로 이동
+    this.el     = null
     this.filter = 'all'
+    this._modal = null
   }
 
   mount(container) {
@@ -21,70 +29,203 @@ export class CharacterDict {
     container.appendChild(this.el)
   }
 
-  unmount() { this.el?.remove() }
+  unmount() {
+    this._closeModal()
+    this.el?.remove()
+  }
+
+  // ─────────────────────────────────────
+  // 렌더링
+  // ─────────────────────────────────────
+
+  _getRoles() {
+    let roles = ROLES_TB
+    if (this.scriptRoles) roles = roles.filter(r => this.scriptRoles.includes(r.id))
+    if (this.filter !== 'all') roles = roles.filter(r => r.team === this.filter)
+    return roles
+  }
 
   _render() {
     this.el.innerHTML = ''
 
-    const teams = ['townsfolk','outsider','minion','demon']
-    const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'데몬' }
-
-    // 필터 탭
+    // ── 필터 버튼 ──
     const filterRow = document.createElement('div')
     filterRow.className = 'dict__filter'
-    ;['all', ...teams].forEach(key => {
+    ;['all', 'townsfolk', 'outsider', 'minion', 'demon'].forEach(key => {
       const btn = document.createElement('button')
       btn.className = 'dict__filter-btn' + (this.filter === key ? ' dict__filter-btn--active' : '')
-      btn.textContent = key === 'all' ? '전체' : teamLabel[key]
+      btn.textContent = key === 'all' ? '전체' : TEAM_LABEL[key]
       btn.addEventListener('click', () => { this.filter = key; this._render() })
       filterRow.appendChild(btn)
     })
     this.el.appendChild(filterRow)
 
-    // 역할 목록
-    let roles = ROLES_TB
-    if (this.scriptRoles) {
-      roles = roles.filter(r => this.scriptRoles.includes(r.id))
-    }
-    if (this.filter !== 'all') {
-      roles = roles.filter(r => r.team === this.filter)
-    }
-
+    const roles = this._getRoles()
     if (roles.length === 0) {
       const empty = document.createElement('div')
-      empty.className = 'text-center text-muted'
-      empty.style.padding = '24px'
+      empty.style.cssText = 'text-align:center;padding:32px;color:var(--text3);font-size:0.8rem;'
       empty.textContent = '역할 없음'
       this.el.appendChild(empty)
       return
     }
 
-    roles.forEach(role => {
-      const card = renderRoleCard(role, { compact: false })
+    // ── 그리드 (전체 필터 → 진영별 섹션, 단일 필터 → 단순 그리드) ──
+    if (this.filter === 'all') {
+      ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
+        const teamRoles = roles.filter(r => r.team === team)
+        if (teamRoles.length === 0) return
 
-      // 클릭 이벤트 추가
-      if (this.onRoleClick) {
-        card.classList.add('role-card--clickable')
-        card.addEventListener('click', () => {
-          this.onRoleClick(role.id)
-        })
-      }
+        const section = document.createElement('div')
+        section.className = 'dict__section'
 
-      this.el.appendChild(card)
-    })
+        const heading = document.createElement('div')
+        heading.className = `dict__section-title dict__section-title--${team}`
+        heading.textContent = TEAM_LABEL[team]
+        section.appendChild(heading)
+
+        section.appendChild(this._buildGrid(teamRoles))
+        this.el.appendChild(section)
+      })
+    } else {
+      this.el.appendChild(this._buildGrid(roles))
+    }
+  }
+
+  _buildGrid(roles) {
+    const grid = document.createElement('div')
+    grid.className = 'dict__grid'
+    roles.forEach(role => grid.appendChild(this._buildToken(role)))
+    return grid
+  }
+
+  _buildToken(role) {
+    const btn = document.createElement('button')
+    btn.className = `dict__token dict__token--${role.team}`
+
+    const iconDiv = document.createElement('div')
+    iconDiv.className = 'dict__token-icon'
+    if (role.icon?.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/icons/${role.icon}`
+      img.alt = role.name
+      iconDiv.appendChild(img)
+    } else {
+      iconDiv.textContent = role.iconEmoji || role.icon || '?'
+    }
+
+    const nameDiv = document.createElement('div')
+    nameDiv.className = 'dict__token-name'
+    nameDiv.textContent = role.name
+
+    btn.appendChild(iconDiv)
+    btn.appendChild(nameDiv)
+    btn.addEventListener('click', () => this._openModal(role))
+    return btn
+  }
+
+  // ─────────────────────────────────────
+  // 상세 모달
+  // ─────────────────────────────────────
+
+  _openModal(role) {
+    this._closeModal()
+
+    const overlay = document.createElement('div')
+    overlay.className = 'dict__overlay'
+    overlay.addEventListener('click', e => { if (e.target === overlay) this._closeModal() })
+
+    const modal = document.createElement('div')
+    modal.className = 'dict__modal'
+
+    // ── 닫기 버튼 ──
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'dict__modal-close'
+    closeBtn.textContent = '✕'
+    closeBtn.addEventListener('click', () => this._closeModal())
+    modal.appendChild(closeBtn)
+
+    // ── 큰 아이콘 ──
+    const iconWrap = document.createElement('div')
+    iconWrap.className = `dict__modal-icon gem ${GEM_CLASS[role.team]}`
+    if (role.icon?.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/icons/${role.icon}`
+      img.alt = role.name
+      img.className = 'role-card__gem-img'
+      iconWrap.appendChild(img)
+    } else {
+      iconWrap.textContent = role.iconEmoji || role.icon || '?'
+    }
+    modal.appendChild(iconWrap)
+
+    // ── 역할명 ──
+    const nameEl = document.createElement('div')
+    nameEl.className = 'dict__modal-name'
+    nameEl.style.color = TEAM_COLOR[role.team] || 'var(--text)'
+    nameEl.textContent = role.name
+    modal.appendChild(nameEl)
+
+    // ── 진영 배지 ──
+    const badge = document.createElement('span')
+    badge.className = `badge ${BADGE_CLASS[role.team]}`
+    badge.textContent = TEAM_LABEL[role.team] || role.team
+    modal.appendChild(badge)
+
+    // ── 능력 설명 ──
+    if (role.ability) {
+      const abilityEl = document.createElement('div')
+      abilityEl.className = 'dict__modal-ability'
+      abilityEl.textContent = role.ability
+      modal.appendChild(abilityEl)
+    }
+
+    // ── 규칙 바로가기 버튼 ──
+    if (this.onRoleClick) {
+      const rulesBtn = document.createElement('button')
+      rulesBtn.className = 'btn dict__modal-rules-btn'
+      rulesBtn.innerHTML = '📜 규칙에서 자세히 보기'
+      rulesBtn.addEventListener('click', () => {
+        this._closeModal()
+        this.onRoleClick(role.id)
+      })
+      modal.appendChild(rulesBtn)
+    }
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+    this._modal = overlay
+
+    requestAnimationFrame(() => overlay.classList.add('dict__overlay--visible'))
+  }
+
+  _closeModal() {
+    if (this._modal) {
+      this._modal.remove()
+      this._modal = null
+    }
   }
 }
 
+// ─────────────────────────────────────
+// 스타일
+// ─────────────────────────────────────
 if (!document.getElementById('dict-style')) {
   const style = document.createElement('style')
   style.id = 'dict-style'
   style.textContent = `
-.dict-screen { display: flex; flex-direction: column; gap: 6px; }
+/* ── 사전 화면 ── */
+.dict-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 필터 버튼 */
 .dict__filter {
   display: flex;
   gap: 5px;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .dict__filter-btn {
   padding: 5px 10px;
@@ -101,18 +242,168 @@ if (!document.getElementById('dict-style')) {
   border-color: var(--pu-base);
   color: var(--text);
 }
-.role-card--clickable {
+
+/* 진영 섹션 */
+.dict__section { margin-bottom: 8px; }
+.dict__section-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 0 5px;
+  color: var(--text3);
+}
+.dict__section-title--townsfolk { color: var(--bl-light); }
+.dict__section-title--outsider  { color: var(--tl-light); }
+.dict__section-title--minion    { color: var(--rd-light); }
+.dict__section-title--demon     { color: var(--rd-light); opacity: 0.85; }
+
+/* 그리드 */
+.dict__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* 토큰 버튼 */
+.dict__token {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 8px 4px 6px;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.12s, background 0.12s;
+  -webkit-tap-highlight-color: transparent;
 }
-.role-card--clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+.dict__token:active { transform: scale(0.91); background: var(--surface2); }
+.dict__token--townsfolk { border-color: rgba(46,74,143,0.45); }
+.dict__token--outsider  { border-color: rgba(91,179,198,0.45); }
+.dict__token--minion    { border-color: rgba(110,27,31,0.45); }
+.dict__token--demon     { border-color: rgba(110,27,31,0.65); }
+
+.dict__token-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: var(--surface2);
 }
-.role-card--clickable:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+.dict__token-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
+.dict__token-name {
+  font-size: 0.6rem;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+/* ── 상세 모달 ── */
+.dict__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.18s;
+  padding: 20px;
+}
+.dict__overlay--visible { opacity: 1; }
+
+.dict__modal {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 28px 20px 24px;
+  width: 100%;
+  max-width: 340px;
+  max-height: 78vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.dict__modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--lead2);
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.dict__modal-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.dict__modal-name {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.dict__modal-ability {
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  line-height: 1.75;
+  text-align: center;
+  width: 100%;
+}
+
+.dict__modal-rules-btn {
+  width: 100%;
+  padding: 11px 0;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-top: 2px;
+  background: rgba(122,111,183,0.15);
+  border: 1px solid var(--pu-base);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dict__modal-rules-btn:active { background: rgba(122,111,183,0.3); }
   `
   document.head.appendChild(style)
 }

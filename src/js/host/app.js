@@ -167,8 +167,12 @@ export class HostApp {
   _buildTabs() {
     this.tabBar.innerHTML = ''
     const tabs = [
-      { id: 'role',  icon: '🎭', label: '그리모아' },
-      { id: 'rules', icon: '📜', label: '규칙' },
+      { id: 'role',    icon: '🎭', label: '그리모아' },
+      { id: 'tracker', icon: '👥', label: '플레이어' },
+      { id: 'emoji',   icon: '💬', label: '시그널' },
+      { id: 'memo',    icon: '📝', label: '메모' },
+      { id: 'dict',    icon: '📖', label: '사전' },
+      { id: 'rules',   icon: '📜', label: '규칙' },
     ]
     tabs.forEach(tab => {
       const btn = document.createElement('button')
@@ -200,9 +204,38 @@ export class HostApp {
         this._showGrimoire()
       }
     } else if (tabId === 'rules') {
-      const rulesScreen = new RulesScreen()
+      const initialPage = this._pendingRulesPage || 'index.md'
+      this._pendingRulesPage = null
+      const rulesScreen = new RulesScreen({ initialPage })
       rulesScreen.mount(this.container)
       this.currentScreen = rulesScreen
+    } else if (tabId === 'memo') {
+      import('../player/Memo.js').then(({ Memo }) => {
+        const memo = new Memo()
+        memo.mount(this.container)
+        this.currentScreen = memo
+      })
+    } else if (tabId === 'dict') {
+      import('../player/CharacterDict.js').then(({ CharacterDict }) => {
+        const scriptRoles = this.pendingRoleIds.length > 0 ? this.pendingRoleIds : null
+        const dict = new CharacterDict({
+          scriptRoles,
+          onRoleClick: (roleId) => {
+            this._pendingRulesPage = `${roleId}.md`
+            this._switchTab('rules')
+          },
+        })
+        dict.mount(this.container)
+        this.currentScreen = dict
+      })
+    } else {
+      // tracker, emoji — 참가자 전용 기능
+      this.container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:12px">🎮</div>
+          <div>참가자 전용 기능입니다</div>
+        </div>
+      `
     }
   }
 

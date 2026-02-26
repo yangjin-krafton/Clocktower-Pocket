@@ -13,7 +13,11 @@ let appInstance = null
 function buildTabs() {
   tabBar.innerHTML = ''
   const tabs = [
-    { id: 'role',    icon: '🎭', label: '내 역할' },
+    { id: 'role',    icon: '🏠', label: '홈' },
+    { id: 'tracker', icon: '👥', label: '플레이어' },
+    { id: 'emoji',   icon: '💬', label: '시그널' },
+    { id: 'memo',    icon: '📝', label: '메모' },
+    { id: 'dict',    icon: '📖', label: '사전' },
     { id: 'rules',   icon: '📜', label: '규칙' },
   ]
 
@@ -45,6 +49,18 @@ function switchTab(tabId) {
     showLanding()
   } else if (tabId === 'rules') {
     showRules()
+  } else if (tabId === 'memo') {
+    showMemo()
+  } else if (tabId === 'dict') {
+    showDict()
+  } else {
+    // tracker, emoji — 게임 참가 후 이용 가능
+    content.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+        <div style="font-size:2rem;margin-bottom:12px">🔒</div>
+        <div>게임 참가 후 이용 가능합니다</div>
+      </div>
+    `
   }
 }
 
@@ -110,8 +126,34 @@ function showLanding() {
 function showRules() {
   import('./components/RulesScreen.js').then(({ RulesScreen }) => {
     content.innerHTML = ''
-    const rules = new RulesScreen()
+    const initialPage = _pendingRulesPage || 'index.md'
+    _pendingRulesPage = null
+    const rules = new RulesScreen({ initialPage })
     rules.mount(content)
+  })
+}
+
+function showMemo() {
+  import('./player/Memo.js').then(({ Memo }) => {
+    content.innerHTML = ''
+    const memo = new Memo()
+    memo.mount(content)
+  })
+}
+
+let _pendingRulesPage = null
+
+function showDict() {
+  import('./player/CharacterDict.js').then(({ CharacterDict }) => {
+    content.innerHTML = ''
+    const dict = new CharacterDict({
+      scriptRoles: null,
+      onRoleClick: (roleId) => {
+        _pendingRulesPage = `${roleId}.md`
+        switchTab('rules')
+      },
+    })
+    dict.mount(content)
   })
 }
 

@@ -760,26 +760,28 @@ if (!document.getElementById('grimoire-lobby-style')) {
   transform: translate(-50%, -50%) scale(0.88) !important;
 }
 
-/* ── 자리 번호 배지 ── */
+/* ── 자리 번호 배지 — 슬롯 상단 중앙, 크고 선명하게 ── */
 .gl-seat-num {
   position: absolute;
-  bottom: -6px;
-  right: -4px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  border-radius: 7px;
-  background: var(--surface2);
-  border: 1px solid var(--lead2);
-  font-size: 0.48rem;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 18px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: rgba(10, 9, 22, 0.72);
+  border: 1px solid rgba(212,168,40,0.5);
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--text3);
+  color: var(--gold2);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+  letter-spacing: 0.01em;
 }
 
 .gl-role-panel {

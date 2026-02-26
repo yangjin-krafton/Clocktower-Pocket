@@ -123,7 +123,7 @@ export class LobbyBanner {
     // ── 자리 칩 ─────────────────────────────
     const seatChips = this.seats.map(s => {
       if (s.name) {
-        return `<span class="lobby-banner__chip lobby-banner__chip--filled">${s.name}</span>`
+        return `<span class="lobby-banner__chip lobby-banner__chip--filled">${s.seatNum}</span>`
       }
       return `<span class="lobby-banner__chip lobby-banner__chip--empty">${s.seatNum}</span>`
     }).join('')

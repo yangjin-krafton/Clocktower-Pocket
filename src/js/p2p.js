@@ -113,15 +113,10 @@ class P2PManager {
 
             console.log(`[P2P] Joining room: ${roomCode} as ${playerName}`)
 
-            // Trystero 룸 참가 (Nostr - 인증 불필요한 릴레이만 사용)
+            // Trystero 룸 참가 (MQTT - EMQX Cloud Serverless)
             this.room = joinRoom({
                 appId: 'clocktower-pocket',
-                relayUrls: [
-                    'wss://relay.damus.io',
-                    'wss://nos.lol',
-                    'wss://relay.snort.social',
-                ],
-                relayRedundancy: 2  // 동시 연결 수 제한 (경고 감소)
+                relayUrls: [MQTT_CONFIG.relayUrl],
             }, roomCode)
 
             // 내 피어 ID 저장

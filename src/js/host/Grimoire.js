@@ -123,8 +123,9 @@ export class Grimoire {
     gridCard.innerHTML = '<div class="card-title">👥 플레이어</div>'
     gridCard.appendChild(renderPlayerGrid(state.players, {
       selectable: true,
-      maxSelect: 1,
+      maxSelect:  1,
       roleMap,
+      ring:       true,
       onSelect: (ids) => { if (ids.length > 0) this._showPlayerDetail(ids[0]) },
     }))
     this.el.appendChild(gridCard)

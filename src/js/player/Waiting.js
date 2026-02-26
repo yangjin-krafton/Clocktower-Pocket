@@ -1,13 +1,13 @@
 /**
- * P-02 Waiting — 대기 화면
- * 호스트가 게임 시작할 때까지 대기
+ * P-02 Waiting — 대기 화면 (회전판 착석 현황)
  */
 export class Waiting {
   constructor({ roomCode, playerName }) {
-    this.roomCode   = roomCode
-    this.playerName = playerName
-    this.playerCount = 1
-    this.el = null
+    this.roomCode    = roomCode
+    this.playerName  = playerName
+    this.seated      = []
+    this.total       = 1
+    this.el          = null
   }
 
   mount(container) {
@@ -19,28 +19,68 @@ export class Waiting {
 
   unmount() { this.el?.remove() }
 
-  setPlayerCount(n) {
-    this.playerCount = n
-    this._render()
+  updateSeats(seated, total) {
+    this.seated = seated || []
+    this.total  = total  || 1
+    if (this.el) this._render()
   }
 
   _render() {
-    this.el.innerHTML = `
-      <div class="waiting__logo">🏰</div>
-      <div class="waiting__name">${this.playerName}</div>
-      <div class="waiting__room">방 코드: <span class="waiting__code">${this.roomCode}</span></div>
+    const seated = this.seated
+    const total  = this.total
+    const size   = 260
+    const cx     = size / 2
+    const cy     = size / 2
+    const r      = 100
 
-      <div class="card waiting__card">
+    const seats = Array.from({ length: total }, (_, i) => {
+      const angle = (i / total) * 2 * Math.PI - Math.PI / 2
+      const x = cx + r * Math.cos(angle)
+      const y = cy + r * Math.sin(angle)
+      const player = seated[i] || null
+      const isMe   = player?.name === this.playerName
+      return { x, y, player, isMe, index: i }
+    })
+
+    const svgSeats = seats.map(({ x, y, player, isMe }) => {
+      if (player) {
+        const fill   = isMe ? '#d4a828' : '#5a3e8a'
+        const stroke = isMe ? '#f0d060' : '#9b7ec8'
+        const short  = player.name.length > 4 ? player.name.slice(0, 4) + '…' : player.name
+        return `
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+          <text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
+            font-size="8" fill="white" font-family="sans-serif">${short}</text>
+        `
+      } else {
+        return `
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="16"
+            fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        `
+      }
+    }).join('')
+
+    this.el.innerHTML = `
+      <div class="waiting__header">
+        <div class="waiting__name">${this.playerName}</div>
+        <div class="waiting__room">방 코드: <span class="waiting__code">${this.roomCode}</span></div>
+      </div>
+
+      <svg class="waiting__wheel" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        ${svgSeats}
+      </svg>
+
+      <div class="waiting__status">
         <div class="waiting__dot-row">
           <div class="waiting__dot"></div>
           <div class="waiting__dot" style="animation-delay:0.2s"></div>
           <div class="waiting__dot" style="animation-delay:0.4s"></div>
         </div>
-        <div class="waiting__status">호스트가 게임을 시작할 때까지 대기 중...</div>
-        <div class="waiting__count">현재 ${this.playerCount}명 연결됨</div>
+        <div class="waiting__msg">호스트가 게임을 시작할 때까지 대기 중...</div>
+        <div class="waiting__count">${seated.length} / ${total} 명 착석</div>
       </div>
-
-      <div class="waiting__hint">눈을 감고 대기해주세요<br>게임이 시작되면 안내드립니다</div>
     `
   }
 }
@@ -53,40 +93,29 @@ if (!document.getElementById('waiting-style')) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px 20px;
-  gap: 10px;
+  padding: 32px 20px 24px;
+  gap: 16px;
 }
-.waiting__logo { font-size: 2.8rem; }
+.waiting__header { text-align: center; }
 .waiting__name {
   font-family: 'Noto Serif KR', serif;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text);
 }
-.waiting__room { font-size: 0.72rem; color: var(--text3); }
+.waiting__room { font-size: 0.72rem; color: var(--text3); margin-top: 4px; }
 .waiting__code { color: var(--gold2); font-weight: 700; letter-spacing: 0.1em; }
-.waiting__card {
-  width: 100%;
-  text-align: center;
-  padding: 20px;
-  margin-top: 10px;
-}
-.waiting__dot-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+.waiting__wheel { display: block; }
+.waiting__status { text-align: center; }
+.waiting__dot-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
 .waiting__dot {
-  width: 10px; height: 10px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--pu-base);
   animation: dot-pulse 1.2s infinite;
 }
-.waiting__status { font-size: 0.82rem; color: var(--text2); }
-.waiting__count { font-size: 0.65rem; color: var(--text4); margin-top: 6px; }
-.waiting__hint {
-  font-size: 0.68rem;
-  color: var(--text4);
-  text-align: center;
-  line-height: 1.6;
-  margin-top: 8px;
-}
+.waiting__msg   { font-size: 0.82rem; color: var(--text2); }
+.waiting__count { font-size: 0.7rem;  color: var(--text4); margin-top: 4px; }
   `
   document.head.appendChild(style)
 }

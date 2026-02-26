@@ -12,6 +12,7 @@
 import { P2PManager }     from '../p2p.js'
 import { LobbyBanner }    from '../components/LobbyBanner.js'
 import { Join }           from './Join.js'
+import { Waiting }        from './Waiting.js'
 import { RoleCardScreen } from './RoleCardScreen.js'
 import { PlayerTracker }  from './PlayerTracker.js'
 import { EmojiPanel }     from './EmojiPanel.js'
@@ -36,7 +37,8 @@ export class PlayerApp {
     this.tabBar     = document.getElementById('tab-bar')
     this.bannerSlot = document.getElementById('lobby-banner')
 
-    this.lobbyBanner = null
+    this.lobbyBanner  = null
+    this.waitingScreen = null
   }
 
   init() {
@@ -70,15 +72,25 @@ export class PlayerApp {
     }
   }
 
-  /** 방 접속 즉시 탭 + LobbyBanner */
+  /** 방 접속 즉시 탭 + LobbyBanner + 회전판 대기화면 */
   _showGame(roomCode) {
-    // LobbyBanner 마운트 (roomCode 가 없으면 p2p에서 가져옴)
     const code = roomCode || this.p2p.roomCode || '------'
     this._mountLobbyBanner(code)
-
-    // 탭바가 이미 표시되어 있으므로 참가자용 탭으로 재구성
     this._buildTabs()
-    this._switchTab('role')
+
+    // 역할 없는 상태 → 회전판 대기화면
+    this._showWaiting(code)
+  }
+
+  _showWaiting(roomCode) {
+    this.content.innerHTML = ''
+    const code = roomCode || this.p2p.roomCode || '------'
+    this.waitingScreen = new Waiting({ roomCode: code, playerName: this._playerName || '' })
+    this.waitingScreen.mount(this.content)
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
   }
 
   _mountLobbyBanner(roomCode) {
@@ -206,18 +218,22 @@ export class PlayerApp {
       }
     })
 
-    // 착석 현황 갱신 → LobbyBanner
+    // 착석 현황 갱신 → LobbyBanner + 회전판
     this.p2p.on('SEAT_UPDATE', (data) => {
       if (this.lobbyBanner) {
         this.lobbyBanner.updateSeats(data.seated || [], data.total)
+      }
+      if (this.waitingScreen) {
+        this.waitingScreen.updateSeats(data.seated || [], data.total)
       }
     })
 
     // 역할 배정
     this.p2p.on('ROLE_ASSIGN', (data) => {
-      this.myPlayerId = data.playerId
-      this.myRole     = data.role
-      this.myTeam     = data.team
+      this.myPlayerId    = data.playerId
+      this.myRole        = data.role
+      this.myTeam        = data.team
+      this.waitingScreen = null
       if (this.currentTab === 'role') {
         this._switchTab('role')
       }

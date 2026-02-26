@@ -158,14 +158,14 @@ export class CharacterDict {
     closeBtn.addEventListener('click', () => this._closeModal())
     modal.appendChild(closeBtn)
 
-    // ── 큰 아이콘 ──
+    // ── 큰 아이콘 (배경 없이 반투명) ──
     const iconWrap = document.createElement('div')
-    iconWrap.className = `dict__modal-icon gem ${GEM_CLASS[role.team]}`
+    iconWrap.className = 'dict__modal-icon'
     if (role.icon?.endsWith('.png')) {
       const img = document.createElement('img')
       img.src = `./asset/icons/${role.icon}`
       img.alt = role.name
-      img.className = 'role-card__gem-img'
+      img.className = 'dict__modal-icon-img'
       iconWrap.appendChild(img)
     } else {
       iconWrap.textContent = role.iconEmoji || role.icon || '?'
@@ -383,16 +383,20 @@ if (!document.getElementById('dict-style')) {
 }
 
 .dict__modal-icon {
-  width: 176px !important;
-  height: 176px !important;
-  border-radius: 50% !important;
+  width: 176px;
+  height: 176px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 4.8rem;
-  overflow: hidden;
   flex-shrink: 0;
   margin-bottom: 2px;
+  opacity: 0.72;
+}
+.dict__modal-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .dict__modal-name {

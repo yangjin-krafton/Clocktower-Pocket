@@ -17,29 +17,29 @@
   --lead:     #0a0916;
   --lead2:    #1a183a;
 
-  --pu-base:  #7A6FB7;
-  --pu-light: #9B93C9;
-  --pu-dark:  #5C5389;
+  --pu-base:  #9080CC;
+  --pu-light: #B8B0E0;
+  --pu-dark:  #6A5FA0;
 
   --tl-base:  #5BB3C6;
-  --tl-light: #84C6D4;
+  --tl-light: #96D4E2;
   --tl-dark:  #448694;
 
-  --rd-base:  #6E1B1F;
-  --rd-light: #925457;
-  --rd-dark:  #521417;
+  --rd-base:  #8C3030;
+  --rd-light: #D08888;
+  --rd-dark:  #621818;
 
-  --bl-base:  #2E4A8F;
-  --bl-light: #6277AB;
+  --bl-base:  #3A5AAE;
+  --bl-light: #8899D0;
   --bl-dark:  #22386B;
 
   --gold:  #d4a828;
   --gold2: #f0cc60;
 
-  --text:  #EAE6F8;
-  --text2: #9B93C9;
-  --text3: #7A6FB7;
-  --text4: #3d3868;
+  --text:  #F4F1FF;
+  --text2: #CCC7EC;
+  --text3: #A89FD4;
+  --text4: #807898;
 
   --town:    #2E4A8F;
   --outside: #5BB3C6;
@@ -242,14 +242,14 @@ body {
   font-weight: 600;
   border: 1px solid;
 }
-.badge-town    { background: rgba(46,74,143,0.15);   color: #6277AB; border-color: rgba(46,74,143,0.4); }
-.badge-outside { background: rgba(91,179,198,0.15);  color: #5BB3C6; border-color: rgba(91,179,198,0.4); }
-.badge-minion  { background: rgba(146,84,87,0.15);   color: #925457; border-color: rgba(110,27,31,0.4); }
-.badge-demon   { background: rgba(110,27,31,0.2);    color: #925457; border-color: rgba(110,27,31,0.5); }
-.badge-good    { background: rgba(91,179,198,0.1);   color: #5BB3C6; border-color: rgba(91,179,198,0.3); }
-.badge-evil    { background: rgba(110,27,31,0.15);   color: #925457; border-color: rgba(110,27,31,0.4); }
-.badge-alive   { background: rgba(46,74,143,0.1);    color: #6277AB; border-color: rgba(46,74,143,0.3); }
-.badge-dead    { background: rgba(30,26,54,0.5);     color: var(--text4); border-color: var(--lead2); }
+.badge-town    { background: rgba(58,90,174,0.18);   color: var(--bl-light);  border-color: rgba(58,90,174,0.45); }
+.badge-outside { background: rgba(91,179,198,0.18);  color: var(--tl-light);  border-color: rgba(91,179,198,0.45); }
+.badge-minion  { background: rgba(140,48,48,0.2);    color: var(--rd-light);  border-color: rgba(140,48,48,0.45); }
+.badge-demon   { background: rgba(140,48,48,0.25);   color: var(--rd-light);  border-color: rgba(140,48,48,0.55); }
+.badge-good    { background: rgba(91,179,198,0.12);  color: var(--tl-light);  border-color: rgba(91,179,198,0.35); }
+.badge-evil    { background: rgba(140,48,48,0.18);   color: var(--rd-light);  border-color: rgba(140,48,48,0.4); }
+.badge-alive   { background: rgba(58,90,174,0.12);   color: var(--bl-light);  border-color: rgba(58,90,174,0.35); }
+.badge-dead    { background: rgba(30,26,54,0.5);     color: var(--text4);     border-color: var(--lead2); }
 
 /* ── 역할 팀 색상 보석 ── */
 .gem {
@@ -271,10 +271,10 @@ body {
   border-radius: 50%;
   transform: rotate(-25deg);
 }
-.gem-town    { background: radial-gradient(circle at 35% 30%, #6277AB, #22386B); }
-.gem-outside { background: radial-gradient(circle at 35% 30%, #84C6D4, #448694); }
-.gem-minion  { background: radial-gradient(circle at 35% 30%, #925457, #521417); }
-.gem-demon   { background: radial-gradient(circle at 35% 30%, #6E1B1F, #280608); }
+.gem-town    { background: radial-gradient(circle at 35% 30%, #8899D0, #22386B); }
+.gem-outside { background: radial-gradient(circle at 35% 30%, #96D4E2, #448694); }
+.gem-minion  { background: radial-gradient(circle at 35% 30%, #D08888, #621818); }
+.gem-demon   { background: radial-gradient(circle at 35% 30%, #8C3030, #280608); }
 .gem-dead    { background: radial-gradient(circle at 35% 30%, #262240, #0c0c20); opacity: 0.4; filter: grayscale(0.8); }
 
 /* ── 입력 ── */

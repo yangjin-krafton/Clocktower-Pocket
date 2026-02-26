@@ -164,7 +164,10 @@ export class PlayerApp {
     this.content.appendChild(header)
 
     header.querySelector('#player-reset-btn').addEventListener('click', () => {
-      if (confirm('이 게임에서 나가시겠습니까?')) this._leaveGame()
+      if (confirm('이 게임에서 나가시겠습니까?')) {
+        this._leaveGame()
+        window.goHome?.()
+      }
     })
 
     // 역할 카드
@@ -192,6 +195,14 @@ export class PlayerApp {
     const el = document.createElement('div')
     el.className = 'join-screen'
     el.innerHTML = `
+      <button id="p-back-btn" style="
+        position:absolute;top:12px;left:12px;
+        background:none;border:none;cursor:pointer;
+        font-size:0.8rem;color:var(--text4);
+        display:flex;align-items:center;gap:4px;padding:6px 8px;
+        border-radius:8px;
+      ">← 홈으로</button>
+
       <div class="join__logo">🏰</div>
       <h1 class="join__title">Clocktower Pocket</h1>
       <p class="join__sub">방 코드로 입장</p>
@@ -216,7 +227,10 @@ export class PlayerApp {
         </button>
       </div>
     `
+    this.content.style.position = 'relative'
     this.content.appendChild(el)
+
+    el.querySelector('#p-back-btn').addEventListener('click', () => window.goHome?.())
 
     const codeInput   = el.querySelector('#p-code')
     const codeError   = el.querySelector('#p-code-error')

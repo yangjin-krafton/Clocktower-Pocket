@@ -56,6 +56,14 @@ function switchTab(tabId) {
 // 앱이 탭바를 재빌드할 때 이 함수를 사용하도록 export
 window.switchTab = switchTab
 
+// 어디서든 랜딩 화면으로 복귀
+window.goHome = () => {
+  appInstance = null
+  currentTab  = 'role'
+  buildTabs()
+  showLanding()
+}
+
 function showLoading() {
   content.innerHTML = `
     <div style="text-align:center;padding:60px 20px;color:var(--text3)">

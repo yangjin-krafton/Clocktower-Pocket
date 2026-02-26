@@ -245,19 +245,30 @@ export class Grimoire {
     const wrap = document.createElement('div')
     wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;padding:8px 0 4px;'
 
-    const grid = document.createElement('div')
-    grid.className = 'gl-seat-grid'
+    const oval = document.createElement('div')
+    oval.className = 'gl-seat-oval'
 
-    // 인원수별 최적 컬럼 수 (화면 균등 배치)
-    const COLS = { 5:5, 6:3, 7:4, 8:4, 9:5, 10:5, 11:4, 12:4, 13:5, 14:5, 15:5, 16:4, 17:6, 18:6, 19:5, 20:5 }
-    const cols = COLS[total] || 5
-    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+    // 17인 이상 → 지그재그 이중 궤도 (짝수=외곽, 홀수=내곽)
+    const zigzag = total >= 17
+
+    // 인원수별 슬롯 크기
+    const slotPx =
+      total <= 6  ? 60 :
+      total <= 9  ? 54 :
+      total <= 13 ? 48 :
+      total <= 16 ? 42 : 36
+
+    const iconPx = Math.round(slotPx * 0.62)
+
+    // 타원 반지름 (% 단위, 컨테이너 기준)
+    // rX = % of container width, rY = % of container height (aspect-ratio 3:2 → H = W*2/3)
+    const RX = 43, RY = 40   // 단일 궤도 반지름
 
     const TEAM_BORDER = {
-      townsfolk: 'rgba(46,74,143,0.6)',
-      outsider:  'rgba(91,179,198,0.6)',
-      minion:    'rgba(140,40,50,0.6)',
-      demon:     'rgba(160,30,40,0.85)',
+      townsfolk: 'rgba(46,74,143,0.65)',
+      outsider:  'rgba(91,179,198,0.65)',
+      minion:    'rgba(140,40,50,0.65)',
+      demon:     'rgba(160,30,40,0.9)',
     }
 
     seats.forEach((roleId, i) => {
@@ -265,51 +276,70 @@ export class Grimoire {
       const isSelected = this._selectedSeat === i
       const isAssigned = !!roleId
 
+      // 각도: 12시 방향 시작, 시계 방향
+      const angle = (2 * Math.PI * i) / total - Math.PI / 2
+
+      // 지그재그: 짝수 인덱스 = 외곽, 홀수 = 내곽 (76%)
+      const scale = zigzag ? (i % 2 === 0 ? 1.0 : 0.76) : 1.0
+      const rx = RX * scale
+      const ry = RY * scale
+
+      const x = 50 + rx * Math.cos(angle)   // % of width
+      const y = 50 + ry * Math.sin(angle)   // % of height
+
+      const borderColor = isSelected
+        ? 'var(--gold2)'
+        : (role ? (TEAM_BORDER[role.team] || 'var(--lead2)') : 'var(--lead2)')
+
       const slot = document.createElement('div')
       slot.className = 'gl-seat-slot'
         + (isSelected ? ' gl-seat-slot--selected' : '')
         + (isAssigned ? ' gl-seat-slot--assigned' : ' gl-seat-slot--empty')
-      if (isAssigned && !isSelected) slot.style.borderColor = TEAM_BORDER[role?.team] || 'var(--lead2)'
+      slot.style.cssText = `
+        left:${x.toFixed(2)}%;
+        top:${y.toFixed(2)}%;
+        width:${slotPx}px;
+        height:${slotPx}px;
+        border-color:${borderColor};
+        ${isSelected ? 'box-shadow:0 0 0 2px rgba(212,168,40,0.35),0 0 12px rgba(212,168,40,0.4);background:rgba(212,168,40,0.08);' : ''}
+      `
 
-      // 자리 번호 (우상단)
-      const badge = document.createElement('span')
-      badge.className = 'gl-seat-num'
-      badge.textContent = i + 1
-      slot.appendChild(badge)
-
-      // 아이콘 영역 (원형)
-      const iconArea = document.createElement('div')
-      iconArea.className = 'gl-seat-icon-area'
+      // 아이콘 (원형 영역)
+      const iconEl = document.createElement('div')
+      iconEl.style.cssText = `
+        width:${iconPx}px;height:${iconPx}px;
+        border-radius:50%;background:var(--surface2);
+        display:flex;align-items:center;justify-content:center;
+        font-size:${Math.round(iconPx * 0.58)}px;
+        overflow:hidden;flex-shrink:0;pointer-events:none;
+      `
       if (role?.icon?.endsWith('.png')) {
         const img = document.createElement('img')
         img.src = `./asset/icons/${role.icon}`
-        iconArea.appendChild(img)
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+        iconEl.appendChild(img)
       } else if (role) {
-        iconArea.textContent = role.iconEmoji || '?'
+        iconEl.textContent = role.iconEmoji || '?'
       } else {
-        iconArea.innerHTML = '<span style="color:var(--text4);font-size:1.1rem;">+</span>'
+        iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.5)}px">+</span>`
       }
-      slot.appendChild(iconArea)
 
-      // 역할명 / 자리 번호 라벨
-      const label = document.createElement('div')
-      label.className = 'gl-seat-label'
-      if (role) {
-        label.textContent = role.name
-      } else {
-        label.textContent = `${i + 1}번`
-        label.style.color = 'var(--text4)'
-      }
-      slot.appendChild(label)
+      // 자리 번호 배지
+      const badge = document.createElement('span')
+      badge.className = 'gl-seat-num'
+      badge.textContent = i + 1
+
+      slot.appendChild(iconEl)
+      slot.appendChild(badge)
 
       slot.addEventListener('click', () => {
         this._selectedSeat = (this._selectedSeat === i) ? null : i
         this._render()
       })
-      grid.appendChild(slot)
+      oval.appendChild(slot)
     })
 
-    wrap.appendChild(grid)
+    wrap.appendChild(oval)
     this.el.appendChild(wrap)
   }
 
@@ -666,28 +696,27 @@ if (!document.getElementById('grimoire-lobby-style')) {
   filter: grayscale(0.6);
 }
 
-/* ── 자리 배치 그리드 ── */
-.gl-seat-grid {
-  display: grid;
-  gap: 6px;
+/* ── 타원형 링 컨테이너 ── */
+.gl-seat-oval {
+  position: relative;
   width: 100%;
+  aspect-ratio: 3 / 2;   /* 가로:세로 = 3:2 → 세로 = 너비의 66% */
 }
 
-/* ── 자리 슬롯 (dict__token 스타일 카드) ── */
+/* ── 자리 슬롯 (링 내 절대 위치) ── */
 .gl-seat-slot {
-  position: relative;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 4px 6px;
-  border-radius: 10px;
-  border: 1.5px solid var(--lead2);
-  background: var(--surface);
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  border: 2px solid var(--lead2);
+  background: var(--surface);
+  transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s;
+  overflow: visible;
   -webkit-tap-highlight-color: transparent;
-  min-width: 0;
 }
 .gl-seat-slot--empty {
   border-style: dashed;
@@ -697,58 +726,32 @@ if (!document.getElementById('grimoire-lobby-style')) {
   border-style: solid;
 }
 .gl-seat-slot--selected {
-  border-color: var(--gold2) !important;
-  background: rgba(212,168,40,0.09) !important;
-  box-shadow: 0 0 0 2px rgba(212,168,40,0.3), 0 0 10px rgba(212,168,40,0.35) !important;
-  transform: scale(1.06);
+  transform: translate(-50%, -50%) scale(1.18) !important;
 }
 .gl-seat-slot:active {
-  transform: scale(0.91);
+  transform: translate(-50%, -50%) scale(0.88) !important;
 }
 
-/* ── 슬롯 내 아이콘 원형 영역 ── */
-.gl-seat-icon-area {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+/* ── 자리 번호 배지 ── */
+.gl-seat-num {
+  position: absolute;
+  bottom: -6px;
+  right: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
   background: var(--surface2);
+  border: 1px solid var(--lead2);
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: var(--text3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.gl-seat-icon-area img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* ── 슬롯 라벨 (역할명 / 자리번호) ── */
-.gl-seat-label {
-  font-size: 0.58rem;
-  color: var(--text2);
-  text-align: center;
-  line-height: 1.2;
-  word-break: keep-all;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
-  padding: 0 2px;
-}
-
-/* ── 자리 번호 배지 (우상단) ── */
-.gl-seat-num {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: 0.48rem;
-  font-weight: 700;
-  color: var(--text4);
   line-height: 1;
   pointer-events: none;
+  z-index: 1;
 }
 
 .gl-role-panel {

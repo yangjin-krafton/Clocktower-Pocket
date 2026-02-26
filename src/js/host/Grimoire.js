@@ -149,121 +149,126 @@ export class Grimoire {
 
     this.el.classList.add('grimoire--lobby')
 
-    // ── Ghost: 실제 인게임 레이아웃 (흐릿하게 뒤에) ─────────
-    const ghost = document.createElement('div')
-    ghost.className = 'grimoire-ghost'
+    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
 
-    // Ghost PhaseHeader (Night 1 형태)
-    ghost.appendChild(renderPhaseHeader({ phase: 'night', round: 1, players: [] }))
+    // ── 1) 상단 헤더: 매칭 상태 + 설정 버튼 ──────────────────
+    const header = document.createElement('div')
+    header.className = 'gl-header'
 
-    // Ghost PlayerGrid (N개 빈 자리)
-    const ghostCard = document.createElement('div')
-    ghostCard.className = 'card'
-    ghostCard.innerHTML = '<div class="card-title">👥 플레이어</div>'
-    const ghostPlayers = Array.from({ length: Math.max(total, 5) }, (_, i) => ({
-      id: i + 1, name: `${i + 1}`, status: 'alive', isPoisoned: false, isDrunk: false,
-    }))
-    ghostCard.appendChild(renderPlayerGrid(ghostPlayers, { selectable: false }))
-    ghost.appendChild(ghostCard)
-
-    // Ghost 버튼
-    const ghostBtns = document.createElement('div')
-    ghostBtns.className = 'btn-grid-2'
-    ghostBtns.innerHTML = `
-      <button class="btn btn-primary btn-grid-full" disabled>▶ 밤 진행 시작</button>
-      <button class="btn btn-grid-full" disabled>🌅 낮으로 전환</button>
+    const headerLeft = document.createElement('div')
+    headerLeft.className = 'gl-header__left'
+    headerLeft.innerHTML = `
+      <span class="gl-header__title">🏰 게임 준비</span>
+      <span class="gl-header__sub">${count > 0 ? `${count}명 입장됨` : '참가자 연결 대기 중...'}</span>
     `
-    ghost.appendChild(ghostBtns)
-    this.el.appendChild(ghost)
 
-    // ── Lobby 패널: 게임 준비 단계 (위에 덮음) ──────────────
-    const panel = document.createElement('div')
-    panel.className = 'grimoire-lobby-panel'
+    const settingsBtn = document.createElement('button')
+    settingsBtn.className = 'btn gl-header__settings'
+    settingsBtn.innerHTML = `⚙️ 설정<span style="display:block;font-size:0.55rem;color:var(--text4)">${total}인 · ${config.roleCount}개</span>`
+    settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
 
-    // 1) 매칭 상태 바 (PhaseHeader 위치)
-    const statusBar = document.createElement('div')
-    statusBar.className = 'phase-header phase-header--lobby grimoire-lobby-status'
-    statusBar.innerHTML = `
-      <span class="phase-header__icon">🏰</span>
-      <div class="phase-header__text">
-        <span class="phase-header__name">매칭 대기 중</span>
-        <span class="phase-header__sub">
-          ${count > 0 ? `${count}명 입장됨` : '참가자 연결 대기 중...'}
-        </span>
-      </div>
-      <div class="phase-header__alive">
-        <span class="phase-header__alive-num" style="color:var(--tl-light)">${count}</span>
-        <span class="phase-header__alive-lbl">입장</span>
-      </div>
-    `
-    panel.appendChild(statusBar)
+    header.appendChild(headerLeft)
+    header.appendChild(settingsBtn)
+    this.el.appendChild(header)
 
-    // 2) 현재 참가자 (PlayerGrid 위치)
-    const participantsCard = document.createElement('div')
-    participantsCard.className = 'card grimoire-lobby-card'
-    participantsCard.innerHTML = '<div class="card-title">👥 현재 참가자</div>'
+    // ── 2) 참가자 칩 ─────────────────────────────────────────
+    const participantsRow = document.createElement('div')
+    participantsRow.className = 'gl-participants'
 
     if (count === 0) {
-      const empty = document.createElement('div')
-      empty.style.cssText = 'color:var(--text4);font-size:0.78rem;padding:10px 0 4px;display:flex;align-items:center;gap:8px;'
-      empty.innerHTML = `<span class="lobby-wait-dot"></span> 참가자 연결 대기 중...`
-      participantsCard.appendChild(empty)
+      participantsRow.innerHTML = `<span class="lobby-wait-dot"></span><span style="color:var(--text4);font-size:0.75rem;margin-left:6px">대기 중...</span>`
     } else {
-      const chips = document.createElement('div')
-      chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:7px;padding:6px 0 2px;'
       players.forEach(p => {
         const chip = document.createElement('span')
         chip.className = 'grimoire-lobby-chip'
         chip.textContent = p.name
-        chips.appendChild(chip)
+        participantsRow.appendChild(chip)
       })
-      participantsCard.appendChild(chips)
     }
-    panel.appendChild(participantsCard)
+    this.el.appendChild(participantsRow)
 
-    // 3) 액션 버튼 (밤 진행 / 낮 전환 버튼 위치)
-    const btnGrid = document.createElement('div')
-    btnGrid.className = 'btn-grid-2'
+    // ── 3) 역할 토큰 그리드 ───────────────────────────────────
+    if (config.roleIds && config.roleIds.length > 0) {
+      const rolesByTeam = { townsfolk: [], outsider: [], minion: [], demon: [] }
+      config.roleIds.forEach(id => {
+        const role = ROLES_BY_ID[id]
+        if (role && rolesByTeam[role.team]) rolesByTeam[role.team].push(role)
+      })
 
+      ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
+        const teamRoles = rolesByTeam[team]
+        if (teamRoles.length === 0) return
+
+        const section = document.createElement('div')
+        section.className = 'dict__section'
+
+        const heading = document.createElement('div')
+        heading.className = `dict__section-title dict__section-title--${team}`
+        heading.textContent = TEAM_LABEL[team]
+        section.appendChild(heading)
+
+        const grid = document.createElement('div')
+        grid.className = 'dict__grid'
+
+        teamRoles.forEach(role => {
+          const btn = document.createElement('button')
+          btn.className = `dict__token dict__token--${role.team}`
+
+          const iconDiv = document.createElement('div')
+          iconDiv.className = 'dict__token-icon'
+          if (role.icon?.endsWith('.png')) {
+            const img = document.createElement('img')
+            img.src = `./asset/icons/${role.icon}`
+            img.alt = role.name
+            iconDiv.appendChild(img)
+          } else {
+            iconDiv.textContent = role.iconEmoji || role.icon || '?'
+          }
+
+          const nameDiv = document.createElement('div')
+          nameDiv.className = 'dict__token-name'
+          nameDiv.textContent = role.name
+
+          btn.appendChild(iconDiv)
+          btn.appendChild(nameDiv)
+          btn.addEventListener('click', () => this._showRoleModal(role))
+          grid.appendChild(btn)
+        })
+
+        section.appendChild(grid)
+        this.el.appendChild(section)
+      })
+    } else {
+      const empty = document.createElement('div')
+      empty.className = 'gl-empty'
+      empty.innerHTML = `<div style="font-size:1.8rem;margin-bottom:10px">⚙️</div><div>설정에서 역할을 구성해주세요</div>`
+      this.el.appendChild(empty)
+    }
+
+    // ── 4) 시작 버튼 ─────────────────────────────────────────
     const startBtn = document.createElement('button')
-    startBtn.className = 'btn btn-gold btn-grid-full'
-    startBtn.style.padding = '13px'
+    startBtn.className = 'btn btn-gold gl-start-btn'
     startBtn.textContent = count > 0 ? `🏰 게임 시작 (${count}명)` : '🏰 게임 시작'
     startBtn.disabled = count === 0
     if (count === 0) startBtn.style.opacity = '0.45'
     startBtn.addEventListener('click', () => this.onStartGame?.())
-    btnGrid.appendChild(startBtn)
-
-    const settingsBtn = document.createElement('button')
-    settingsBtn.className = 'btn'
-    settingsBtn.innerHTML = `⚙️ 설정<span style="display:block;font-size:0.58rem;color:var(--text4)">${total}인 · ${config.roleCount}개</span>`
-    settingsBtn.addEventListener('click', () => this.onOpenSettings?.())
-    btnGrid.appendChild(settingsBtn)
-
-    panel.appendChild(btnGrid)
+    this.el.appendChild(startBtn)
 
     if (count > 0 && count < 5) {
       const hint = document.createElement('div')
-      hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
+      hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-top:4px;'
       hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${count}명으로도 시작 가능`
-      panel.appendChild(hint)
+      this.el.appendChild(hint)
     }
+  }
 
-    // 4) 역할 구성 그리드
-    if (config.roleIds && config.roleIds.length > 0) {
-      const roleCard = document.createElement('div')
-      roleCard.className = 'card grimoire-lobby-card'
-      roleCard.innerHTML = `<div class="card-title">🎭 역할 구성 <span style="font-size:0.65rem;color:var(--text4);font-weight:400">${config.roleIds.length}개</span></div>`
+  // ─────────────────────────────────────
+  // 역할 상세 모달 (로비용, CharacterDict 모달 재사용)
+  // ─────────────────────────────────────
 
-      const dict = new CharacterDict({
-        scriptRoles: config.roleIds,
-        // initialScenario 없이 — scriptRoles 있으면 자동으로 'game' 기본값
-      })
-      dict.mount(roleCard)
-      panel.appendChild(roleCard)
-    }
-
-    this.el.appendChild(panel)
+  _showRoleModal(role) {
+    const helper = new CharacterDict({ scriptRoles: null })
+    helper._openModal(role)
   }
 
   // ─────────────────────────────────────
@@ -379,60 +384,83 @@ if (!document.getElementById('grimoire-lobby-style')) {
   const style = document.createElement('style')
   style.id = 'grimoire-lobby-style'
   style.textContent = `
-/* ── Lobby 모드 컨테이너 ── */
+/* ── 로비 컨테이너 ── */
 .grimoire--lobby {
-  position: relative;
-}
-
-/* ── Ghost: 실제 인게임 레이아웃 (뒤에 희미하게) ── */
-.grimoire-ghost {
-  position: absolute;
-  inset: 0;
-  opacity: 0.08;
-  filter: blur(1.5px);
-  pointer-events: none;
-  user-select: none;
-  overflow: hidden;
-}
-
-/* ── Lobby 패널: 게임 준비 단계 (위에 덮음) ── */
-.grimoire-lobby-panel {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
-/* 매칭 상태 바 */
-.grimoire-lobby-status {
-  background: rgba(11, 10, 24, 0.75);
-  backdrop-filter: blur(6px);
-  border-color: rgba(122, 111, 183, 0.3);
+/* ── 상단 헤더 ── */
+.gl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px 6px;
+  border-bottom: 1px solid var(--lead2);
+  margin-bottom: 4px;
+}
+.gl-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gl-header__title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--gold2);
+}
+.gl-header__sub {
+  font-size: 0.68rem;
+  color: var(--text3);
+}
+.gl-header__settings {
+  padding: 7px 12px;
+  font-size: 0.72rem;
+  text-align: center;
 }
 
-/* 로비 카드 */
-.grimoire-lobby-card {
-  background: rgba(20, 18, 42, 0.9);
-  backdrop-filter: blur(4px);
+/* ── 참가자 칩 행 ── */
+.gl-participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 0 6px;
 }
-
-/* 현재 참가자 칩 */
 .grimoire-lobby-chip {
   background: rgba(91, 179, 198, 0.12);
   border: 1px solid rgba(91, 179, 198, 0.35);
   border-radius: 20px;
   padding: 4px 12px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--tl-light);
   font-weight: 600;
   white-space: nowrap;
 }
 
-/* 대기 점 */
+/* ── 역할 없을 때 빈 화면 ── */
+.gl-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text4);
+  font-size: 0.82rem;
+}
+
+/* ── 시작 버튼 ── */
+.gl-start-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  font-size: 0.92rem;
+}
+
+/* ── 대기 점 ── */
 .lobby-wait-dot {
   display: inline-block;
-  width: 8px; height: 8px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--pu-base);
   animation: dot-pulse 1.2s infinite;

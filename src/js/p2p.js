@@ -3,8 +3,9 @@
  * WebRTC를 사용하여 서버 없이 직접 피어 간 통신
  */
 
-// Trystero를 CDN에서 로드 (Nostr 전략 - 기본, 가장 안정적)
-import { joinRoom } from 'https://esm.run/trystero'
+// Trystero MQTT 전략 (EMQX Cloud Serverless 사용)
+import { joinRoom } from 'https://esm.run/trystero/mqtt'
+import { MQTT_CONFIG } from './config.js'
 
 class P2PManager {
     constructor() {
@@ -68,15 +69,12 @@ class P2PManager {
 
             console.log(`[P2P] Creating room: ${roomCode}`)
 
-            // Trystero 룸 생성 (Nostr - 인증 불필요한 릴레이만 사용)
+            // Trystero 룸 생성 (MQTT - EMQX Cloud Serverless)
             this.room = joinRoom({
                 appId: 'clocktower-pocket',
-                relayUrls: [
-                    'wss://relay.damus.io',
-                    'wss://nos.lol',
-                    'wss://relay.snort.social',
-                ],
-                relayRedundancy: 2  // 동시 연결 수 제한 (경고 감소)
+                relayUrls: [MQTT_CONFIG.relayUrl],
+                username: MQTT_CONFIG.username,
+                password: MQTT_CONFIG.password,
             }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)

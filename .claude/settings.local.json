@@ -26,7 +26,14 @@
       "Bash(for file in baron.md butler.md chef.md investigator.md poisoner.md spy.md undertaker.md washerwoman.md)",
       "Bash(do sed -i 's/취한 자/술꾼/g' \"$file\")",
       "Bash(for file in demon.md fortuneteller.md imp.md investigator.md mayor.md minion.md scarletwoman.md slayer.md)",
-      "Bash(do sed -i 's/붉은 여인/스칼렛 우먼/g' \"$file\")"
+      "Bash(do sed -i 's/붉은 여인/스칼렛 우먼/g' \"$file\")",
+      "WebFetch(domain:www.hivemq.com)",
+      "WebFetch(domain:www.emqx.com)",
+      "WebFetch(domain:docs.emqx.com)",
+      "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\.env\":*)",
+      "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\.gitignore\":*)",
+      "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\src\\\\js\\\\config.js\":*)",
+      "Bash(mkdir:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

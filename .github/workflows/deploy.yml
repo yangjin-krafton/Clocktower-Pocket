@@ -28,6 +28,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      - name: Generate config.js from secrets
+        run: |
+          cat > src/js/config.js << JSEOF
+          // ⚠️ 이 파일은 자동 생성됩니다. 직접 수정하지 마세요.
+          export const MQTT_CONFIG = {
+              relayUrl: '${{ secrets.EMQX_URL }}',
+              username: '${{ secrets.EMQX_USERNAME }}',
+              password: '${{ secrets.EMQX_PASSWORD }}',
+          }
+          JSEOF
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

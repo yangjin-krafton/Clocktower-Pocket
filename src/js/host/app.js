@@ -6,14 +6,14 @@
  *          Grimoire 안에서: 인원/역할 설정 · 게임 시작 버튼
  *          호스트가 "게임 시작" 누르면 → 역할 배정 → 밤 페이즈 시작
  */
-import { engine }                          from '../game-engine.js'
-import { RulesScreen }                     from '../components/RulesScreen.js'
-import { Grimoire }                        from './Grimoire.js'
-import { NightAction }                     from './NightAction.js'
-import { DayFlow }                         from './DayFlow.js'
-import { Victory }                         from './Victory.js'
+import { engine }                               from '../game-engine.js'
+import { RulesScreen }                          from '../components/RulesScreen.js'
+import { Grimoire }                             from './Grimoire.js'
+import { NightAction }                          from './NightAction.js'
+import { DayFlow }                              from './DayFlow.js'
+import { Victory }                              from './Victory.js'
 import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
-import { encodeRoomCode, formatCode }      from '../room-code.js'
+import { encodeRoomCode, formatCode }           from '../room-code.js'
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -93,6 +93,7 @@ export class HostApp {
     this.tabBar.innerHTML = ''
     const tabs = [
       { id: 'role',  icon: '🎭', label: '그리모아' },
+      { id: 'seats', icon: '🪑', label: '자리배치' },
       { id: 'memo',  icon: '📝', label: '메모' },
       { id: 'dict',  icon: '📖', label: '사전' },
       { id: 'rules', icon: '📜', label: '규칙' },
@@ -124,6 +125,8 @@ export class HostApp {
       } else {
         this._showGrimoire()
       }
+    } else if (tabId === 'seats') {
+      this._showSeatLayout()
     } else if (tabId === 'rules') {
       const initialPage = this._pendingRulesPage || 'index.md'
       this._pendingRulesPage = null
@@ -439,4 +442,126 @@ export class HostApp {
   }
 
   _handlePlayerAction(action, actorId) {}
+
+  // ─────────────────────────────────────
+  // 자리 배치 탭 — 전체 공개 링 뷰
+  // ─────────────────────────────────────
+
+  _showSeatLayout() {
+    const state = engine.state
+    if (!state || state.phase === 'lobby') {
+      this.container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:12px">🪑</div>
+          <div>게임 시작 후 이용 가능합니다</div>
+        </div>`
+      return
+    }
+
+    const { players } = state
+    const total = players.length
+    const RX = 43, RY = 43
+    const slotPx = total <= 6 ? 62 : total <= 9 ? 56 : total <= 13 ? 50 : total <= 16 ? 44 : 38
+    const iconPx = Math.round(slotPx * 0.62)
+
+    const TEAM_BORDER = {
+      townsfolk: 'rgba(46,74,143,0.65)',
+      outsider:  'rgba(91,179,198,0.65)',
+      minion:    'rgba(140,40,50,0.65)',
+      demon:     'rgba(160,30,40,0.9)',
+    }
+
+    const el = document.createElement('div')
+    el.style.cssText = 'padding:8px 0 4px;'
+
+    const sub = document.createElement('div')
+    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
+    sub.textContent = `${total}인 게임 · 호스트 전용 전체 공개`
+    el.appendChild(sub)
+
+    const oval = document.createElement('div')
+    oval.style.cssText = 'position:relative;width:100%;aspect-ratio:2/3;overflow:visible;'
+
+    players.forEach((player, i) => {
+      const role  = ROLES_BY_ID[player.role]
+      const angle = (2 * Math.PI * i) / total - Math.PI / 2
+      const x = 50 + RX * Math.cos(angle)
+      const y = 50 + RY * Math.sin(angle)
+      const isDead = player.status !== 'alive'
+
+      const slot = document.createElement('div')
+      slot.style.cssText = `
+        position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
+        width:${slotPx}px;height:${slotPx}px;
+        transform:translate(-50%,-50%);
+        border-radius:8px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        cursor:pointer;border:2px solid ${TEAM_BORDER[role?.team] || 'var(--lead2)'};
+        background:var(--surface);
+        ${isDead ? 'opacity:0.38;filter:grayscale(0.65);' : ''}
+      `
+
+      const iconEl = document.createElement('div')
+      iconEl.style.cssText = `
+        width:${iconPx}px;height:${iconPx}px;border-radius:50%;
+        background:var(--surface2);overflow:hidden;
+        display:flex;align-items:center;justify-content:center;
+        font-size:${Math.round(iconPx * 0.58)}px;
+      `
+      if (role?.icon?.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/icons/${role.icon}`
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+        iconEl.appendChild(img)
+      } else { iconEl.textContent = role?.iconEmoji || '?' }
+      slot.appendChild(iconEl)
+
+      const badge = document.createElement('span')
+      badge.style.cssText = `
+        position:absolute;bottom:-4px;right:-4px;
+        min-width:14px;height:14px;padding:0 3px;border-radius:7px;
+        background:var(--surface2);border:1px solid var(--lead2);
+        font-size:0.48rem;font-weight:700;color:var(--text3);
+        display:flex;align-items:center;justify-content:center;z-index:1;
+      `
+      badge.textContent = player.id
+      slot.appendChild(badge)
+
+      slot.addEventListener('click', () => {
+        document.getElementById('host-seat-popup')?.remove()
+        const ov = document.createElement('div')
+        ov.className = 'popup-overlay'
+        ov.id = 'host-seat-popup'
+        const box = document.createElement('div')
+        box.className = 'popup-box'
+        box.style.padding = '16px'
+        const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'데몬' }
+        box.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="font-size:2rem;">${role?.iconEmoji || '?'}</div>
+            <div>
+              <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.name} (${player.id}번 자리)</div>
+              <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>
+              <div style="font-size:0.68rem;margin-top:2px;color:${isDead ? 'var(--rd-light)' : 'var(--tl-light)'}">${isDead ? '💀 사망' : '✅ 생존'}${player.isPoisoned ? ' · ☠ 중독' : ''}${player.isDrunk ? ' · 🍾 취함' : ''}</div>
+            </div>
+          </div>
+          <div style="font-size:0.68rem;color:var(--text4);line-height:1.5;">${role?.ability || ''}</div>
+        `
+        const closeBtn = document.createElement('button')
+        closeBtn.className = 'btn btn-full'
+        closeBtn.style.marginTop = '12px'
+        closeBtn.textContent = '닫기'
+        closeBtn.addEventListener('click', () => ov.remove())
+        box.appendChild(closeBtn)
+        ov.appendChild(box)
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove() })
+        document.body.appendChild(ov)
+      })
+
+      oval.appendChild(slot)
+    })
+
+    el.appendChild(oval)
+    this.container.appendChild(el)
+  }
 }

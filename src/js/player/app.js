@@ -90,6 +90,7 @@ export class PlayerApp {
     this.tabBar.innerHTML = ''
     const tabs = [
       { id: 'role',  icon: '🎭', label: '내 역할' },
+      { id: 'seats', icon: '🪑', label: '자리배치' },
       { id: 'memo',  icon: '📝', label: '메모' },
       { id: 'dict',  icon: '📖', label: '사전' },
       { id: 'rules', icon: '📜', label: '규칙' },
@@ -118,6 +119,9 @@ export class PlayerApp {
         } else {
           this._showJoinForm()
         }
+        break
+      case 'seats':
+        this._showSeatLayout()
         break
       case 'memo':
         const memo = new Memo()
@@ -307,5 +311,193 @@ export class PlayerApp {
     // URL 코드 자동 시도
     if (urlCode) tryDecode()
     setTimeout(() => codeInput.focus(), 100)
+  }
+
+  // ─────────────────────────────────────
+  // 자리 배치 탭 — 참가자 뷰 (의심 표시)
+  // ─────────────────────────────────────
+
+  _getSuspicions() {
+    if (!this.session) return {}
+    try { return JSON.parse(localStorage.getItem(`ctp_sus_${this.session.code}`) || '{}') } catch { return {} }
+  }
+
+  _setSuspicion(seatNum, mark) {
+    if (!this.session) return
+    const sus = this._getSuspicions()
+    if (mark === null) delete sus[seatNum]
+    else sus[seatNum] = mark
+    try { localStorage.setItem(`ctp_sus_${this.session.code}`, JSON.stringify(sus)) } catch {}
+  }
+
+  _showSeatLayout() {
+    if (!this.session) {
+      this.content.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+          <div style="font-size:2rem;margin-bottom:12px">🪑</div>
+          <div>게임 참가 후 이용 가능합니다</div>
+        </div>`
+      return
+    }
+
+    const { playerCount, seatNum: mySeat, roleId } = this.session
+    const myRole = ROLES_BY_ID[roleId]
+    const RX = 43, RY = 43
+    const slotPx = playerCount <= 6 ? 62 : playerCount <= 9 ? 56 : playerCount <= 13 ? 50 : playerCount <= 16 ? 44 : 38
+    const iconPx = Math.round(slotPx * 0.62)
+
+    const MARKS = {
+      evil:  { emoji: '🔴', label: '악인 의심', border: 'rgba(200,40,40,0.7)'  },
+      watch: { emoji: '👁',  label: '주목',      border: 'rgba(200,150,0,0.7)'  },
+      good:  { emoji: '🟢', label: '선 확인',   border: 'rgba(30,150,80,0.7)'  },
+      dead:  { emoji: '💀', label: '사망',       border: 'rgba(120,120,120,0.7)'},
+    }
+    const MY_TEAM_BORDER = {
+      townsfolk: 'rgba(46,74,143,0.65)', outsider: 'rgba(91,179,198,0.65)',
+      minion: 'rgba(140,40,50,0.65)',    demon: 'rgba(160,30,40,0.9)',
+    }
+
+    const el = document.createElement('div')
+    el.style.cssText = 'padding:8px 0 4px;'
+
+    const sub = document.createElement('div')
+    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
+    sub.textContent = `${playerCount}인 게임 · 자리 ${mySeat}번 · 다른 자리를 탭해 표시 추가`
+    el.appendChild(sub)
+
+    const oval = document.createElement('div')
+    oval.id = 'player-seats-oval'
+    oval.style.cssText = 'position:relative;width:100%;aspect-ratio:2/3;overflow:visible;'
+
+    const buildSlot = (i) => {
+      const seatNum    = i + 1
+      const isOwn      = seatNum === mySeat
+      const sus        = this._getSuspicions()
+      const mark       = sus[seatNum] || null
+      const angle      = (2 * Math.PI * i) / playerCount - Math.PI / 2
+      const x          = 50 + RX * Math.cos(angle)
+      const y          = 50 + RY * Math.sin(angle)
+      const borderColor = isOwn
+        ? (MY_TEAM_BORDER[myRole?.team] || 'var(--lead2)')
+        : (mark ? MARKS[mark].border : 'var(--lead2)')
+
+      const slot = document.createElement('div')
+      slot.id = `pseat-${seatNum}`
+      slot.style.cssText = `
+        position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
+        width:${slotPx}px;height:${slotPx}px;
+        transform:translate(-50%,-50%);
+        border-radius:8px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        cursor:${isOwn ? 'default' : 'pointer'};
+        border:2px solid ${borderColor};
+        border-style:${isOwn || mark ? 'solid' : 'dashed'};
+        background:${isOwn ? 'var(--surface)' : 'var(--surface2)'};
+      `
+
+      const iconEl = document.createElement('div')
+      iconEl.style.cssText = `
+        width:${iconPx}px;height:${iconPx}px;border-radius:50%;
+        background:var(--surface2);overflow:hidden;
+        display:flex;align-items:center;justify-content:center;
+        font-size:${Math.round(iconPx * 0.58)}px;
+      `
+      if (isOwn) {
+        if (myRole?.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${myRole.icon}`
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+          iconEl.appendChild(img)
+        } else { iconEl.textContent = myRole?.iconEmoji || '?' }
+      } else if (mark) {
+        iconEl.textContent = MARKS[mark].emoji
+        iconEl.style.background = 'transparent'
+      } else {
+        iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.4)}px">?</span>`
+      }
+      slot.appendChild(iconEl)
+
+      // 자리 번호 배지
+      const badge = document.createElement('span')
+      badge.style.cssText = `
+        position:absolute;bottom:-4px;right:-4px;min-width:14px;height:14px;
+        padding:0 3px;border-radius:7px;background:var(--surface2);
+        border:1px solid var(--lead2);font-size:0.48rem;font-weight:700;
+        color:${isOwn ? 'var(--gold2)' : 'var(--text3)'};
+        display:flex;align-items:center;justify-content:center;z-index:1;
+      `
+      badge.textContent = seatNum
+      slot.appendChild(badge)
+
+      if (!isOwn) {
+        slot.addEventListener('click', () => this._showSuspicionPicker(seatNum, oval, MARKS))
+      }
+      return slot
+    }
+
+    for (let i = 0; i < playerCount; i++) oval.appendChild(buildSlot(i))
+    el.appendChild(oval)
+    this.content.appendChild(el)
+  }
+
+  _showSuspicionPicker(seatNum, oval, MARKS) {
+    document.getElementById('sus-picker')?.remove()
+
+    const picker = document.createElement('div')
+    picker.id = 'sus-picker'
+    picker.style.cssText = `
+      position:fixed;bottom:calc(var(--tab-h,56px) + 8px);left:50%;
+      transform:translateX(-50%);
+      background:var(--surface);border:1px solid var(--lead2);
+      border-radius:14px;padding:10px 12px;
+      display:flex;flex-direction:column;gap:8px;
+      box-shadow:0 4px 24px rgba(0,0,0,0.4);z-index:100;
+      min-width:200px;
+    `
+
+    const title = document.createElement('div')
+    title.style.cssText = 'font-size:0.65rem;color:var(--text4);text-align:center;'
+    title.textContent = `자리 ${seatNum}번 표시`
+    picker.appendChild(title)
+
+    const btnRow = document.createElement('div')
+    btnRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center;'
+
+    Object.entries(MARKS).forEach(([key, { emoji, label }]) => {
+      const btn = document.createElement('button')
+      btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:8px;border:1px solid var(--lead2);background:var(--surface2);cursor:pointer;font-size:1.1rem;min-width:48px;'
+      btn.innerHTML = `<span>${emoji}</span><span style="font-size:0.5rem;color:var(--text3)">${label}</span>`
+      btn.addEventListener('click', () => {
+        this._setSuspicion(seatNum, key)
+        picker.remove()
+        this._refreshSeatSlot(seatNum, oval, MARKS)
+      })
+      btnRow.appendChild(btn)
+    })
+
+    // 초기화 버튼
+    const clearBtn = document.createElement('button')
+    clearBtn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:8px;border:1px solid var(--lead2);background:var(--surface2);cursor:pointer;font-size:1.1rem;min-width:48px;'
+    clearBtn.innerHTML = `<span>✕</span><span style="font-size:0.5rem;color:var(--text3)">초기화</span>`
+    clearBtn.addEventListener('click', () => {
+      this._setSuspicion(seatNum, null)
+      picker.remove()
+      this._refreshSeatSlot(seatNum, oval, MARKS)
+    })
+    btnRow.appendChild(clearBtn)
+
+    picker.appendChild(btnRow)
+    document.body.appendChild(picker)
+
+    // 외부 탭 → 닫기
+    setTimeout(() => {
+      const close = (e) => { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', close) } }
+      document.addEventListener('click', close)
+    }, 50)
+  }
+
+  _refreshSeatSlot(seatNum, oval, MARKS) {
+    // 전체 다시 그리기 대신 해당 슬롯만 교체
+    this._switchTab('seats')
   }
 }

@@ -119,59 +119,6 @@ export class Grimoire {
       this.el.appendChild(nightCard)
     }
 
-    const gridCard = document.createElement('div')
-    gridCard.className = 'card'
-
-    // 접기/펼치기 헤더
-    const cardHeader = document.createElement('div')
-    cardHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0;'
-
-    const cardTitle = document.createElement('div')
-    cardTitle.className = 'card-title'
-    cardTitle.style.marginBottom = '0'
-    cardTitle.textContent = '👥 플레이어'
-
-    const collapseBtn = document.createElement('span')
-    collapseBtn.style.cssText = 'font-size:0.78rem;color:var(--text4);padding:2px 4px;transition:transform 0.18s;'
-    collapseBtn.textContent = this._playerSectionCollapsed ? '▶' : '▼'
-
-    cardHeader.appendChild(cardTitle)
-    cardHeader.appendChild(collapseBtn)
-    gridCard.appendChild(cardHeader)
-
-    // 링 바디
-    const cardBody = document.createElement('div')
-    cardBody.style.cssText = `overflow:hidden;transition:max-height 0.25s ease;max-height:${this._playerSectionCollapsed ? '0' : '800px'};`
-    cardBody.style.marginTop = this._playerSectionCollapsed ? '0' : '8px'
-
-    const buildRing = () => renderPlayerGrid(state.players, {
-      selectable: true,
-      maxSelect:  1,
-      roleMap,
-      ring:       true,
-      onSelect: (ids) => { if (ids.length > 0) this._showPlayerDetail(ids[0]) },
-    })
-
-    if (!this._playerSectionCollapsed) cardBody.appendChild(buildRing())
-
-    cardHeader.addEventListener('click', () => {
-      this._playerSectionCollapsed = !this._playerSectionCollapsed
-      if (this._playerSectionCollapsed) {
-        cardBody.style.maxHeight = '0'
-        cardBody.style.marginTop = '0'
-        collapseBtn.textContent = '▶'
-        cardBody.innerHTML = ''
-      } else {
-        cardBody.style.marginTop = '8px'
-        cardBody.appendChild(buildRing())
-        // 다음 프레임에 max-height 애니메이션 시작
-        requestAnimationFrame(() => { cardBody.style.maxHeight = '800px' })
-        collapseBtn.textContent = '▼'
-      }
-    })
-
-    gridCard.appendChild(cardBody)
-    this.el.appendChild(gridCard)
 
     const btnGrid = document.createElement('div')
     btnGrid.className = 'btn-grid-2'

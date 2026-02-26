@@ -11,6 +11,7 @@ import { renderNightOrderList } from '../components/NightOrderList.js'
 import { renderLogList }        from '../components/LogEntry.js'
 import { ROLES_BY_ID }          from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
+import { CharacterDict }        from '../player/CharacterDict.js'
 
 export class Grimoire {
   /**
@@ -246,6 +247,20 @@ export class Grimoire {
       hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
       hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${count}명으로도 시작 가능`
       panel.appendChild(hint)
+    }
+
+    // 4) 역할 구성 그리드
+    if (config.roleIds && config.roleIds.length > 0) {
+      const roleCard = document.createElement('div')
+      roleCard.className = 'card grimoire-lobby-card'
+      roleCard.innerHTML = `<div class="card-title">🎭 역할 구성 <span style="font-size:0.65rem;color:var(--text4);font-weight:400">${config.roleIds.length}개</span></div>`
+
+      const dict = new CharacterDict({
+        scriptRoles: config.roleIds,
+        // initialScenario 없이 — scriptRoles 있으면 자동으로 'game' 기본값
+      })
+      dict.mount(roleCard)
+      panel.appendChild(roleCard)
     }
 
     this.el.appendChild(panel)

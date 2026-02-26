@@ -14,12 +14,14 @@ const GEM_CLASS   = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'g
 const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
 
 export class CharacterDict {
-  constructor({ scriptRoles = null, onRoleClick = null } = {}) {
+  constructor({ scriptRoles = null, onRoleClick = null, initialScenario = null } = {}) {
     this.scriptRoles = scriptRoles
     this.onRoleClick = onRoleClick  // (roleId) => 규칙 탭 해당 페이지로 이동
-    this.el     = null
-    this.filter = 'all'
-    this._modal = null
+    this.el         = null
+    this._modal     = null
+    // 시나리오 필터: 'all' | 'tb' | 'game'  ('game'은 호스트 전용)
+    // initialScenario 명시 > scriptRoles 있으면 'game' > 기본 'all'
+    this.scenario   = initialScenario ?? (scriptRoles ? 'game' : 'all')
   }
 
   mount(container) {
@@ -40,25 +42,41 @@ export class CharacterDict {
 
   _getRoles() {
     let roles = ROLES_TB
-    if (this.scriptRoles) roles = roles.filter(r => this.scriptRoles.includes(r.id))
-    if (this.filter !== 'all') roles = roles.filter(r => r.team === this.filter)
+
+    if (this.scenario === 'game' && this.scriptRoles) {
+      roles = roles.filter(r => this.scriptRoles.includes(r.id))
+    }
+    // 'all'과 'tb' 모두 ROLES_TB 전체 표시
+
     return roles
   }
 
   _render() {
     this.el.innerHTML = ''
 
-    // ── 필터 버튼 ──
-    const filterRow = document.createElement('div')
-    filterRow.className = 'dict__filter'
-    ;['all', 'townsfolk', 'outsider', 'minion', 'demon'].forEach(key => {
+    // ── 시나리오 필터 행 ──
+    const scenarioRow = document.createElement('div')
+    scenarioRow.className = 'dict__filter'
+
+    const scenarioItems = [
+      { key: 'all',  label: '전체' },
+      { key: 'tb',   label: '등장 가능한' },
+    ]
+    // '실제 등장한' 필터는 scriptRoles가 있을 때(호스트)만 표시
+    if (this.scriptRoles) {
+      scenarioItems.push({ key: 'game', label: '👑 실제 등장한' })
+    }
+
+    scenarioItems.forEach(({ key, label }) => {
       const btn = document.createElement('button')
-      btn.className = 'dict__filter-btn' + (this.filter === key ? ' dict__filter-btn--active' : '')
-      btn.textContent = key === 'all' ? '전체' : TEAM_LABEL[key]
-      btn.addEventListener('click', () => { this.filter = key; this._render() })
-      filterRow.appendChild(btn)
+      btn.className = 'dict__filter-btn'
+        + (this.scenario === key ? ' dict__filter-btn--active' : '')
+        + (key === 'game' ? ' dict__filter-btn--host' : '')
+      btn.textContent = label
+      btn.addEventListener('click', () => { this.scenario = key; this._render() })
+      scenarioRow.appendChild(btn)
     })
-    this.el.appendChild(filterRow)
+    this.el.appendChild(scenarioRow)
 
     const roles = this._getRoles()
     if (roles.length === 0) {
@@ -69,26 +87,22 @@ export class CharacterDict {
       return
     }
 
-    // ── 그리드 (전체 필터 → 진영별 섹션, 단일 필터 → 단순 그리드) ──
-    if (this.filter === 'all') {
-      ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
-        const teamRoles = roles.filter(r => r.team === team)
-        if (teamRoles.length === 0) return
+    // ── 그리드: 항상 진영별 섹션으로 표시 ──
+    ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
+      const teamRoles = roles.filter(r => r.team === team)
+      if (teamRoles.length === 0) return
 
-        const section = document.createElement('div')
-        section.className = 'dict__section'
+      const section = document.createElement('div')
+      section.className = 'dict__section'
 
-        const heading = document.createElement('div')
-        heading.className = `dict__section-title dict__section-title--${team}`
-        heading.textContent = TEAM_LABEL[team]
-        section.appendChild(heading)
+      const heading = document.createElement('div')
+      heading.className = `dict__section-title dict__section-title--${team}`
+      heading.textContent = TEAM_LABEL[team]
+      section.appendChild(heading)
 
-        section.appendChild(this._buildGrid(teamRoles))
-        this.el.appendChild(section)
-      })
-    } else {
-      this.el.appendChild(this._buildGrid(roles))
-    }
+      section.appendChild(this._buildGrid(teamRoles))
+      this.el.appendChild(section)
+    })
   }
 
   _buildGrid(roles) {
@@ -225,10 +239,10 @@ if (!document.getElementById('dict-style')) {
   display: flex;
   gap: 5px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .dict__filter-btn {
-  padding: 5px 10px;
+  padding: 5px 11px;
   border-radius: 16px;
   border: 1px solid var(--lead2);
   background: var(--surface);
@@ -241,6 +255,16 @@ if (!document.getElementById('dict-style')) {
   background: rgba(122,111,183,0.2);
   border-color: var(--pu-base);
   color: var(--text);
+}
+/* 호스트 전용 이번 게임 필터 */
+.dict__filter-btn--host {
+  border-color: rgba(212,175,55,0.5);
+  color: var(--gold2, #c9a84c);
+}
+.dict__filter-btn--host.dict__filter-btn--active {
+  background: rgba(212,175,55,0.15);
+  border-color: var(--gold2, #c9a84c);
+  color: var(--gold2, #c9a84c);
 }
 
 /* 진영 섹션 */
@@ -329,7 +353,7 @@ if (!document.getElementById('dict-style')) {
   border-radius: 18px;
   padding: 28px 20px 24px;
   width: 100%;
-  max-width: 340px;
+  max-width: 400px;
   max-height: 78vh;
   overflow-y: auto;
   display: flex;
@@ -359,13 +383,13 @@ if (!document.getElementById('dict-style')) {
 }
 
 .dict__modal-icon {
-  width: 88px;
-  height: 88px;
+  width: 176px !important;
+  height: 176px !important;
   border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.4rem;
+  font-size: 4.8rem;
   overflow: hidden;
   flex-shrink: 0;
   margin-bottom: 2px;
@@ -383,8 +407,8 @@ if (!document.getElementById('dict-style')) {
   background: var(--surface2);
   border: 1px solid var(--lead2);
   border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 0.78rem;
+  padding: 16px 18px;
+  font-size: 1.0rem;
   color: var(--text2);
   line-height: 1.75;
   text-align: center;

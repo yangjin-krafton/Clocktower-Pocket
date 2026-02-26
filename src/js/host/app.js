@@ -260,6 +260,7 @@ export class HostApp {
       getLobbyConfig:  () => ({
         playerCount: this.pendingPlayerCount,
         roleCount:   this.pendingRoleIds.length,
+        roleIds:     this.pendingRoleIds,
       }),
       onStartGame:    () => this._handleManualStart(),
       onOpenSettings: () => this._showSetupPopup(),

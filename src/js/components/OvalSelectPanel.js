@@ -239,11 +239,16 @@ if (!document.getElementById('oval-select-panel-style')) {
   align-items: center;
   justify-content: center;
   min-height: 0;
+  overflow: hidden;
 }
 .oval-sel__oval {
   position: relative;
+  /* max-height: 100% → flex 부모 높이에 맞게 제한 */
+  /* aspect-ratio가 max-height 제약 시 width를 자동 축소 */
   width: 100%;
+  max-height: 100%;
   aspect-ratio: 2 / 3;
+  margin: 0 auto;
 }
 
 /* 슬롯 공통 */

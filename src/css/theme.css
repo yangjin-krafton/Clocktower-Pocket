@@ -401,6 +401,8 @@ body {
 @media (orientation: landscape) and (max-height: 500px) {
   .gl-seat-oval {
     aspect-ratio: 3 / 2;
+    /* landscape: 너비가 높이 기준 → 높이로 제한 */
+    width: min(100%, calc((100svh - 200px) * 3 / 2));
   }
   .page-content {
     padding-bottom: 56px;

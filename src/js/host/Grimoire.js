@@ -238,7 +238,7 @@ export class Grimoire {
 
   _renderSeatWheel(total, seats) {
     const wrap = document.createElement('div')
-    wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;padding:8px 0 4px;'
+    wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;padding:4px 0 2px;width:100%;'
 
     const oval = document.createElement('div')
     oval.className = 'gl-seat-oval'
@@ -724,11 +724,13 @@ if (!document.getElementById('grimoire-lobby-style')) {
 }
 
 /* ── 타원형 링 컨테이너 (세로형 portrait) ── */
+/* width를 뷰포트 높이 기반으로 제한 → height(=width×1.5)가 화면을 넘지 않도록 */
 .gl-seat-oval {
   position: relative;
-  width: 100%;
-  aspect-ratio: 2 / 3;   /* 가로:세로 = 2:3 → 세로 = 너비의 150% */
+  width: min(100%, calc((100svh - 360px) * 2 / 3));
+  aspect-ratio: 2 / 3;
   overflow: visible;
+  margin: 0 auto;
 }
 
 /* ── 자리 슬롯 (링 내 절대 위치) ── */

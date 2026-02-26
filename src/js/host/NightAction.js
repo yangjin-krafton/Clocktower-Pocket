@@ -5,6 +5,7 @@
 import { mountInfoPanel }          from '../components/InfoPanel.js'
 import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
 import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
+import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
@@ -107,24 +108,19 @@ export class NightAction {
   // ── 스파이 (그리모어 열람) ──
   _showSpyInfo(spies) {
     if (!spies || spies.length === 0) { this._done('spy'); return }
-    const allInfo = this.engine.state.players.map(p => {
-      const role = ROLES_BY_ID[p.role]
-      return `${p.id}번: ${role?.iconEmoji || role?.icon || '?'} ${role?.name || p.role} (${p.team === 'good' ? '선' : '악'})`
-    }).join('\n')
+    const allPlayers = this.engine.state.players
 
-    this._unmount = mountInfoPanel({
-      title:    '스파이 — 그리모어',
-      roleIcon: '🕵️',
-      message:  allInfo,
-      players:  [],
-      revealData: {
-        roleIcon: '🕵️',
-        roleName: '스파이 — 그리모어',
-        roleTeam: 'minion',
-        message:  allInfo,
-        players:  [],
+    // ① 호스트가 공개 방식 선택 (모두/반/셔플)
+    this._unmount = mountSpyModeSelector({
+      players: allPlayers,
+      onSelected: (mode) => {
+        // ② 선택된 방식으로 오발 그리모어 공개
+        this._unmount = mountSpyGrimoirePanel({
+          players: allPlayers,
+          mode,
+          onNext: () => this._done('spy'),
+        })
       },
-      onConfirm: () => this._done('spy'),
     })
   }
 

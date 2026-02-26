@@ -28,20 +28,6 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Generate config.js from secrets
-        env:
-          EMQX_URL: ${{ secrets.EMQX_URL }}
-          EMQX_USERNAME: ${{ secrets.EMQX_USERNAME }}
-          EMQX_PASSWORD: ${{ secrets.EMQX_PASSWORD }}
-        run: |
-          {
-            echo "export const MQTT_CONFIG = {"
-            echo "  relayUrl: '${EMQX_URL}',"
-            echo "  username: '${EMQX_USERNAME}',"
-            echo "  password: '${EMQX_PASSWORD}',"
-            echo "}"
-          } > src/js/config.js
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

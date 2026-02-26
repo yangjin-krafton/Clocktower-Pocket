@@ -16,36 +16,34 @@ import { formatCode }           from '../room-code.js'
 
 export class Grimoire {
   /**
-   * @param {Object} opts
    * @param {Object}   opts.engine
-   * @param {Function} [opts.getLobbyPlayers]  () => [{peerId, name}]
-   * @param {Function} [opts.getLobbyConfig]   () => {playerCount, roleCount}
-   * @param {Function} [opts.onStartGame]      () => void  ← 호스트 시작 버튼
-   * @param {Function} [opts.onOpenSettings]   () => void  ← 설정 변경 팝업
-   * @param {Function} [opts.onStartNight]
-   * @param {Function} [opts.onStartDay]
-   * @param {Function} [opts.onNextNightStep]
-   * @param {Function} [opts.onPlayerAction]
+   * @param {Function} opts.getLobbyConfig      () => { playerCount, seatRoles[], roomCode }
+   * @param {Function} opts.onStartGame
+   * @param {Function} opts.onPlayerCountChange (n) => void
+   * @param {Function} opts.onSeatRoleAssign    (seatIdx, roleId|null) => void
+   * @param {Function} opts.onAutoAssign        () => void
    */
   constructor({
     engine,
-    getLobbyPlayers, getLobbyConfig,
-    onStartGame, onOpenSettings,
+    getLobbyConfig,
+    onStartGame,
     onStartNight, onStartDay, onNextNightStep, onPlayerAction,
-    onPlayerCountChange, onRoleToggle,
+    onPlayerCountChange,
+    onSeatRoleAssign,
+    onAutoAssign,
   }) {
-    this.engine               = engine
-    this.getLobbyPlayers      = getLobbyPlayers      || (() => [])
-    this.getLobbyConfig       = getLobbyConfig       || (() => ({ playerCount: 7, roleCount: 0, roleIds: [] }))
-    this.onStartGame          = onStartGame          || null
-    this.onOpenSettings       = onOpenSettings       || null
-    this.onStartNight         = onStartNight         || null
-    this.onStartDay           = onStartDay           || null
-    this.onNextNightStep      = onNextNightStep       || null
-    this.onPlayerAction       = onPlayerAction       || null
-    this.onPlayerCountChange  = onPlayerCountChange  || null
-    this.onRoleToggle         = onRoleToggle         || null
-    this.el                   = null
+    this.engine              = engine
+    this.getLobbyConfig      = getLobbyConfig     || (() => ({ playerCount: 7, seatRoles: [], roomCode: null }))
+    this.onStartGame         = onStartGame        || null
+    this.onStartNight        = onStartNight       || null
+    this.onStartDay          = onStartDay         || null
+    this.onNextNightStep     = onNextNightStep     || null
+    this.onPlayerAction      = onPlayerAction     || null
+    this.onPlayerCountChange = onPlayerCountChange|| null
+    this.onSeatRoleAssign    = onSeatRoleAssign   || null
+    this.onAutoAssign        = onAutoAssign       || null
+    this.el                  = null
+    this._selectedSeat       = null  // 로비에서 선택된 자리 인덱스 (0-based)
   }
 
   mount(container) {
@@ -162,24 +160,22 @@ export class Grimoire {
   }
 
   // ─────────────────────────────────────
-  // Lobby phase 전용 렌더
-  // 실제 인게임 레이아웃을 ghost로 뒤에 깔고
-  // 게임 준비 패널을 위에 덮는 방식
+  // Lobby phase — 자리 배치 뷰
   // ─────────────────────────────────────
 
   _renderLobby() {
-    const players   = this.getLobbyPlayers()
-    const config    = this.getLobbyConfig()
-    const joined    = players.length
-    const total     = config.playerCount
-    const selectedSet = new Set(config.roleIds || [])
-    const roleMatch = selectedSet.size === total
+    const config = this.getLobbyConfig()
+    const total  = config.playerCount
+    const seats  = Array.from({ length: total }, (_, i) => config.seatRoles?.[i] ?? null)
 
     this.el.classList.add('grimoire--lobby')
 
-    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+    // 선택된 자리가 범위 밖이면 초기화
+    if (this._selectedSeat !== null && this._selectedSeat >= total) {
+      this._selectedSeat = null
+    }
 
-    // ── 1) 상단 헤더: 참가자 상태 + 인원 선택기 ──────────────
+    // ── 1) 헤더: 인원 선택기 ───────────────────────────────────
     const header = document.createElement('div')
     header.className = 'gl-header'
 
@@ -187,10 +183,9 @@ export class Grimoire {
     headerLeft.className = 'gl-header__left'
     headerLeft.innerHTML = `
       <span class="gl-header__title">🏰 게임 준비</span>
-      <span class="gl-header__sub">${total}인 게임</span>
+      <span class="gl-header__sub">자리를 탭해 역할을 배정하세요</span>
     `
 
-    // 인원 선택기
     const countSel = document.createElement('div')
     countSel.className = 'gl-count-sel'
 
@@ -207,7 +202,7 @@ export class Grimoire {
     const incBtn = document.createElement('button')
     incBtn.className = 'gl-count-btn'
     incBtn.textContent = '+'
-    incBtn.disabled = total >= 15
+    incBtn.disabled = total >= 20
     incBtn.addEventListener('click', () => this.onPlayerCountChange?.(total + 1))
 
     countSel.appendChild(decBtn)
@@ -218,21 +213,145 @@ export class Grimoire {
     header.appendChild(countSel)
     this.el.appendChild(header)
 
+    // ── 2) 원형 자리 배치 휠 ─────────────────────────────────
+    this._renderSeatWheel(total, seats)
 
-    // ── 3) 역할 선택 상태 표시 ────────────────────────────────
-    const roleStatus = document.createElement('div')
-    roleStatus.className = 'gl-role-status' + (roleMatch ? ' gl-role-status--ok' : '')
-    roleStatus.textContent = roleMatch
-      ? `✓ ${selectedSet.size}개 선택됨 (${total}인 완성)`
-      : `${selectedSet.size}개 선택 / ${total}인 필요`
-    this.el.appendChild(roleStatus)
+    // ── 3) 자동 배정 버튼 ──────────────────────────────────────
+    const autoBtn = document.createElement('button')
+    autoBtn.className = 'btn btn-full'
+    autoBtn.style.cssText = 'font-size:0.78rem;padding:9px;margin:0 0 2px;color:var(--text3);'
+    autoBtn.textContent = '🎲 역할 자동 배정'
+    autoBtn.addEventListener('click', () => {
+      this._selectedSeat = null
+      this.onAutoAssign?.()
+    })
+    this.el.appendChild(autoBtn)
 
-    // ── 4) 역할 토큰 그리드 (전체 표시 · 클릭으로 ON/OFF) ────
+    // ── 4) 역할 선택 패널 (자리 선택 시) ──────────────────────
+    if (this._selectedSeat !== null) {
+      this._renderRolePanel(seats)
+    }
+
+    // ── 5) 구성 상태 + 시작 버튼 ───────────────────────────────
+    this._renderLobbyFooter(total, seats)
+  }
+
+  _renderSeatWheel(total, seats) {
+    const wrap = document.createElement('div')
+    wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;padding:8px 0 4px;'
+
+    const wheel = document.createElement('div')
+    wheel.className = 'gl-seat-wheel'
+
+    // 인원수에 따른 칩 크기와 반경
+    let chipPx, rPct
+    if      (total <= 6)  { chipPx = 56; rPct = 35 }
+    else if (total <= 8)  { chipPx = 52; rPct = 37 }
+    else if (total <= 11) { chipPx = 46; rPct = 39 }
+    else if (total <= 14) { chipPx = 40; rPct = 40 }
+    else if (total <= 17) { chipPx = 34; rPct = 41 }
+    else                  { chipPx = 28; rPct = 42 }
+
+    // 중앙 표시
+    const center = document.createElement('div')
+    center.className = 'gl-wheel-center'
+    center.innerHTML = `
+      <span class="gl-wheel-count">${total}</span>
+      <span class="gl-wheel-unit">인</span>
+    `
+    wheel.appendChild(center)
+
+    // 자리 슬롯
+    seats.forEach((roleId, i) => {
+      const role       = roleId ? ROLES_BY_ID[roleId] : null
+      const angle      = (2 * Math.PI * i) / total - Math.PI / 2
+      const x          = 50 + rPct * Math.cos(angle)
+      const y          = 50 + rPct * Math.sin(angle)
+      const isSelected = this._selectedSeat === i
+      const isAssigned = !!roleId
+
+      const teamColor = {
+        townsfolk: 'rgba(46,74,143,0.55)',
+        outsider:  'rgba(91,179,198,0.55)',
+        minion:    'rgba(140,40,50,0.55)',
+        demon:     'rgba(140,40,50,0.80)',
+      }[role?.team] || 'transparent'
+
+      const slot = document.createElement('div')
+      slot.className = 'gl-seat-slot'
+        + (isSelected ? ' gl-seat-slot--selected' : '')
+        + (isAssigned ? ' gl-seat-slot--assigned' : ' gl-seat-slot--empty')
+      slot.style.cssText = `
+        left:${x}%;top:${y}%;
+        width:${chipPx}px;height:${chipPx}px;
+        ${isAssigned ? `border-color:${teamColor};` : ''}
+        ${isSelected ? `box-shadow:0 0 0 3px var(--gold2),0 0 14px rgba(212,168,40,0.45);` : ''}
+      `
+
+      // 역할 아이콘
+      const iconEl = document.createElement('div')
+      iconEl.className = 'gl-seat-icon'
+      iconEl.style.fontSize = `${Math.max(13, chipPx * 0.42)}px`
+      if (role?.icon?.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/icons/${role.icon}`
+        img.style.cssText = `width:${Math.max(14, chipPx * 0.52)}px;height:${Math.max(14, chipPx * 0.52)}px;object-fit:contain;`
+        iconEl.appendChild(img)
+      } else if (role) {
+        iconEl.textContent = role.iconEmoji || '?'
+      } else {
+        iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.max(11,chipPx*0.32)}px;">+</span>`
+      }
+
+      // 자리 번호 배지
+      const badge = document.createElement('span')
+      badge.className = 'gl-seat-num'
+      badge.textContent = i + 1
+
+      slot.appendChild(iconEl)
+      slot.appendChild(badge)
+      slot.addEventListener('click', () => {
+        this._selectedSeat = (this._selectedSeat === i) ? null : i
+        this._render()
+      })
+      wheel.appendChild(slot)
+    })
+
+    wrap.appendChild(wheel)
+    this.el.appendChild(wrap)
+  }
+
+  _renderRolePanel(seats) {
+    const si          = this._selectedSeat
+    const currentRole = seats[si] ?? null
+    const usedByOther = new Set(seats.filter((r, i) => r && i !== si))
+
+    const panel = document.createElement('div')
+    panel.className = 'card gl-role-panel'
+
+    // 패널 헤더
+    const ph = document.createElement('div')
+    ph.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;'
+
+    const pt = document.createElement('div')
+    pt.className = 'card-title'
+    pt.style.marginBottom = '0'
+    pt.textContent = `자리 ${si + 1} 역할 선택`
+
+    const clearBtn = document.createElement('button')
+    clearBtn.style.cssText = 'font-size:0.68rem;color:var(--text4);background:none;border:none;cursor:pointer;padding:2px 8px;'
+    clearBtn.textContent = '비우기'
+    clearBtn.addEventListener('click', () => this.onSeatRoleAssign?.(si, null))
+
+    ph.appendChild(pt)
+    ph.appendChild(clearBtn)
+    panel.appendChild(ph)
+
+    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+
     ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
       const teamRoles = ROLES_TB.filter(r => r.team === team)
-      if (teamRoles.length === 0) return
-
-      const section = document.createElement('div')
+      const section   = document.createElement('div')
       section.className = 'dict__section'
 
       const heading = document.createElement('div')
@@ -244,9 +363,13 @@ export class Grimoire {
       grid.className = 'dict__grid'
 
       teamRoles.forEach(role => {
-        const isSelected = selectedSet.has(role.id)
+        const isCurrent = role.id === currentRole
+        const isUsed    = usedByOther.has(role.id)
+        const usedSeat  = isUsed ? seats.findIndex((r, i) => r === role.id && i !== si) + 1 : 0
+
         const btn = document.createElement('button')
-        btn.className = `dict__token dict__token--${role.team}` + (isSelected ? ' dict__token--on' : ' dict__token--off')
+        btn.className = `dict__token dict__token--${role.team}`
+          + (isCurrent ? ' dict__token--on' : (isUsed ? ' dict__token--used' : ' dict__token--off'))
 
         const iconDiv = document.createElement('div')
         iconDiv.className = 'dict__token-icon'
@@ -256,38 +379,89 @@ export class Grimoire {
           img.alt = role.name
           iconDiv.appendChild(img)
         } else {
-          iconDiv.textContent = role.iconEmoji || role.icon || '?'
+          iconDiv.textContent = role.iconEmoji || '?'
         }
 
         const nameDiv = document.createElement('div')
         nameDiv.className = 'dict__token-name'
         nameDiv.textContent = role.name
+        if (isUsed) {
+          const usedTag = document.createElement('div')
+          usedTag.style.cssText = 'font-size:0.52rem;color:var(--text4);margin-top:1px;'
+          usedTag.textContent = `자리${usedSeat}`
+          nameDiv.appendChild(usedTag)
+        }
 
         btn.appendChild(iconDiv)
         btn.appendChild(nameDiv)
-        btn.addEventListener('click', () => this.onRoleToggle?.(role.id))
+        btn.addEventListener('click', () => {
+          this.onSeatRoleAssign?.(si, isCurrent ? null : role.id)
+        })
         grid.appendChild(btn)
       })
 
       section.appendChild(grid)
-      this.el.appendChild(section)
+      panel.appendChild(section)
     })
 
-    // ── 5) 시작 버튼 ─────────────────────────────────────────
+    this.el.appendChild(panel)
+  }
+
+  _renderLobbyFooter(total, seats) {
+    const counts     = { townsfolk: 0, outsider: 0, minion: 0, demon: 0 }
+    const filledCnt  = seats.filter(Boolean).length
+    seats.forEach(r => {
+      const role = r ? ROLES_BY_ID[r] : null
+      if (role) counts[role.team] = (counts[role.team] || 0) + 1
+    })
+
+    const comp     = PLAYER_COUNTS[total]
+    const hasBaron = seats.includes('baron')
+    let valid = false
+    let msg   = ''
+
+    if (filledCnt < total) {
+      msg = `${filledCnt} / ${total} 자리 배정 완료`
+    } else if (comp) {
+      const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
+      const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
+      if (counts.demon < 1)              msg = '데몬 1개 필요'
+      else if (counts.minion < comp.minion) msg = `미니언 ${comp.minion}개 필요 (현재 ${counts.minion})`
+      else if (counts.townsfolk < needTown) msg = `마을주민 ${needTown}개 필요 (현재 ${counts.townsfolk})`
+      else if (counts.outsider  < needOut)  msg = `아웃사이더 ${needOut}개 필요 (현재 ${counts.outsider})`
+      else { valid = true; msg = `✓ ${total}인 구성 완성` }
+    } else {
+      if (filledCnt === total) { valid = true; msg = `✓ ${total}인 구성 완성` }
+    }
+
+    // 구성 현황 배지
+    if (filledCnt > 0) {
+      const compRow = document.createElement('div')
+      compRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;'
+      const BADGE = { townsfolk:['badge-town','마을'], outsider:['badge-outside','아웃'], minion:['badge-minion','미니언'], demon:['badge-minion','데몬'] }
+      Object.entries(counts).forEach(([team, cnt]) => {
+        if (!cnt) return
+        const [cls, label] = BADGE[team]
+        const b = document.createElement('span')
+        b.className = `badge ${cls}`
+        b.textContent = `${label} ${cnt}`
+        compRow.appendChild(b)
+      })
+      this.el.appendChild(compRow)
+    }
+
+    const status = document.createElement('div')
+    status.className = 'gl-role-status' + (valid ? ' gl-role-status--ok' : '')
+    status.textContent = msg
+    this.el.appendChild(status)
+
     const startBtn = document.createElement('button')
     startBtn.className = 'btn btn-gold gl-start-btn'
-    startBtn.disabled = !roleMatch
-    if (!roleMatch) startBtn.style.opacity = '0.45'
-    startBtn.textContent = roleMatch ? `🏰 게임 시작 (${total}명)` : '🏰 역할 선택 미완료'
+    startBtn.disabled  = !valid
+    if (!valid) startBtn.style.opacity = '0.45'
+    startBtn.textContent = valid ? `🏰 방코드 생성 & 게임 시작 (${total}명)` : `🏰 ${msg}`
     startBtn.addEventListener('click', () => this.onStartGame?.())
     this.el.appendChild(startBtn)
-
-    if (total < 5) {
-      const hint = document.createElement('div')
-      hint.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-top:4px;'
-      hint.textContent = `※ 정식 게임은 5명 이상 권장 · ${total}명으로도 시작 가능`
-      this.el.appendChild(hint)
-    }
   }
 
   // ─────────────────────────────────────
@@ -494,6 +668,96 @@ if (!document.getElementById('grimoire-lobby-style')) {
 .dict__token--off {
   opacity: 0.22;
   filter: grayscale(0.5);
+}
+.dict__token--used {
+  opacity: 0.38;
+  filter: grayscale(0.6);
+}
+
+/* ── 원형 자리 배치 휠 ── */
+.gl-seat-wheel {
+  position: relative;
+  width: min(290px, 86vw);
+  height: min(290px, 86vw);
+  flex-shrink: 0;
+}
+.gl-wheel-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+.gl-wheel-count {
+  display: block;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold2);
+  line-height: 1.1;
+}
+.gl-wheel-unit {
+  font-size: 0.68rem;
+  color: var(--text3);
+}
+.gl-seat-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid var(--lead2);
+  background: var(--surface);
+  transition: transform 0.13s, box-shadow 0.13s;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+}
+.gl-seat-slot--empty {
+  border-style: dashed;
+  background: var(--surface2);
+}
+.gl-seat-slot--assigned {
+  border-width: 2px;
+  border-style: solid;
+}
+.gl-seat-slot--selected {
+  transform: translate(-50%, -50%) scale(1.18) !important;
+  background: rgba(212,168,40,0.10) !important;
+}
+.gl-seat-slot:active {
+  transform: translate(-50%, -50%) scale(0.91);
+}
+.gl-seat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+.gl-seat-num {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  padding: 0 3px;
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+.gl-role-panel {
+  margin-top: 4px;
 }
 
 /* ── 참가자 칩 행 ── */

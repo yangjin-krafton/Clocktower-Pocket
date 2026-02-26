@@ -159,6 +159,12 @@ export const PLAYER_COUNTS = {
   13: { townsfolk: 9, outsider: 0, minion: 3, demon: 1 },
   14: { townsfolk: 9, outsider: 1, minion: 3, demon: 1 },
   15: { townsfolk: 9, outsider: 2, minion: 3, demon: 1 },
+  // ── 16-20인 (비공식 확장 구성) ──
+  16: { townsfolk: 10, outsider: 2, minion: 3, demon: 1 },
+  17: { townsfolk: 11, outsider: 2, minion: 3, demon: 1 },
+  18: { townsfolk: 11, outsider: 3, minion: 3, demon: 1 },
+  19: { townsfolk: 12, outsider: 3, minion: 3, demon: 1 },
+  20: { townsfolk: 13, outsider: 3, minion: 3, demon: 1 },
 }
 
 /**

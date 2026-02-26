@@ -8,7 +8,6 @@
  */
 import { engine }                          from '../game-engine.js'
 import { RulesScreen }                     from '../components/RulesScreen.js'
-import { Setup }                           from './Setup.js'
 import { Grimoire }                        from './Grimoire.js'
 import { NightAction }                     from './NightAction.js'
 import { DayFlow }                         from './DayFlow.js'
@@ -27,16 +26,16 @@ export class HostApp {
     this.tabBar         = document.getElementById('tab-bar')
 
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
-    this.pendingRoleIds     = []
+    this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)  // 자리별 역할 ID
     this._gameStarting      = false
     this._grimoire          = null
     this.currentTab         = 'role'
-    this._lastRoomCode      = null   // 마지막 생성된 방 코드
+    this._lastRoomCode      = null
   }
 
   init() {
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
-    this.pendingRoleIds     = this._autoRoles(DEFAULT_PLAYER_COUNT)
+    this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
     this._buildTabs()
     this._switchTab('role')
   }
@@ -45,70 +44,25 @@ export class HostApp {
   // 기본 역할 자동 선택
   // ─────────────────────────────────────
 
+  /** 자동 역할 배정: 인원수에 맞는 역할을 섞어서 자리별 배열로 반환 */
   _autoRoles(n) {
     const comp = PLAYER_COUNTS[n]
-    if (!comp) return []
+    if (!comp) return new Array(n).fill(null)
     const pick = (team, cnt) =>
       ROLES_TB.filter(r => r.team === team)
                .sort(() => Math.random() - 0.5)
                .slice(0, cnt)
                .map(r => r.id)
-    return [
+    const pool = [
       ...pick('townsfolk', comp.townsfolk),
       ...pick('outsider',  comp.outsider),
       ...pick('minion',    comp.minion),
       'imp',
     ]
+    // 자리 순서로 셔플
+    return pool.sort(() => Math.random() - 0.5)
   }
 
-  // ─────────────────────────────────────
-  // 설정 팝업 (Grimoire 위 오버레이)
-  // ─────────────────────────────────────
-
-  _showSetupPopup() {
-    document.getElementById('setup-popup')?.remove()
-
-    const overlay = document.createElement('div')
-    overlay.className = 'popup-overlay'
-    overlay.id = 'setup-popup'
-
-    const box = document.createElement('div')
-    box.className = 'popup-box'
-    box.style.cssText = 'max-height:82vh;overflow-y:auto;padding:14px;'
-
-    const header = document.createElement('div')
-    header.style.cssText = 'font-family:"Noto Serif KR",serif;font-size:0.92rem;font-weight:700;color:var(--gold2);margin-bottom:10px;'
-    header.textContent = '⚙️ 게임 설정'
-    box.appendChild(header)
-
-    const setup = new Setup({
-      onCreateRoom: (playerCount, roleIds) => {
-        this.pendingPlayerCount = playerCount
-        this.pendingRoleIds     = roleIds
-        overlay.remove()
-        this._grimoire?.refresh()
-      },
-    })
-
-    const origRender = setup._render.bind(setup)
-    setup._render = function () {
-      origRender()
-      const btn = this.el?.querySelector('.btn-gold')
-      if (btn) btn.textContent = '✓ 설정 완료'
-    }
-
-    setup.mount(box)
-
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) {
-        overlay.remove()
-        this._grimoire?.refresh()
-      }
-    })
-
-    overlay.appendChild(box)
-    document.body.appendChild(overlay)
-  }
 
   // ─────────────────────────────────────
   // 탭 시스템
@@ -163,7 +117,8 @@ export class HostApp {
       })
     } else if (tabId === 'dict') {
       import('../player/CharacterDict.js').then(({ CharacterDict }) => {
-        const scriptRoles = this.pendingRoleIds.length > 0 ? this.pendingRoleIds : null
+        const assigned    = this.seatRoles.filter(Boolean)
+        const scriptRoles = assigned.length > 0 ? assigned : null
         const dict = new CharacterDict({
           scriptRoles,
           onRoleClick: (roleId) => {
@@ -194,30 +149,37 @@ export class HostApp {
 
     const grimoire = new Grimoire({
       engine,
-      getLobbyPlayers: () => Array.from(
-        { length: this.pendingPlayerCount },
-        (_, i) => ({ name: `플레이어${i + 1}` })
-      ),
       getLobbyConfig:  () => ({
         playerCount: this.pendingPlayerCount,
-        roleCount:   this.pendingRoleIds.length,
-        roleIds:     this.pendingRoleIds,
+        seatRoles:   this.seatRoles,
         roomCode:    this._lastRoomCode,
       }),
-      onStartGame:          () => this._handleManualStart(),
-      onOpenSettings:       () => this._showSetupPopup(),
-      onStartNight:         () => this._handleStartNight(),
-      onStartDay:           () => this._handleStartDay(),
-      onNextNightStep:      () => this._handleNextNightStep(),
-      onPlayerAction:       (action, id) => this._handlePlayerAction(action, id),
-      onPlayerCountChange:  (n) => {
-        this.pendingPlayerCount = Math.max(5, Math.min(15, n))
+      onStartGame:         () => this._handleManualStart(),
+      onStartNight:        () => this._handleStartNight(),
+      onStartDay:          () => this._handleStartDay(),
+      onNextNightStep:     () => this._handleNextNightStep(),
+      onPlayerAction:      (action, id) => this._handlePlayerAction(action, id),
+      onPlayerCountChange: (n) => {
+        const newN = Math.max(5, Math.min(20, n))
+        // 자리 배열 크기 조정 (늘리면 null 추가, 줄이면 자르기)
+        if (newN > this.pendingPlayerCount) {
+          for (let i = this.pendingPlayerCount; i < newN; i++) this.seatRoles.push(null)
+        } else {
+          this.seatRoles = this.seatRoles.slice(0, newN)
+        }
+        this.pendingPlayerCount = newN
         this._grimoire?.refresh()
       },
-      onRoleToggle: (roleId) => {
-        const idx = this.pendingRoleIds.indexOf(roleId)
-        if (idx === -1) this.pendingRoleIds.push(roleId)
-        else            this.pendingRoleIds.splice(idx, 1)
+      onSeatRoleAssign: (seatIdx, roleId) => {
+        // 같은 역할이 다른 자리에 있으면 제거
+        if (roleId) {
+          this.seatRoles = this.seatRoles.map((r, i) => (r === roleId && i !== seatIdx) ? null : r)
+        }
+        this.seatRoles[seatIdx] = roleId || null
+        this._grimoire?.refresh()
+      },
+      onAutoAssign: () => {
+        this.seatRoles = this._autoRoles(this.pendingPlayerCount)
         this._grimoire?.refresh()
       },
     })
@@ -236,30 +198,31 @@ export class HostApp {
   _handleManualStart() {
     if (this._gameStarting) return
 
-    // 역할 셔플 (코드 생성 전에 미리 확정)
-    const shuffled = [...this.pendingRoleIds].sort(() => Math.random() - 0.5)
+    // seatRoles가 이미 자리별로 배정된 역할 배열
+    const assignedRoles = [...this.seatRoles]
 
     // 레드헤링 계산 (선 팀 플레이어 중 1명)
-    const tempPlayers = shuffled.map((roleId, i) => {
-      const role = ROLES_BY_ID[roleId]
-      const team = role ? (role.team === 'townsfolk' || role.team === 'outsider' ? 'good' : 'evil') : 'good'
-      return { id: i + 1, team }
-    })
-    const goodPlayers = tempPlayers.filter(p => p.team === 'good')
-    const redHerringId = goodPlayers.length > 0
-      ? goodPlayers[Math.floor(Math.random() * goodPlayers.length)].id
+    const goodPlayerIds = assignedRoles
+      .map((roleId, i) => {
+        const role = ROLES_BY_ID[roleId]
+        const isGood = role ? (role.team === 'townsfolk' || role.team === 'outsider') : true
+        return isGood ? i + 1 : null
+      })
+      .filter(Boolean)
+    const redHerringId = goodPlayerIds.length > 0
+      ? goodPlayerIds[Math.floor(Math.random() * goodPlayerIds.length)]
       : 0
 
     // 방 코드 생성
-    const code = encodeRoomCode(this.pendingPlayerCount, shuffled, redHerringId)
+    const code = encodeRoomCode(this.pendingPlayerCount, assignedRoles, redHerringId)
     this._lastRoomCode = code
 
     // 코드 팝업 표시 → 닫으면 게임 시작
-    this._showCodePopup(code, shuffled, () => {
+    this._showCodePopup(code, assignedRoles, () => {
       this._gameStarting = true
       const names = Array.from({ length: this.pendingPlayerCount }, (_, i) => `플레이어${i + 1}`)
       engine.reset()
-      engine.initGame(names, shuffled, { preAssigned: true, redHerringId })
+      engine.initGame(names, assignedRoles, { preAssigned: true, redHerringId })
       engine.startNight()
 
       this.currentTab = 'role'
@@ -444,8 +407,9 @@ export class HostApp {
       reason,
       onNewGame: () => {
         engine.reset()
-        this._gameStarting  = false
-        this.pendingRoleIds = this._autoRoles(this.pendingPlayerCount)
+        this._gameStarting = false
+        this.seatRoles     = new Array(this.pendingPlayerCount).fill(null)
+        this._lastRoomCode = null
         this._switchTab('role')
       },
     })

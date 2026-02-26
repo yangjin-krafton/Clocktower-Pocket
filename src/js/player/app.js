@@ -156,9 +156,14 @@ export class PlayerApp {
     let screen
     switch (tabId) {
       case 'role':
-        // 역할이 없으면 Join 화면 표시
         if (!this.myRole) {
-          this._showJoin()
+          // 방 참가 후 역할 대기 중 → 회전판 대기화면
+          if (this.p2p.room) {
+            this._showWaiting()
+          } else {
+            // 방 미참가 → Join 화면
+            this._showJoin()
+          }
           return
         }
         screen = new RoleCardScreen({ roleId: this.myRole, team: this.myTeam })

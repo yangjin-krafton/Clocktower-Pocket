@@ -172,11 +172,11 @@ if (!document.getElementById('player-chip-style')) {
 /* 자리 번호 (우상단) */
 .player-chip__seat {
   position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: 0.5rem;
+  top: 2px;
+  right: 4px;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text4);
+  color: var(--gold2);
   line-height: 1;
 }
 

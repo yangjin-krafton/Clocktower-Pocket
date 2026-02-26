@@ -66,7 +66,7 @@ export class Waiting {
         <div class="waiting__room">방 코드: <span class="waiting__code">${this.roomCode}</span></div>
       </div>
 
-      <svg class="waiting__wheel" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <svg class="waiting__wheel" viewBox="0 0 ${size} ${size}">
         <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
           stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
         ${svgSeats}
@@ -105,7 +105,12 @@ if (!document.getElementById('waiting-style')) {
 }
 .waiting__room { font-size: 0.72rem; color: var(--text3); margin-top: 4px; }
 .waiting__code { color: var(--gold2); font-weight: 700; letter-spacing: 0.1em; }
-.waiting__wheel { display: block; }
+.waiting__wheel {
+  display: block;
+  width: min(80vw, 260px);
+  height: auto;
+  aspect-ratio: 1;
+}
 .waiting__status { text-align: center; }
 .waiting__dot-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
 .waiting__dot {

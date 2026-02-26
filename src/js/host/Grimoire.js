@@ -45,6 +45,7 @@ export class Grimoire {
     this.el                       = null
     this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
     this._playerSectionCollapsed  = false  // 게임 중 플레이어 섹션 접힘 상태
+    this._resizeObs               = null   // 화면 크기 변화 감지
   }
 
   mount(container) {
@@ -52,9 +53,22 @@ export class Grimoire {
     this.el.className = 'grimoire-screen'
     this._render()
     container.appendChild(this.el)
+
+    // 화면 크기 변화 시 로비 오발 재렌더링
+    const appContent = document.getElementById('app-content')
+    if (appContent && !this._resizeObs) {
+      this._resizeObs = new ResizeObserver(() => {
+        if (this.engine.state.phase === 'lobby') this._renderLobby()
+      })
+      this._resizeObs.observe(appContent)
+    }
   }
 
-  unmount() { this.el?.remove() }
+  unmount() {
+    this._resizeObs?.disconnect()
+    this._resizeObs = null
+    this.el?.remove()
+  }
   refresh()  { this._render()   }
 
   // ─────────────────────────────────────
@@ -229,12 +243,15 @@ export class Grimoire {
     const oval = document.createElement('div')
     oval.className = 'gl-seat-oval'
 
-    // 인원수별 슬롯 크기
-    const slotPx =
-      total <= 6  ? 60 :
-      total <= 9  ? 54 :
-      total <= 13 ? 48 :
-      total <= 16 ? 42 : 36
+    // 컨테이너 너비 기반 슬롯 크기 (app-content 실측)
+    const appContent = document.getElementById('app-content')
+    const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
+    const baseRatio =
+      total <= 6  ? 0.20 :
+      total <= 9  ? 0.18 :
+      total <= 13 ? 0.16 :
+      total <= 16 ? 0.14 : 0.12
+    const slotPx = Math.min(72, Math.max(32, Math.round(containerW * baseRatio)))
 
     const iconPx = Math.round(slotPx * 0.62)
 
@@ -781,7 +798,7 @@ if (!document.getElementById('grimoire-lobby-style')) {
   gap: 7px;
   z-index: 5;
   pointer-events: none;
-  width: 120px;
+  width: clamp(100px, 28%, 160px);
 }
 .gl-oval-center > * { pointer-events: auto; }
 

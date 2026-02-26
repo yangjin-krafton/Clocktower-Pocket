@@ -192,7 +192,7 @@ if (!document.getElementById('select-panel-style')) {
 }
 .select-panel {
   width: 100%;
-  max-width: 430px;
+  max-width: var(--app-max-width);
   height: 100%;
   display: flex;
   flex-direction: column;

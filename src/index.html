@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clocktower Pocket</title>
 <link rel="icon" href="asset/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/theme.css">
@@ -16,26 +16,26 @@
     gap: 6px;
   }
   .landing__logo {
-    font-size: 3rem;
+    font-size: clamp(2.4rem, 7vw, 3.2rem);
     filter: drop-shadow(0 0 16px rgba(212,168,40,0.4));
   }
   .landing__title {
     font-family: 'Noto Serif KR', serif;
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
     font-weight: 700;
     color: var(--gold2);
     text-shadow: 0 0 24px rgba(212,168,40,0.3);
     margin-top: 4px;
   }
   .landing__sub {
-    font-size: 0.72rem;
+    font-size: clamp(0.68rem, 2vw, 0.82rem);
     color: var(--text3);
     margin-bottom: 28px;
   }
   .landing__cards {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
   }
   .landing__card {

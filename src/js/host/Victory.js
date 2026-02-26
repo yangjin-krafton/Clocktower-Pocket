@@ -91,7 +91,7 @@ export class Victory {
 
       const nameSpan = document.createElement('span')
       nameSpan.className = 'victory__role-name'
-      nameSpan.textContent = p.name
+      nameSpan.textContent = `${p.id}번`
 
       const roleSpan = document.createElement('span')
       roleSpan.className = 'victory__role-role'

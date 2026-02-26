@@ -27,7 +27,7 @@ export function renderEmojiPicker(players, emojis, onSend, myId) {
   // 각 플레이어 (본인 제외)
   const others = players.filter(p => p.id !== myId && p.status === 'alive')
   others.forEach(p => {
-    recipientRow.appendChild(makeRecipient(p.id, p.icon || '👤', p.name, false))
+    recipientRow.appendChild(makeRecipient(p.id, p.icon || '👤', `${p.id}번`, false))
   })
 
   recipientSection.appendChild(recipientRow)

@@ -62,7 +62,7 @@ export class PreGame {
         return `
           <div class="pregame__seat pregame__seat--filled">
             <span class="pregame__seat-num">${i + 1}</span>
-            <span class="pregame__seat-name">${p.name}</span>
+            <span class="pregame__seat-status">입장</span>
           </div>`
       }
       return `
@@ -170,9 +170,9 @@ if (!document.getElementById('pregame-style')) {
   background: var(--tl-base);
   color: #fff;
 }
-.pregame__seat-name {
-  font-size: 0.88rem;
-  color: var(--text);
+.pregame__seat-status {
+  font-size: 0.78rem;
+  color: var(--tl-light);
   font-weight: 600;
 }
 .pregame__seat-waiting {

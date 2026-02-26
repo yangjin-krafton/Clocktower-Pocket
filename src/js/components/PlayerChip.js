@@ -51,7 +51,7 @@ export function renderPlayerChip(player, opts = {}) {
   if (roleIcon && roleIcon.endsWith('.png')) {
     const img = document.createElement('img')
     img.src = `./asset/icons/${roleIcon}`
-    img.alt = player.name
+    img.alt = `${player.id}번`
     iconWrap.appendChild(img)
   } else if (roleIconEmoji) {
     iconWrap.textContent = roleIconEmoji
@@ -80,14 +80,7 @@ export function renderPlayerChip(player, opts = {}) {
 
   el.appendChild(iconWrap)
 
-  // ── 플레이어 이름 ─────────────────────────────────────────
-  if (!compact) {
-    const nameEl = document.createElement('div')
-    nameEl.className = 'player-chip__name dict__token-name'
-    if (dead) nameEl.style.textDecoration = 'line-through'
-    nameEl.textContent = player.name
-    el.appendChild(nameEl)
-  }
+  // 이름 표시 제거 — 자리번호는 player-chip__seat 뱃지로 표시됨
 
   // ── 역할명 (옵션) ─────────────────────────────────────────
   if (showRole && player.role && !compact) {

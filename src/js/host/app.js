@@ -540,7 +540,7 @@ export class HostApp {
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <div style="font-size:2rem;">${role?.iconEmoji || '?'}</div>
             <div>
-              <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.name} (${player.id}번 자리)</div>
+              <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.id}번 자리</div>
               <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>
               <div style="font-size:0.68rem;margin-top:2px;color:${isDead ? 'var(--rd-light)' : 'var(--tl-light)'}">${isDead ? '💀 사망' : '✅ 생존'}${player.isPoisoned ? ' · ☠ 중독' : ''}${player.isDrunk ? ' · 🍾 취함' : ''}</div>
             </div>

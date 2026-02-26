@@ -589,7 +589,7 @@ export class Grimoire {
 
     const infoDiv = document.createElement('div')
     infoDiv.innerHTML = `
-      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--text)">${player.name} (${player.id}번)</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--text)">${player.id}번 자리</div>
       <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role}</div>
     `
 

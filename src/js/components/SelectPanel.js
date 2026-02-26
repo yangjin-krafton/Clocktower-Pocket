@@ -108,7 +108,7 @@ export function renderSelectPanel(data) {
 
       const nameDiv = document.createElement('div')
       nameDiv.className = 'select-panel__chip-name'
-      nameDiv.textContent = p.name
+      nameDiv.textContent = `${p.id}번`
 
       const seatDiv = document.createElement('div')
       seatDiv.className = 'select-panel__chip-seat'

@@ -2,9 +2,10 @@
  * P-02 Waiting — 대기 화면 (회전판 착석 현황)
  */
 export class Waiting {
-  constructor({ roomCode, playerName }) {
+  constructor({ roomCode, playerName, mySeatId }) {
     this.roomCode    = roomCode
-    this.playerName  = playerName
+    this.playerName  = playerName  // 내부 식별용으로만 유지 (화면 미표시)
+    this.mySeatId    = mySeatId || null
     this.seated      = []
     this.total       = 1
     this.el          = null
@@ -34,23 +35,26 @@ export class Waiting {
     const r      = 100
 
     const seats = Array.from({ length: total }, (_, i) => {
+      const seatNum = i + 1
       const angle = (i / total) * 2 * Math.PI - Math.PI / 2
       const x = cx + r * Math.cos(angle)
       const y = cy + r * Math.sin(angle)
       const player = seated[i] || null
-      const isMe   = player?.name === this.playerName
-      return { x, y, player, isMe, index: i }
+      // mySeatId 우선, 없으면 이름으로 fallback
+      const isMe = this.mySeatId
+        ? seatNum === this.mySeatId
+        : player?.name === this.playerName
+      return { x, y, player, isMe, seatNum }
     })
 
-    const svgSeats = seats.map(({ x, y, player, isMe }) => {
+    const svgSeats = seats.map(({ x, y, player, isMe, seatNum }) => {
       if (player) {
         const fill   = isMe ? '#d4a828' : '#5a3e8a'
         const stroke = isMe ? '#f0d060' : '#9b7ec8'
-        const short  = player.name.length > 4 ? player.name.slice(0, 4) + '…' : player.name
         return `
           <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
-          <text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
-            font-size="8" fill="white" font-family="sans-serif">${short}</text>
+          <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
+            font-size="10" font-weight="700" fill="white" font-family="sans-serif">${seatNum}</text>
         `
       } else {
         return `
@@ -62,7 +66,6 @@ export class Waiting {
 
     this.el.innerHTML = `
       <div class="waiting__header">
-        <div class="waiting__name">${this.playerName}</div>
         <div class="waiting__room">방 코드: <span class="waiting__code">${this.roomCode}</span></div>
       </div>
 

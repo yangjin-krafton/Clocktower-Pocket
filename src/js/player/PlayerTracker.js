@@ -51,7 +51,7 @@ export class PlayerTracker {
         <div class="tracker__left">
           <span class="tracker__seat">${p.id}</span>
           <div class="tracker__info">
-            <span class="tracker__name ${p.status !== 'alive' ? 'tracker__name--dead' : ''}">${p.name}</span>
+            <span class="tracker__name ${p.status !== 'alive' ? 'tracker__name--dead' : ''}">${p.id}번</span>
             <span class="tracker__claim">${note.claim || ''}</span>
           </div>
         </div>
@@ -63,7 +63,7 @@ export class PlayerTracker {
       `
 
       row.querySelector('.tracker__edit-btn').addEventListener('click', () => {
-        this._openEdit(p.id, p.name)
+        this._openEdit(p.id)
       })
 
       list.appendChild(row)
@@ -72,7 +72,7 @@ export class PlayerTracker {
     this.el.appendChild(list)
   }
 
-  _openEdit(playerId, playerName) {
+  _openEdit(playerId) {
     const note = this.notes[playerId] || {}
 
     const overlay = document.createElement('div')
@@ -81,7 +81,7 @@ export class PlayerTracker {
     const box = document.createElement('div')
     box.className = 'popup-box tracker__edit-box'
     box.innerHTML = `
-      <div class="tracker__edit-title">${playerName} 메모</div>
+      <div class="tracker__edit-title">${playerId}번 메모</div>
 
       <div class="section-label" style="margin-top:10px">주장 역할</div>
       <input id="te-claim" class="input" type="text" placeholder="예: Fortune Teller라고 주장" value="${note.claim || ''}">

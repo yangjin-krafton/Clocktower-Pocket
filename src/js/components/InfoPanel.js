@@ -11,6 +11,7 @@
  * @returns {HTMLElement}
  */
 import { renderPlayerChip } from './PlayerChip.js'
+import { mountRevealPanel }  from './RevealPanel.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 // 캐릭터 이름 → 진영 매핑
@@ -80,7 +81,7 @@ export function renderInfoPanel(data) {
     el.appendChild(playersEl)
   }
 
-  // 확인 버튼
+  // 확인 / 공개 버튼 — revealData 있으면 "참가자에게 공개 →", 없으면 "✅ 확인"
   const confirmBtn = document.createElement('button')
   confirmBtn.className = 'info-panel__confirm btn btn-primary'
   confirmBtn.textContent = '✅ 확인'
@@ -98,13 +99,31 @@ export function mountInfoPanel(data) {
   const overlay = document.createElement('div')
   overlay.className = 'info-panel-overlay'
 
+  // revealData 있으면 "👁 참가자에게 공개 →" 버튼으로 교체
+  const onConfirmOverride = data.revealData
+    ? () => {
+        overlay.remove()
+        mountRevealPanel({
+          ...data.revealData,
+          onNext: () => data.onConfirm?.(),
+        })
+      }
+    : () => {
+        overlay.remove()
+        data.onConfirm?.()
+      }
+
   const panel = renderInfoPanel({
     ...data,
-    onConfirm: () => {
-      overlay.remove()
-      data.onConfirm && data.onConfirm()
-    }
+    onConfirm: onConfirmOverride,
   })
+
+  // 버튼 레이블 업데이트
+  if (data.revealData) {
+    const btn = panel.querySelector('.info-panel__confirm')
+    if (btn) btn.textContent = '👁 참가자에게 공개 →'
+  }
+
   overlay.appendChild(panel)
   document.body.appendChild(overlay)
 

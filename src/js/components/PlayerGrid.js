@@ -40,7 +40,8 @@ export function renderPlayerGrid(players, opts = {}) {
       total <= 16 ? 44 : 38
 
     // 타원 반지름 (% — rX: 너비 기준, rY: 높이 기준)
-    const RX = 43, RY = 40
+    // 2:3 portrait 컨테이너 기준 — rX: %of width, rY: %of height
+    const RX = 43, RY = 43
 
     function rebuildRing() {
       el.innerHTML = ''
@@ -163,7 +164,7 @@ if (!document.getElementById('player-grid-style')) {
 .player-ring__oval {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 2 / 3;   /* portrait — 세로 = 너비의 150% */
   overflow: visible;
 }
   `

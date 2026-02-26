@@ -42,8 +42,9 @@ export class Grimoire {
     this.onPlayerCountChange = onPlayerCountChange|| null
     this.onSeatRoleAssign    = onSeatRoleAssign   || null
     this.onAutoAssign        = onAutoAssign       || null
-    this.el                  = null
-    this._selectedSeat       = null  // 로비에서 선택된 자리 인덱스 (0-based)
+    this.el                       = null
+    this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
+    this._playerSectionCollapsed  = false  // 게임 중 플레이어 섹션 접힘 상태
   }
 
   mount(container) {
@@ -120,14 +121,56 @@ export class Grimoire {
 
     const gridCard = document.createElement('div')
     gridCard.className = 'card'
-    gridCard.innerHTML = '<div class="card-title">👥 플레이어</div>'
-    gridCard.appendChild(renderPlayerGrid(state.players, {
+
+    // 접기/펼치기 헤더
+    const cardHeader = document.createElement('div')
+    cardHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0;'
+
+    const cardTitle = document.createElement('div')
+    cardTitle.className = 'card-title'
+    cardTitle.style.marginBottom = '0'
+    cardTitle.textContent = '👥 플레이어'
+
+    const collapseBtn = document.createElement('span')
+    collapseBtn.style.cssText = 'font-size:0.78rem;color:var(--text4);padding:2px 4px;transition:transform 0.18s;'
+    collapseBtn.textContent = this._playerSectionCollapsed ? '▶' : '▼'
+
+    cardHeader.appendChild(cardTitle)
+    cardHeader.appendChild(collapseBtn)
+    gridCard.appendChild(cardHeader)
+
+    // 링 바디
+    const cardBody = document.createElement('div')
+    cardBody.style.cssText = `overflow:hidden;transition:max-height 0.25s ease;max-height:${this._playerSectionCollapsed ? '0' : '800px'};`
+    cardBody.style.marginTop = this._playerSectionCollapsed ? '0' : '8px'
+
+    const buildRing = () => renderPlayerGrid(state.players, {
       selectable: true,
       maxSelect:  1,
       roleMap,
       ring:       true,
       onSelect: (ids) => { if (ids.length > 0) this._showPlayerDetail(ids[0]) },
-    }))
+    })
+
+    if (!this._playerSectionCollapsed) cardBody.appendChild(buildRing())
+
+    cardHeader.addEventListener('click', () => {
+      this._playerSectionCollapsed = !this._playerSectionCollapsed
+      if (this._playerSectionCollapsed) {
+        cardBody.style.maxHeight = '0'
+        cardBody.style.marginTop = '0'
+        collapseBtn.textContent = '▶'
+        cardBody.innerHTML = ''
+      } else {
+        cardBody.style.marginTop = '8px'
+        cardBody.appendChild(buildRing())
+        // 다음 프레임에 max-height 애니메이션 시작
+        requestAnimationFrame(() => { cardBody.style.maxHeight = '800px' })
+        collapseBtn.textContent = '▼'
+      }
+    })
+
+    gridCard.appendChild(cardBody)
     this.el.appendChild(gridCard)
 
     const btnGrid = document.createElement('div')
@@ -263,7 +306,8 @@ export class Grimoire {
 
     // 타원 반지름 (% 단위, 컨테이너 기준)
     // rX = % of container width, rY = % of container height (aspect-ratio 3:2 → H = W*2/3)
-    const RX = 43, RY = 40   // 단일 궤도 반지름
+    // 2:3 portrait 컨테이너 기준 — rX: %of width, rY: %of height
+    const RX = 43, RY = 43
 
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',
@@ -697,11 +741,12 @@ if (!document.getElementById('grimoire-lobby-style')) {
   filter: grayscale(0.6);
 }
 
-/* ── 타원형 링 컨테이너 ── */
+/* ── 타원형 링 컨테이너 (세로형 portrait) ── */
 .gl-seat-oval {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;   /* 가로:세로 = 3:2 → 세로 = 너비의 66% */
+  aspect-ratio: 2 / 3;   /* 가로:세로 = 2:3 → 세로 = 너비의 150% */
+  overflow: visible;
 }
 
 /* ── 자리 슬롯 (링 내 절대 위치) ── */

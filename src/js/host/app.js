@@ -44,23 +44,44 @@ export class HostApp {
   // 기본 역할 자동 선택
   // ─────────────────────────────────────
 
-  /** 자동 역할 배정: 인원수에 맞는 역할을 섞어서 자리별 배열로 반환 */
+  /**
+   * 자동 역할 배정: 게임 규칙에 맞게 역할을 선택 후 자리별 배열로 반환
+   * - 바론 선택 시 마을주민 -2 / 아웃사이더 +2 자동 반영
+   * - 아웃사이더 최대 4개 제한 → 바론 불가 인원 수 보호
+   */
   _autoRoles(n) {
     const comp = PLAYER_COUNTS[n]
     if (!comp) return new Array(n).fill(null)
-    const pick = (team, cnt) =>
-      ROLES_TB.filter(r => r.team === team)
-               .sort(() => Math.random() - 0.5)
-               .slice(0, cnt)
-               .map(r => r.id)
+
+    const shuffle  = arr => arr.slice().sort(() => Math.random() - 0.5)
+    const byTeam   = team => ROLES_TB.filter(r => r.team === team)
+    const OUTSIDER_MAX = byTeam('outsider').length  // 4개
+
+    // 바론 포함 가능 여부 (아웃사이더가 +2 해도 최대 4개 이내)
+    const baronOK  = (comp.outsider + 2) <= OUTSIDER_MAX
+
+    // 미니언 선택 (바론 불가 시 제외)
+    const minionPool = baronOK
+      ? byTeam('minion')
+      : byTeam('minion').filter(r => r.id !== 'baron')
+    const minions  = shuffle(minionPool).slice(0, comp.minion)
+    const hasBaron = minions.some(r => r.id === 'baron')
+
+    // 바론 효과 적용
+    const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
+    const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
+
+    const townsfolk = shuffle(byTeam('townsfolk')).slice(0, needTown)
+    const outsiders = shuffle(byTeam('outsider')).slice(0, needOut)
+
     const pool = [
-      ...pick('townsfolk', comp.townsfolk),
-      ...pick('outsider',  comp.outsider),
-      ...pick('minion',    comp.minion),
+      ...townsfolk.map(r => r.id),
+      ...outsiders.map(r => r.id),
+      ...minions.map(r => r.id),
       'imp',
     ]
-    // 자리 순서로 셔플
-    return pool.sort(() => Math.random() - 0.5)
+
+    return shuffle(pool)
   }
 
 

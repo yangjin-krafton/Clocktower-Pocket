@@ -72,11 +72,17 @@ function showLanding() {
       <h1 class="landing__title">Clocktower Pocket</h1>
       <p class="landing__sub">Blood on the Clocktower 게임 도우미</p>
 
-      <div class="landing__cards" style="grid-template-columns:1fr">
+      <div class="landing__cards">
         <button class="landing__card landing__card--host" id="btn-host">
           <span class="landing__card-icon">👑</span>
           <span class="landing__card-title">스토리텔러</span>
-          <span class="landing__card-desc">게임을 진행합니다</span>
+          <span class="landing__card-desc">방을 만들고<br>게임을 진행합니다</span>
+        </button>
+
+        <button class="landing__card landing__card--player" id="btn-player">
+          <span class="landing__card-icon">🎮</span>
+          <span class="landing__card-title">참가자</span>
+          <span class="landing__card-desc">방 코드를 입력하여<br>내 역할을 확인합니다</span>
         </button>
       </div>
     </div>
@@ -86,6 +92,15 @@ function showLanding() {
     showLoading()
     import('./host/app.js').then(({ HostApp }) => {
       const app = new HostApp()
+      appInstance = app
+      app.init()
+    })
+  })
+
+  document.getElementById('btn-player').addEventListener('click', () => {
+    showLoading()
+    import('./player/app.js').then(({ PlayerApp }) => {
+      const app = new PlayerApp()
       appInstance = app
       app.init()
     })

@@ -40,19 +40,24 @@ export class GameEngine {
 
   /**
    * 게임 시작 — 역할 배정
-   * @param {string[]} playerNames 좌석 순서 이름 목록
+   * @param {string[]} playerNames    좌석 순서 이름 목록
    * @param {string[]} selectedRoleIds 사용할 역할 id 목록
+   * @param {{ preAssigned?: boolean, redHerringId?: number }} [opts]
+   *   preAssigned=true  → selectedRoleIds 가 이미 자리 순서로 배정됨 (셔플 안 함)
+   *   redHerringId      → 점쟁이 레드헤링 플레이어 ID (1-based), 지정하면 랜덤 선택 안 함
    */
-  initGame(playerNames, selectedRoleIds) {
+  initGame(playerNames, selectedRoleIds, opts = {}) {
     const n = playerNames.length
     const counts = PLAYER_COUNTS[n]
     if (!counts) throw new Error(`지원하지 않는 인원: ${n}`)
 
-    // 역할 셔플 배정
-    const shuffled = [...selectedRoleIds].sort(() => Math.random() - 0.5)
+    // 역할 배정 (사전배정 or 셔플)
+    const assigned = opts.preAssigned
+      ? [...selectedRoleIds]
+      : [...selectedRoleIds].sort(() => Math.random() - 0.5)
 
     this.state.players = playerNames.map((name, i) => {
-      const roleId = shuffled[i] || 'unknown'
+      const roleId = assigned[i] || 'unknown'
       const role = ROLES_BY_ID[roleId]
       const team = role ? (role.team === 'townsfolk' || role.team === 'outsider' ? 'good' : 'evil') : 'good'
       return {
@@ -69,10 +74,14 @@ export class GameEngine {
       }
     })
 
-    // 점쟁이 레드 헤링 고정 선택 (선 플레이어 중 1명)
-    const goodPlayers = this.state.players.filter(p => p.team === 'good')
-    if (goodPlayers.length > 0) {
-      this.redHerring = goodPlayers[Math.floor(Math.random() * goodPlayers.length)].id
+    // 점쟁이 레드 헤링
+    if (opts.redHerringId) {
+      this.redHerring = opts.redHerringId
+    } else {
+      const goodPlayers = this.state.players.filter(p => p.team === 'good')
+      if (goodPlayers.length > 0) {
+        this.redHerring = goodPlayers[Math.floor(Math.random() * goodPlayers.length)].id
+      }
     }
 
     // 주정뱅이: isDrunk = true 처리

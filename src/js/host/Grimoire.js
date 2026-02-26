@@ -12,6 +12,7 @@ import { renderLogList }        from '../components/LogEntry.js'
 import { ROLES_BY_ID, ROLES_TB } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
+import { formatCode }           from '../room-code.js'
 
 export class Grimoire {
   /**
@@ -79,6 +80,28 @@ export class Grimoire {
     })
 
     this.el.appendChild(renderPhaseHeader(state))
+
+    // 방 코드 배지 (게임 중 참조용)
+    const cfg = this.getLobbyConfig()
+    if (cfg.roomCode) {
+      const codeBadge = document.createElement('div')
+      codeBadge.style.cssText = `
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        background:rgba(212,168,40,0.08);border:1px solid rgba(212,168,40,0.25);
+        border-radius:8px;padding:7px 12px;margin-bottom:4px;cursor:pointer;
+      `
+      codeBadge.innerHTML = `
+        <span style="font-size:0.65rem;color:var(--text4)">방 코드</span>
+        <span style="font-family:monospace;font-size:0.88rem;font-weight:700;letter-spacing:0.12em;color:var(--gold2)">${formatCode(cfg.roomCode)}</span>
+        <span style="font-size:0.6rem;color:var(--text4)">탭=복사</span>
+      `
+      codeBadge.addEventListener('click', () => {
+        navigator.clipboard?.writeText(cfg.roomCode).catch(() => {})
+        codeBadge.querySelector('span:last-child').textContent = '✓ 복사됨!'
+        setTimeout(() => { codeBadge.querySelector('span:last-child').textContent = '탭=복사' }, 1500)
+      })
+      this.el.appendChild(codeBadge)
+    }
 
     if (state.phase === 'night') {
       const nightCard = document.createElement('div')

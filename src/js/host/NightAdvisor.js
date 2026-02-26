@@ -202,6 +202,9 @@ export class NightAdvisor {
         if (!value) return '정보 없음'
         const r = ROLES_BY_ID[value.roleId]
         const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
+        // 플래그에 따라 미리보기 텍스트 구분
+        if (value.fullyWrong) return `(오정보) 이 중 한 명: ${r?.name || value.roleId} (${pNums})`
+        if (value.decoySwapped) return `이 중 한 명: ${r?.name || value.roleId} (${pNums}) [인물 교체]`
         return `이 중 한 명: ${r?.name || value.roleId} (${pNums})`
       }
       case 'spy':
@@ -253,11 +256,13 @@ export class NightAdvisor {
         if (!value) return null
         const r = ROLES_BY_ID[value.roleId]
         const label = roleId === 'washerwoman' ? '마을 사람' : roleId === 'librarian' ? '아웃사이더' : '미니언'
+        // fullyWrong: 완전히 잘못된 정보, decoySwapped: 한 명만 교체
+        const msgNote = value.fullyWrong ? ' (※ 오정보)' : ''
         return {
           roleIcon: role?.icon || '?',
           roleName: role?.name || roleId,
           roleTeam: role?.team || null,
-          message:  `이 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || label}입니다`,
+          message:  `이 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || label}입니다${msgNote}`,
           players:  (value.players || []).map(p => ({ id: p.id })),
         }
       }

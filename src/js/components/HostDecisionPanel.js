@@ -117,10 +117,15 @@ export function mountHostDecisionPanel(data) {
           // 선택된 버튼 강조
           customRow.querySelectorAll('.hdp__custom-num-btn').forEach(b => b.classList.remove('hdp__custom-num-btn--on'))
           btn.classList.add('hdp__custom-num-btn--on')
-          // 이 옵션 선택 + preview 업데이트
-          opt.customValue = n
-          opt.revealData  = { ...opt.revealData, message: String(n) }
-          _selectOption(card, opt)
+          // opt 원본 변형 방지 — 새 객체로 전달
+          const customOpt = {
+            ...opt,
+            customValue: n,
+            revealData: opt.revealData
+              ? { ...opt.revealData, message: String(n) }
+              : { message: String(n), players: [] },
+          }
+          _selectOption(card, customOpt)
         })
         customRow.appendChild(btn)
       })

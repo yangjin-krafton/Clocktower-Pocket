@@ -60,11 +60,19 @@ export class NightAction {
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ')
     const demonNums  = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
 
+    const minionMsg = `미니언: ${minionNums}\n데몬: ${demonNums}\n블러프: ${bluffText || '없음'}`
     this._unmount = mountInfoPanel({
-      title: '미니언 공개',
+      title:    '미니언 공개',
       roleIcon: '🎭',
-      message: `미니언: ${minionNums}\n데몬: ${demonNums}\n블러프: ${bluffText || '없음'}`,
-      players: [...minions, ...demonPlayers],
+      message:  minionMsg,
+      players:  [...minions, ...demonPlayers],
+      revealData: {
+        roleIcon: '🎭',
+        roleName: '미니언 공개',
+        roleTeam: 'minion',
+        message:  `데몬: ${demonNums}\n블러프: ${bluffText || '없음'}`,
+        players:  minions.map(p => ({ id: p.id })),
+      },
       onConfirm: () => this._done('minion-info'),
     })
   }
@@ -79,11 +87,19 @@ export class NightAction {
     const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
 
+    const demonMsg = `미니언: ${minionNums}\n블러프 3개: ${bluffText}`
     this._unmount = mountInfoPanel({
-      title: '데몬 정보',
+      title:    '데몬 정보',
       roleIcon: '👿',
-      message: `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
-      players: minions,
+      message:  demonMsg,
+      players:  minions,
+      revealData: {
+        roleIcon: '👿',
+        roleName: '데몬 정보',
+        roleTeam: 'demon',
+        message:  `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
+        players:  minions.map(p => ({ id: p.id })),
+      },
       onConfirm: () => this._done('demon-info'),
     })
   }
@@ -97,10 +113,17 @@ export class NightAction {
     }).join('\n')
 
     this._unmount = mountInfoPanel({
-      title: '스파이 — 그리모어',
+      title:    '스파이 — 그리모어',
       roleIcon: '🕵️',
-      message: allInfo,
-      players: [],
+      message:  allInfo,
+      players:  [],
+      revealData: {
+        roleIcon: '🕵️',
+        roleName: '스파이 — 그리모어',
+        roleTeam: 'minion',
+        message:  allInfo,
+        players:  [],
+      },
       onConfirm: () => this._done('spy'),
     })
   }

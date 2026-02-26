@@ -110,13 +110,8 @@ export function renderSelectPanel(data) {
       nameDiv.className = 'select-panel__chip-name'
       nameDiv.textContent = `${p.id}번`
 
-      const seatDiv = document.createElement('div')
-      seatDiv.className = 'select-panel__chip-seat'
-      seatDiv.textContent = `${p.id}번`
-
       cell.appendChild(gemDiv)
       cell.appendChild(nameDiv)
-      cell.appendChild(seatDiv)
 
       if (canSelect) {
         cell.addEventListener('click', () => {

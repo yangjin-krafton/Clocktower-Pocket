@@ -58,7 +58,7 @@ export class Grimoire {
     const appContent = document.getElementById('app-content')
     if (appContent && !this._resizeObs) {
       this._resizeObs = new ResizeObserver(() => {
-        if (this.engine.state.phase === 'lobby') this._renderLobby()
+        if (this.engine.state.phase === 'lobby') this._render()
       })
       this._resizeObs.observe(appContent)
     }

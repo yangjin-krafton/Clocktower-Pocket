@@ -33,7 +33,9 @@
       "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\.env\":*)",
       "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\.gitignore\":*)",
       "Bash(\"D:\\\\Weeks\\\\Clocktower-Pocket\\\\src\\\\js\\\\config.js\":*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(gh run:*)",
+      "Bash(git remote:*)"
     ],
     "additionalDirectories": [
       "\\tmp"

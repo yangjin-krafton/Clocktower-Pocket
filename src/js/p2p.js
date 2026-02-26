@@ -73,8 +73,6 @@ class P2PManager {
             this.room = joinRoom({
                 appId: 'clocktower-pocket',
                 relayUrls: [MQTT_CONFIG.relayUrl],
-                username: MQTT_CONFIG.username,
-                password: MQTT_CONFIG.password,
             }, roomCode)
 
             // 내 피어 ID 저장 (Trystero는 getPeers()로 확인 가능)

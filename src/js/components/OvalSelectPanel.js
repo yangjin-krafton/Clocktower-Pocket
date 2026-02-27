@@ -173,7 +173,8 @@ export function mountOvalSelectPanel(data) {
   // 파이 차트는 최초 1회만 생성 (슬롯 선택 변경 시 재생성 불필요)
   pieSvg = drawOvalPieNumbers(oval, total, {
     rotOffset,
-    innerR: 14,
+    innerR: 20,        // 중앙 공간 확보
+    outerR: 43,        // 타원 경계까지 확장
     slices: players.map(p => ({
       opacity: p.status !== 'alive' ? 0.28 : undefined,
     })),
@@ -265,6 +266,7 @@ if (!document.getElementById('oval-select-panel-style')) {
   max-height: 100%;
   aspect-ratio: 2 / 3;
   margin: 0 auto;
+  filter: drop-shadow(0 0 20px rgba(212, 168, 40, 0.15));
 }
 
 /* 슬롯 공통 */
@@ -279,7 +281,10 @@ if (!document.getElementById('oval-select-panel-style')) {
   gap: 0;
   cursor: pointer;
   border: 2px solid var(--lead2);
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(212, 168, 40, 0.06) 100%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(212, 168, 40, 0.1);
   transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -289,13 +294,19 @@ if (!document.getElementById('oval-select-panel-style')) {
 /* 선택됨 */
 .oval-sel__slot--selected {
   border-color: var(--gold) !important;
-  background: rgba(212,168,40,0.1) !important;
-  box-shadow: 0 0 0 2px rgba(212,168,40,0.3), 0 0 12px rgba(212,168,40,0.35);
+  background: linear-gradient(135deg, rgba(212,168,40,0.15) 0%, rgba(212,168,40,0.25) 100%) !important;
+  box-shadow:
+    0 0 0 2px rgba(212,168,40,0.4),
+    0 0 16px rgba(212,168,40,0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 /* 본인 */
 .oval-sel__slot--self {
   border-color: var(--gold2) !important;
-  background: rgba(212,168,40,0.05) !important;
+  background: linear-gradient(135deg, rgba(212,168,40,0.08) 0%, rgba(212,168,40,0.12) 100%) !important;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(212, 168, 40, 0.2);
   cursor: default;
 }
 /* 사망 */

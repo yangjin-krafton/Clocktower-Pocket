@@ -104,16 +104,17 @@ export function ovalSelfRotOffset(selfSeatId, total) {
  * @param {number}      [opts.rotOffset=-Math.PI/2]  회전 오프셋 (기본 12시 방향)
  * @param {number}      [opts.innerR=8]              도넛 안쪽 반지름 (viewBox 단위)
  *                                                   중앙 UI 가 있으면 크게 설정
+ * @param {number}      [opts.outerR=30]             도넛 바깥 반지름 (viewBox 단위)
  * @param {Array}       [opts.slices]  per-slot 스타일 [{fill?, textFill?, opacity?}]
  * @returns {SVGSVGElement}  생성된 SVG 요소
  */
 export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
-  const { rotOffset = -Math.PI / 2, innerR = 8, slices = [] } = opts
+  const { rotOffset = -Math.PI / 2, innerR = 8, outerR = 30, slices = [] } = opts
 
   // 파이 기하
   const cx        = 50
   const cy        = 50
-  const pieR      = 30          // 슬롯(반지름 43) 안쪽으로 충분한 여유
+  const pieR      = outerR      // 외곽 반지름 (사용자 지정 또는 기본 30)
   const textR     = innerR + (pieR - innerR) * 0.60
   const halfSlice = Math.PI / total
   const halfGap   = Math.min(0.025, halfSlice * 0.06)  // 슬라이스 간격
@@ -151,9 +152,16 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
       `A ${innerR} ${innerR} 0 ${lg} 0 ${ix0.toFixed(2)} ${iy0.toFixed(2)}`,
       'Z',
     ].join(' '))
-    path.setAttribute('fill',         sd.fill   || 'var(--surface2)')
-    path.setAttribute('stroke',       sd.stroke || 'var(--lead2)')
-    path.setAttribute('stroke-width', '0.4')
+
+    // 생동감 있는 색상: 홀/짝 슬라이스마다 약간 다른 톤 적용
+    const baseOpacity = sd.opacity != null ? sd.opacity : 1
+    const fillColor = sd.fill || (i % 2 === 0
+      ? 'rgba(212, 168, 40, 0.12)'   // 짝수: 밝은 금색
+      : 'rgba(212, 168, 40, 0.08)')  // 홀수: 약간 어두운 금색
+
+    path.setAttribute('fill',         fillColor)
+    path.setAttribute('stroke',       sd.stroke || 'rgba(212, 168, 40, 0.25)')
+    path.setAttribute('stroke-width', '0.5')
     if (sd.opacity != null) path.setAttribute('opacity', sd.opacity)
     svg.appendChild(path)
 

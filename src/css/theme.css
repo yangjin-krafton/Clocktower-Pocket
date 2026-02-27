@@ -169,6 +169,8 @@ body {
 .tab-icon { font-size: 1rem; line-height: 1; }
 .tab-label { font-size: 0.56rem; color: var(--text3); }
 .tab-item.active .tab-label { color: var(--tl-base); }
+.tab-item--exit { opacity: 0.35; flex: 0.6; }
+.tab-item--exit .tab-label { color: var(--text4); font-size: 0.5rem; }
 
 /* ── 버튼 ── */
 .btn {

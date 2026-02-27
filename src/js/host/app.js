@@ -177,6 +177,16 @@ export class HostApp {
       btn.addEventListener('click', () => window.switchTab(tab.id))
       this.tabBar.appendChild(btn)
     })
+
+    // 게임 진행 중이면 나가기 탭 추가 (가장 오른쪽)
+    if (this._gameStarting) {
+      const exitBtn = document.createElement('button')
+      exitBtn.className = 'tab-item tab-item--exit'
+      exitBtn.dataset.tab = 'exit'
+      exitBtn.innerHTML = `<span class="tab-icon">🏠</span><span class="tab-label">나가기</span>`
+      exitBtn.addEventListener('click', () => this._showExitConfirm())
+      this.tabBar.appendChild(exitBtn)
+    }
   }
 
   _switchTab(tabId) {
@@ -284,9 +294,6 @@ export class HostApp {
     this.currentScreen = grimoire
     this._grimoire     = grimoire
 
-    // 게임 중이면 나가기 버튼 삽입
-    if (this._gameStarting) this._insertExitButton()
-
     engine.on('stateChanged', () => grimoire.refresh())
   }
 
@@ -341,9 +348,7 @@ export class HostApp {
       this._startAutoSave()
 
       this.currentTab = 'role'
-      this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === 'role')
-      })
+      this._buildTabs()  // 나가기 탭 포함하여 재빌드
       this._showGrimoire()
     })
   }
@@ -553,7 +558,6 @@ export class HostApp {
     })
     dayFlow.mount(this.container)
     this.currentScreen = dayFlow
-    this._insertExitButton()
     engine.on('stateChanged', () => dayFlow.refresh())
   }
 
@@ -752,6 +756,9 @@ export class HostApp {
       this._showGrimoire()
     }
 
+    // 6) HistoryBar 재마운트 (clearScreen에서 DOM이 변경되므로)
+    this._mountHistoryBar()
+
     // 6) 즉시 저장
     this._autoSave()
   }
@@ -813,21 +820,6 @@ export class HostApp {
       this._beforeUnloadHandler = null
     }
     clearTimeout(this._saveDebounce)
-  }
-
-  _insertExitButton() {
-    const btn = document.createElement('button')
-    btn.style.cssText = `
-      position:absolute;top:8px;right:8px;z-index:20;
-      background:rgba(255,255,255,0.06);border:1px solid var(--lead2);
-      border-radius:8px;padding:4px 10px;cursor:pointer;
-      font-size:0.62rem;color:var(--text4);
-      display:flex;align-items:center;gap:4px;
-    `
-    btn.textContent = '🏠 나가기'
-    btn.addEventListener('click', () => this._showExitConfirm())
-    this.container.style.position = 'relative'
-    this.container.appendChild(btn)
   }
 
   /** 호스트가 게임에서 나가기 (저장 후 홈으로) */

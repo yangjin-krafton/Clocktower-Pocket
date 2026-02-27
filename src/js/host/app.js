@@ -266,7 +266,7 @@ export class HostApp {
       onNextNightStep:     () => this._handleNextNightStep(),
       onPlayerAction:      (action, id) => this._handlePlayerAction(action, id),
       onPlayerCountChange: (n) => {
-        const newN = Math.max(5, Math.min(20, n))
+        const newN = Math.max(5, Math.min(15, n))
         // 자리 배열 크기 조정 (늘리면 null 추가, 줄이면 자르기)
         if (newN > this.pendingPlayerCount) {
           for (let i = this.pendingPlayerCount; i < newN; i++) this.seatRoles.push(null)

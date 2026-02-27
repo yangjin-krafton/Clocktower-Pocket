@@ -409,6 +409,8 @@ export class PlayerApp {
       this.saveId = GameSaveManager.createId()
       this._savePlayerGame()
 
+      // 탭바 재구성 (나가기 탭 포함)
+      this._buildTabs()
       this._switchTab('seats')
     })
 

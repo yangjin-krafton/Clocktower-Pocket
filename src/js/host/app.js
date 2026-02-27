@@ -18,7 +18,7 @@ import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { encodeRoomCode, formatCode }           from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
-import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
+import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -962,15 +962,24 @@ export class HostApp {
       })
 
       oval.appendChild(slot)
-    })
 
-    // 중심 파이 차트 — 자리번호를 각 슬롯 방향 쐐기 안에 표기
-    drawOvalPieNumbers(oval, total, {
-      innerR: 20,
-      outerR: 130,       // 반경 3배 확대 → 원의 둘레가 화면 밖으로
-      slices: players.map(p => ({
-        opacity: p.status !== 'alive' ? 0.35 : undefined,
-      })),
+      // 자리 번호 레이블 (슬롯과 중심 사이)
+      const labelX = 50 + (x - 50) * 0.55
+      const labelY = 50 + (y - 50) * 0.55
+      const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
+
+      const label = document.createElement('div')
+      label.style.cssText = `
+        position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;
+        transform:translate(-50%,-50%);
+        font-size:${labelFontPx}px;font-weight:700;
+        color:${isDead ? 'rgba(212,168,40,0.3)' : 'var(--gold2)'};
+        pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);
+        z-index:1;
+      `
+      label.textContent = player.id
+
+      oval.appendChild(label)
     })
 
     el.appendChild(oval)

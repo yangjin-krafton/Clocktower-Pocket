@@ -367,7 +367,17 @@ export class PlayerApp {
 
   _getSuspicions() {
     if (!this.session) return {}
-    try { return JSON.parse(localStorage.getItem(`ctp_sus_${this.session.code}`) || '{}') } catch { return {} }
+    try {
+      const sus = JSON.parse(localStorage.getItem(`ctp_sus_${this.session.code}`) || '{}')
+      // 유효하지 않은 마크 제거 (MARKS에 없는 키)
+      const validMarks = ['evil', 'good', 'watch', 'poison', 'drunk']
+      Object.keys(sus).forEach(key => {
+        if (!validMarks.includes(sus[key])) {
+          delete sus[key]
+        }
+      })
+      return sus
+    } catch { return {} }
   }
 
   _setSuspicion(seatNum, mark) {
@@ -402,23 +412,31 @@ export class PlayerApp {
       border-bottom:1px solid var(--lead2);
       cursor:pointer;transition:background 0.15s;
     `
-    header.innerHTML = `
-      <span style="font-size:0.68rem;color:var(--text4)">
-        방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formatCode(this.session.code)}</b>
-        &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${this.session.seatNum}</b>번
-        <span style="font-size:0.6rem;margin-left:6px;opacity:0.6">📋</span>
-      </span>
-    `
+
+    const formattedCode = formatCode(this.session.code)
+    const seatNum = this.session.seatNum
+
+    const renderHeader = (icon = '📋') => {
+      header.innerHTML = `
+        <span style="font-size:0.68rem;color:var(--text4)">
+          방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formattedCode}</b>
+          &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${seatNum}</b>번
+          <span style="font-size:0.6rem;margin-left:6px;opacity:0.6">${icon}</span>
+        </span>
+      `
+    }
+
+    renderHeader()
+
     header.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(this.session.code)
-        // 피드백: 배경색 변경
+        // 피드백: 배경색 변경 + 아이콘 변경
         header.style.background = 'rgba(212,168,40,0.15)'
-        const span = header.querySelector('span:last-child')
-        if (span) span.textContent = '✓'
+        renderHeader('✓')
         setTimeout(() => {
           header.style.background = 'rgba(212,168,40,0.06)'
-          if (span) span.textContent = '📋'
+          renderHeader('📋')
         }, 1000)
       } catch (err) {
         // fallback: 텍스트 선택
@@ -439,22 +457,24 @@ export class PlayerApp {
     })
     this.content.appendChild(header)
 
-    // 안내 문구 (상단 바 바로 아래)
+    // 안내 문구 (상단 바 바로 아래) - 30% 축소
     const sub = document.createElement('div')
-    sub.style.cssText = 'text-align:center;font-size:1.3rem;color:var(--text4);padding:12px 16px;'
-    sub.textContent = `${this.session.playerCount}인 게임 · 자리 ${this.session.seatNum}번 · 다른 자리를 탭해 표시 추가`
+    sub.style.cssText = 'text-align:center;font-size:0.91rem;color:var(--text4);padding:8px 16px;'
+    sub.textContent = `다른 자리를 탭해 표시 추가`
     this.content.appendChild(sub)
 
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
 
-    // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
+    // 가용 공간 계산: page-content 기준
+    // padding (12 + 68 = 80) + header (~36px) + sub (~30px) = 146px
     const acRect  = document.getElementById('app-content')?.getBoundingClientRect()
     const availW  = acRect?.width  || this.content.getBoundingClientRect().width || 320
-    const availH  = (acRect?.height || 520) - 80 - 26
+    const reservedH = 146  // page-content padding + header + sub
+    const availH  = (acRect?.height || 520) - reservedH
     const ovalW   = Math.floor(Math.min(availW, availH * 2 / 3))
     const ovalH   = Math.floor(ovalW * 1.5)
-    const contentH = (acRect?.height || 520) - 80
+    const contentH = availH
 
     const _RX_px    = ovalW * 0.43
     const _minChord = 2 * Math.sin(Math.PI / playerCount) * _RX_px
@@ -494,7 +514,7 @@ export class PlayerApp {
       const { x, y }   = ovalSlotPos(i, playerCount, rotOffset)
       const borderColor = isOwn
         ? (MY_TEAM_BORDER[myRole?.team] || 'var(--lead2)')
-        : (mark ? MARKS[mark].border : 'var(--lead2)')
+        : (mark && MARKS[mark] ? MARKS[mark].border : 'var(--lead2)')
 
       const slot = document.createElement('div')
       slot.id = `pseat-${seatNum}`
@@ -506,7 +526,7 @@ export class PlayerApp {
         align-items:center;justify-content:center;
         cursor:${isOwn ? 'default' : 'pointer'};
         border:2px solid ${borderColor};
-        border-style:${isOwn || mark ? 'solid' : 'dashed'};
+        border-style:${isOwn || (mark && MARKS[mark]) ? 'solid' : 'dashed'};
         background:${isOwn ? 'var(--surface)' : 'var(--surface2)'};
       `
 
@@ -524,7 +544,7 @@ export class PlayerApp {
           img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
           iconEl.appendChild(img)
         } else { iconEl.textContent = myRole?.iconEmoji || '?' }
-      } else if (mark) {
+      } else if (mark && MARKS[mark]) {
         iconEl.textContent = MARKS[mark].emoji
         iconEl.style.background = 'transparent'
       } else {

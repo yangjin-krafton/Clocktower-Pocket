@@ -246,14 +246,14 @@ export class Grimoire {
     // 컨테이너 너비 기반 슬롯 크기 (app-content 실측)
     const appContent = document.getElementById('app-content')
     const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
-    const baseRatio =
-      total <= 6  ? 0.23 :
-      total <= 9  ? 0.21 :
-      total <= 13 ? 0.18 :
-      total <= 16 ? 0.16 : 0.14
-    const slotPx = Math.min(88, Math.max(36, Math.round(containerW * baseRatio)))
+    const _RX_px    = containerW * 0.43
+    const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
+    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
 
-    const iconPx = Math.round(slotPx * 0.62)
+    const iconPx      = Math.round(slotPx * 0.62)
+    const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
+    const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
+    const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
 
     // 타원 반지름 (% 단위, 컨테이너 기준)
     // rX = % of container width, rY = % of container height (aspect-ratio 3:2 → H = W*2/3)
@@ -317,6 +317,7 @@ export class Grimoire {
       // 자리 번호 배지
       const badge = document.createElement('span')
       badge.className = 'gl-seat-num'
+      badge.style.cssText = `font-size:${badgeFontPx}px;min-width:${badgeMinW}px;height:${badgeH}px;border-radius:${Math.round(badgeH/2)}px;`
       badge.textContent = i + 1
 
       slot.appendChild(iconEl)

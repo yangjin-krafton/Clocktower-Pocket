@@ -345,10 +345,14 @@ export class PlayerApp {
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
     const RX = 43, RY = 43
-    const contentW = this.content.getBoundingClientRect().width || 320
-    const _baseR = playerCount <= 6 ? 0.23 : playerCount <= 9 ? 0.21 : playerCount <= 13 ? 0.18 : playerCount <= 16 ? 0.16 : 0.14
-    const slotPx = Math.min(88, Math.max(44, Math.round(contentW * _baseR)))
-    const iconPx = Math.round(slotPx * 0.62)
+    const contentW  = this.content.getBoundingClientRect().width || 320
+    const _RX_px    = contentW * 0.43
+    const _minChord = 2 * Math.sin(Math.PI / playerCount) * _RX_px
+    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(contentW * 0.28)))
+    const iconPx    = Math.round(slotPx * 0.62)
+    const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
+    const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
+    const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
 
     const MARKS = {
       evil:  { emoji: '🔴', label: '악인 의심', border: 'rgba(200,40,40,0.7)'  },
@@ -425,11 +429,11 @@ export class PlayerApp {
       const badge = document.createElement('span')
       badge.style.cssText = `
         position:absolute;top:2px;left:50%;transform:translateX(-50%);
-        min-width:18px;height:17px;
-        padding:0 4px;border-radius:9px;
+        min-width:${badgeMinW}px;height:${badgeH}px;
+        padding:0 4px;border-radius:${Math.round(badgeH/2)}px;
         background:rgba(10,9,22,0.72);
         border:1px solid ${isOwn ? 'rgba(212,168,40,0.6)' : 'rgba(92,83,137,0.5)'};
-        font-size:0.68rem;font-weight:700;
+        font-size:${badgeFontPx}px;font-weight:700;
         color:${isOwn ? 'var(--gold2)' : 'var(--tl-light)'};
         display:flex;align-items:center;justify-content:center;z-index:2;
         letter-spacing:0.01em;

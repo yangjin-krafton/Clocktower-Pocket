@@ -37,9 +37,10 @@ export function renderPlayerGrid(players, opts = {}) {
     let _containerW = 0
 
     function getChipPx() {
-      const w = _containerW || window.innerWidth * 0.88
-      const baseRatio = total <= 6 ? 0.23 : total <= 9 ? 0.21 : total <= 13 ? 0.18 : total <= 16 ? 0.16 : 0.14
-      return Math.min(88, Math.max(44, Math.round(w * baseRatio)))
+      const w        = _containerW || window.innerWidth * 0.88
+      const RX_px    = w * 0.43
+      const minChord = 2 * Math.sin(Math.PI / total) * RX_px
+      return Math.max(36, Math.min(Math.floor(minChord * 0.82), Math.floor(w * 0.28)))
     }
 
     function rebuildRing() {

@@ -89,8 +89,9 @@ export function mountOvalSelectPanel(data) {
   // 컨테이너 너비 기반 슬롯 크기
   const appContent  = document.getElementById('app-content')
   const containerW  = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
-  const baseRatio   = total <= 6 ? 0.23 : total <= 9 ? 0.21 : total <= 13 ? 0.18 : total <= 16 ? 0.16 : 0.14
-  const slotPx      = Math.min(88, Math.max(40, Math.round(containerW * baseRatio)))
+  const _RX_px    = containerW * 0.43
+  const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
+  const slotPx    = Math.max(40, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
 
   // 중앙 카운터
   const center = document.createElement('div')
@@ -131,11 +132,14 @@ export function mountOvalSelectPanel(data) {
         height:${slotPx}px;
       `
 
-      const topLabel = isSelf ? '나' : (isSelected ? '✓' : '')
+      const topLabel   = isSelf ? '나' : (isSelected ? '✓' : '')
+      const numFontPx  = Math.max(16, Math.round(slotPx * 0.42))
+      const topFontPx  = Math.max(8,  Math.round(slotPx * 0.14))
+      const unitFontPx = Math.max(8,  Math.round(slotPx * 0.16))
       slot.innerHTML = `
-        <span class="oval-sel__slot-top">${topLabel}</span>
-        <span class="oval-sel__slot-num">${p.id}</span>
-        <span class="oval-sel__slot-unit">번</span>
+        <span class="oval-sel__slot-top" style="font-size:${topFontPx}px">${topLabel}</span>
+        <span class="oval-sel__slot-num" style="font-size:${numFontPx}px">${p.id}</span>
+        <span class="oval-sel__slot-unit" style="font-size:${unitFontPx}px">번</span>
       `
 
       if (canSelect) {

@@ -12,7 +12,6 @@ import { RulesScreen }                from '../components/RulesScreen.js'
 import { ROLES_BY_ID }                from '../data/roles-tb.js'
 import { ThemeManager }               from '../ThemeManager.js'
 import { ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
-import { RoleCardScreen }             from './RoleCardScreen.js'
 
 const STORAGE_KEY = 'ctp_player_session'
 
@@ -68,17 +67,63 @@ if (!document.getElementById('player-app-style')) {
 
 .dict__modal-close {
   position: absolute; top: 12px; right: 12px;
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.15);
-  border: none;
+  border: 1px solid var(--lead2);
+  background: var(--surface2);
   color: var(--text3);
-  font-size: 1.1rem;
+  font-size: 0.75rem;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+
+.dict__modal-icon {
+  width: 176px; height: 176px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4.8rem;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  opacity: 0.72;
+}
+.dict__modal-icon-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+}
+
+.dict__modal-name {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.45rem; font-weight: 700;
+  text-align: center; line-height: 1.2;
+}
+
+.dict__modal-ability {
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-size: 1.0rem;
+  color: var(--text2);
+  line-height: 1.75;
+  text-align: center;
+  width: 100%;
+}
+
+.dict__modal-rules-btn {
+  width: 100%;
+  padding: 11px 0;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-top: 2px;
+  background: rgba(122,111,183,0.15);
+  border: 1px solid var(--pu-base);
+  color: var(--text);
+  cursor: pointer;
   transition: background 0.15s;
 }
-.dict__modal-close:hover { background: rgba(0,0,0,0.25); }
+.dict__modal-rules-btn:hover {
+  background: rgba(122,111,183,0.25);
+}
   `
   document.head.appendChild(s)
 }
@@ -328,8 +373,14 @@ export class PlayerApp {
   _setSuspicion(seatNum, mark) {
     if (!this.session) return
     const sus = this._getSuspicions()
-    if (mark === null) delete sus[seatNum]
-    else sus[seatNum] = mark
+    // 같은 마크를 다시 클릭하면 제거 (토글)
+    if (sus[seatNum] === mark) {
+      delete sus[seatNum]
+    } else if (mark === null) {
+      delete sus[seatNum]
+    } else {
+      sus[seatNum] = mark
+    }
     try { localStorage.setItem(`ctp_sus_${this.session.code}`, JSON.stringify(sus)) } catch {}
   }
 
@@ -343,20 +394,56 @@ export class PlayerApp {
       return
     }
 
-    // 상단: 방 코드 + 자리 번호 배지
+    // 상단: 방 코드 + 자리 번호 배지 (클릭 시 방 코드 복사)
     const header = document.createElement('div')
     header.style.cssText = `
       display:flex;align-items:center;justify-content:center;
       padding:8px 16px;background:rgba(212,168,40,0.06);
       border-bottom:1px solid var(--lead2);
+      cursor:pointer;transition:background 0.15s;
     `
     header.innerHTML = `
       <span style="font-size:0.68rem;color:var(--text4)">
         방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formatCode(this.session.code)}</b>
         &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${this.session.seatNum}</b>번
+        <span style="font-size:0.6rem;margin-left:6px;opacity:0.6">📋</span>
       </span>
     `
+    header.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(this.session.code)
+        // 피드백: 배경색 변경
+        header.style.background = 'rgba(212,168,40,0.15)'
+        const span = header.querySelector('span:last-child')
+        if (span) span.textContent = '✓'
+        setTimeout(() => {
+          header.style.background = 'rgba(212,168,40,0.06)'
+          if (span) span.textContent = '📋'
+        }, 1000)
+      } catch (err) {
+        // fallback: 텍스트 선택
+        const textEl = header.querySelector('b')
+        if (textEl) {
+          const range = document.createRange()
+          range.selectNode(textEl)
+          window.getSelection().removeAllRanges()
+          window.getSelection().addRange(range)
+        }
+      }
+    })
+    header.addEventListener('mouseenter', () => {
+      header.style.background = 'rgba(212,168,40,0.10)'
+    })
+    header.addEventListener('mouseleave', () => {
+      header.style.background = 'rgba(212,168,40,0.06)'
+    })
     this.content.appendChild(header)
+
+    // 안내 문구 (상단 바 바로 아래)
+    const sub = document.createElement('div')
+    sub.style.cssText = 'text-align:center;font-size:1.3rem;color:var(--text4);padding:12px 16px;'
+    sub.textContent = `${this.session.playerCount}인 게임 · 자리 ${this.session.seatNum}번 · 다른 자리를 탭해 표시 추가`
+    this.content.appendChild(sub)
 
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
@@ -381,10 +468,11 @@ export class PlayerApp {
     const rotOffset = ovalSelfRotOffset(mySeat, playerCount)
 
     const MARKS = {
-      evil:  { emoji: '🔴', label: '악인 의심', border: 'rgba(200,40,40,0.7)'  },
-      watch: { emoji: '👁',  label: '주목',      border: 'rgba(200,150,0,0.7)'  },
-      good:  { emoji: '🟢', label: '선 확인',   border: 'rgba(30,150,80,0.7)'  },
-      dead:  { emoji: '💀', label: '사망',       border: 'rgba(120,120,120,0.7)'},
+      evil:   { emoji: '❤️', border: 'rgba(200,40,40,0.7)'   },
+      good:   { emoji: '💙', border: 'rgba(40,100,200,0.7)'  },
+      watch:  { emoji: '🎭', border: 'rgba(200,150,0,0.7)'   },
+      poison: { emoji: '🦠', border: 'rgba(100,200,80,0.7)'  },
+      drunk:  { emoji: '🍺', border: 'rgba(180,120,60,0.7)'  },
     }
     const MY_TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)', outsider: 'rgba(91,179,198,0.65)',
@@ -479,11 +567,6 @@ export class PlayerApp {
     }
     el.appendChild(oval)
 
-    const sub = document.createElement('div')
-    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
-    sub.textContent = `${playerCount}인 게임 · 자리 ${mySeat}번 · 다른 자리를 탭해 표시 추가`
-    el.appendChild(sub)
-
     this.content.appendChild(el)
   }
 
@@ -496,44 +579,41 @@ export class PlayerApp {
       position:fixed;bottom:calc(var(--tab-h,56px) + 8px);left:50%;
       transform:translateX(-50%);
       background:var(--surface);border:1px solid var(--lead2);
-      border-radius:14px;padding:10px 12px;
-      display:flex;flex-direction:column;gap:8px;
+      border-radius:14px;padding:10px;
+      display:flex;gap:6px;
       box-shadow:0 4px 24px rgba(0,0,0,0.4);z-index:100;
-      min-width:200px;
     `
 
-    const title = document.createElement('div')
-    title.style.cssText = 'font-size:0.65rem;color:var(--text4);text-align:center;'
-    title.textContent = `자리 ${seatNum}번 표시`
-    picker.appendChild(title)
-
-    const btnRow = document.createElement('div')
-    btnRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center;'
-
-    Object.entries(MARKS).forEach(([key, { emoji, label }]) => {
+    // 5개 버튼 (이모지만 표시)
+    Object.entries(MARKS).forEach(([key, { emoji }]) => {
       const btn = document.createElement('button')
-      btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:8px;border:1px solid var(--lead2);background:var(--surface2);cursor:pointer;font-size:1.1rem;min-width:48px;'
-      btn.innerHTML = `<span>${emoji}</span><span style="font-size:0.5rem;color:var(--text3)">${label}</span>`
+      btn.style.cssText = `
+        display:flex;align-items:center;justify-content:center;
+        width:48px;height:48px;
+        border-radius:50%;
+        border:2px solid var(--lead2);
+        background:var(--surface2);
+        cursor:pointer;
+        font-size:1.5rem;
+        transition:transform 0.15s, border-color 0.15s;
+      `
+      btn.textContent = emoji
       btn.addEventListener('click', () => {
         this._setSuspicion(seatNum, key)
         picker.remove()
         this._refreshSeatSlot(seatNum, oval, MARKS)
       })
-      btnRow.appendChild(btn)
+      btn.addEventListener('mousedown', () => {
+        btn.style.transform = 'scale(0.9)'
+      })
+      btn.addEventListener('mouseup', () => {
+        btn.style.transform = 'scale(1)'
+      })
+      picker.appendChild(btn)
     })
 
-    // 초기화 버튼
-    const clearBtn = document.createElement('button')
-    clearBtn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:8px;border:1px solid var(--lead2);background:var(--surface2);cursor:pointer;font-size:1.1rem;min-width:48px;'
-    clearBtn.innerHTML = `<span>✕</span><span style="font-size:0.5rem;color:var(--text3)">초기화</span>`
-    clearBtn.addEventListener('click', () => {
-      this._setSuspicion(seatNum, null)
-      picker.remove()
-      this._refreshSeatSlot(seatNum, oval, MARKS)
-    })
-    btnRow.appendChild(clearBtn)
-
-    picker.appendChild(btnRow)
+    // 초기화 버튼 제거 (5개만 유지)
+    // 더블탭으로 제거하거나, 같은 버튼 다시 탭하면 제거되도록 할 수 있음
     document.body.appendChild(picker)
 
     // 외부 탭 → 닫기
@@ -553,7 +633,14 @@ export class PlayerApp {
   // ─────────────────────────────────────
 
   _showMyRoleModal() {
-    // 역할 카드를 오버레이로 표시
+    const role = ROLES_BY_ID[this.session.roleId]
+    if (!role) return
+
+    const TEAM_COLOR = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)' }
+    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
+    const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
+
+    // 역할 카드를 오버레이로 표시 (CharacterDict와 동일한 UI)
     const overlay = document.createElement('div')
     overlay.className = 'dict__overlay'
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
@@ -561,20 +648,57 @@ export class PlayerApp {
     const modal = document.createElement('div')
     modal.className = 'dict__modal'
 
-    // 닫기 버튼
+    // ── 닫기 버튼 ──
     const closeBtn = document.createElement('button')
     closeBtn.className = 'dict__modal-close'
     closeBtn.textContent = '✕'
     closeBtn.addEventListener('click', () => overlay.remove())
     modal.appendChild(closeBtn)
 
-    // 역할 카드 렌더링
-    const cardWrap = document.createElement('div')
-    cardWrap.style.cssText = 'width:100%;'
-    modal.appendChild(cardWrap)
+    // ── 큰 아이콘 ──
+    const iconWrap = document.createElement('div')
+    iconWrap.className = 'dict__modal-icon'
+    if (role.icon?.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/icons/${role.icon}`
+      img.alt = role.name
+      img.className = 'dict__modal-icon-img'
+      iconWrap.appendChild(img)
+    } else {
+      iconWrap.textContent = role.iconEmoji || role.icon || '?'
+    }
+    modal.appendChild(iconWrap)
 
-    const screen = new RoleCardScreen({ roleId: this.session.roleId, team: this.session.team })
-    screen.mount(cardWrap)
+    // ── 역할명 ──
+    const nameEl = document.createElement('div')
+    nameEl.className = 'dict__modal-name'
+    nameEl.style.color = TEAM_COLOR[role.team] || 'var(--text)'
+    nameEl.textContent = role.name
+    modal.appendChild(nameEl)
+
+    // ── 진영 배지 ──
+    const badge = document.createElement('span')
+    badge.className = `badge ${BADGE_CLASS[role.team]}`
+    badge.textContent = TEAM_LABEL[role.team] || role.team
+    modal.appendChild(badge)
+
+    // ── 능력 설명 ──
+    if (role.ability) {
+      const abilityEl = document.createElement('div')
+      abilityEl.className = 'dict__modal-ability'
+      abilityEl.textContent = role.ability
+      modal.appendChild(abilityEl)
+    }
+
+    // ── 규칙 바로가기 버튼 ──
+    const rulesBtn = document.createElement('button')
+    rulesBtn.className = 'btn dict__modal-rules-btn'
+    rulesBtn.innerHTML = '📜 규칙에서 자세히 보기'
+    rulesBtn.addEventListener('click', () => {
+      overlay.remove()
+      this._openRule(role.id)
+    })
+    modal.appendChild(rulesBtn)
 
     overlay.appendChild(modal)
     document.body.appendChild(overlay)

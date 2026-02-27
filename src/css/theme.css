@@ -69,6 +69,7 @@ body {
   padding: 0;
   background: radial-gradient(ellipse at 50% 0%, #1a1848 0%, #070510 60%);
   min-height: 100vh;
+  min-height: 100dvh; /* 동적 뷰포트 높이 (모바일 주소창 대응) */
   overflow-x: hidden;
 }
 
@@ -77,6 +78,7 @@ body {
   width: 100%;
   max-width: var(--app-max-width);
   min-height: 100vh;
+  min-height: 100dvh; /* 동적 뷰포트 높이 (모바일 주소창 대응) */
   background: var(--bg);
   display: flex;
   flex-direction: column;

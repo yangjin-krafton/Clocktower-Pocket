@@ -875,8 +875,15 @@ export class HostApp {
     const { players } = state
     const total = players.length
     const RX = 43, RY = 43
-    const slotPx = total <= 6 ? 62 : total <= 9 ? 56 : total <= 13 ? 50 : total <= 16 ? 44 : 38
-    const iconPx = Math.round(slotPx * 0.62)
+    const containerW  = this.container.getBoundingClientRect().width
+                     || document.getElementById('app-content')?.getBoundingClientRect().width
+                     || 320
+    const _RX_px    = containerW * 0.43
+    const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
+    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
+    const iconPx      = Math.round(slotPx * 0.62)
+    const badgeFontPx = Math.max(9,  Math.round(slotPx * 0.18))
+    const badgeSize   = Math.max(16, Math.round(slotPx * 0.22))
 
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',
@@ -933,9 +940,9 @@ export class HostApp {
       const badge = document.createElement('span')
       badge.style.cssText = `
         position:absolute;bottom:-4px;right:-4px;
-        min-width:14px;height:14px;padding:0 3px;border-radius:7px;
+        min-width:${badgeSize}px;height:${badgeSize}px;padding:0 3px;border-radius:${Math.round(badgeSize/2)}px;
         background:var(--surface2);border:1px solid var(--lead2);
-        font-size:0.48rem;font-weight:700;color:var(--text3);
+        font-size:${badgeFontPx}px;font-weight:700;color:var(--text3);
         display:flex;align-items:center;justify-content:center;z-index:1;
       `
       badge.textContent = player.id

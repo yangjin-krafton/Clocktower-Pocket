@@ -174,7 +174,7 @@ export function mountOvalSelectPanel(data) {
   pieSvg = drawOvalPieNumbers(oval, total, {
     rotOffset,
     innerR: 20,        // 중앙 공간 확보
-    outerR: 43,        // 타원 경계까지 확장
+    outerR: 130,       // 반경 3배 확대 → 원의 둘레가 화면 밖으로
     slices: players.map(p => ({
       opacity: p.status !== 'alive' ? 0.28 : undefined,
     })),

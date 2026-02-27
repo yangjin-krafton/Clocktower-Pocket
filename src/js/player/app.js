@@ -6,12 +6,13 @@
  *   localStorage 에 마지막 세션 저장 (재방문 시 자동 복원)
  */
 import { decodeRoomCode, formatCode } from '../room-code.js'
-import { RoleCardScreen }             from './RoleCardScreen.js'
 import { Memo }                       from './Memo.js'
 import { CharacterDict }              from './CharacterDict.js'
 import { RulesScreen }                from '../components/RulesScreen.js'
 import { ROLES_BY_ID }                from '../data/roles-tb.js'
 import { ThemeManager }               from '../ThemeManager.js'
+import { ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+import { RoleCardScreen }             from './RoleCardScreen.js'
 
 const STORAGE_KEY = 'ctp_player_session'
 
@@ -41,6 +42,43 @@ if (!document.getElementById('player-app-style')) {
 .seat-btn--active {
   background: rgba(122,111,183,0.25); border-color: var(--pu-base); color: var(--text);
 }
+
+/* ── 역할 카드 오버레이 ── */
+.dict__overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; opacity: 0;
+  transition: opacity 0.18s;
+  padding: 20px;
+}
+.dict__overlay--visible { opacity: 1; }
+
+.dict__modal {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 28px 20px 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.dict__modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  border: none;
+  color: var(--text3);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.dict__modal-close:hover { background: rgba(0,0,0,0.25); }
   `
   document.head.appendChild(s)
 }
@@ -51,7 +89,7 @@ export class PlayerApp {
     this.tabBar   = document.getElementById('tab-bar')
 
     this.session  = null   // { code, seatNum, roleId, team, playerCount }
-    this.currentTab = 'role'
+    this.currentTab = 'seats'
     this.pendingRulesPage = null
     this.screens  = {}
   }
@@ -81,7 +119,7 @@ export class PlayerApp {
     } catch {}
 
     this._buildTabs()
-    this._switchTab('role')
+    this._switchTab('seats')
   }
 
   // ─────────────────────────────────────
@@ -91,7 +129,6 @@ export class PlayerApp {
   _buildTabs() {
     this.tabBar.innerHTML = ''
     const tabs = [
-      { id: 'role',  icon: '🎭', label: '내 역할' },
       { id: 'seats', icon: '🪑', label: '자리배치' },
       { id: 'memo',  icon: '📝', label: '메모' },
       { id: 'dict',  icon: '🃏', label: '역할' },
@@ -105,6 +142,16 @@ export class PlayerApp {
       btn.addEventListener('click', () => window.switchTab(tab.id))
       this.tabBar.appendChild(btn)
     })
+
+    // 게임 참가 중이면 나가기 탭 추가 (가장 오른쪽)
+    if (this.session) {
+      const exitBtn = document.createElement('button')
+      exitBtn.className = 'tab-item tab-item--exit'
+      exitBtn.dataset.tab = 'exit'
+      exitBtn.innerHTML = `<span class="tab-icon">🏠</span><span class="tab-label">나가기</span>`
+      exitBtn.addEventListener('click', () => this._showExitConfirm())
+      this.tabBar.appendChild(exitBtn)
+    }
   }
 
   _switchTab(tabId) {
@@ -115,15 +162,12 @@ export class PlayerApp {
     })
 
     switch (tabId) {
-      case 'role':
+      case 'seats':
         if (this.session) {
-          this._showRoleCard()
+          this._showSeatLayout()
         } else {
           this._showJoinForm()
         }
-        break
-      case 'seats':
-        this._showSeatLayout()
         break
       case 'memo':
         const memo = new Memo()
@@ -146,49 +190,6 @@ export class PlayerApp {
   _openRule(roleId) {
     this.pendingRulesPage = `${roleId}.md`
     this._switchTab('rules')
-  }
-
-  // ─────────────────────────────────────
-  // 역할 카드 화면
-  // ─────────────────────────────────────
-
-  _showRoleCard() {
-    // 상단: 방 코드 + 자리 번호 배지
-    const header = document.createElement('div')
-    header.style.cssText = `
-      display:flex;align-items:center;justify-content:space-between;
-      padding:8px 16px;background:rgba(212,168,40,0.06);
-      border-bottom:1px solid var(--lead2);gap:8px;
-    `
-    header.innerHTML = `
-      <span style="font-size:0.68rem;color:var(--text4)">
-        방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formatCode(this.session.code)}</b>
-        &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${this.session.seatNum}</b>번
-      </span>
-      <button id="player-reset-btn" style="font-size:0.65rem;color:var(--text4);background:none;border:none;cursor:pointer;padding:2px 6px;">나가기</button>
-    `
-    this.content.appendChild(header)
-
-    header.querySelector('#player-reset-btn').addEventListener('click', () => {
-      if (confirm('이 게임에서 나가시겠습니까?')) {
-        this._leaveGame()
-        window.goHome?.()
-      }
-    })
-
-    // 역할 카드
-    const cardWrap = document.createElement('div')
-    cardWrap.style.cssText = 'padding:0;'
-    this.content.appendChild(cardWrap)
-
-    const screen = new RoleCardScreen({ roleId: this.session.roleId, team: this.session.team })
-    screen.mount(cardWrap)
-  }
-
-  _leaveGame() {
-    this.session = null
-    localStorage.removeItem(STORAGE_KEY)
-    this._switchTab('role')
   }
 
   // ─────────────────────────────────────
@@ -307,7 +308,7 @@ export class PlayerApp {
       this.session = { code: rawCode, seatNum: selectedSeat, roleId, team, playerCount: decoded.playerCount }
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ code: rawCode, seatNum: selectedSeat })) } catch {}
 
-      this._switchTab('role')
+      this._switchTab('seats')
     })
 
     // URL 코드 자동 시도
@@ -342,9 +343,23 @@ export class PlayerApp {
       return
     }
 
+    // 상단: 방 코드 + 자리 번호 배지
+    const header = document.createElement('div')
+    header.style.cssText = `
+      display:flex;align-items:center;justify-content:center;
+      padding:8px 16px;background:rgba(212,168,40,0.06);
+      border-bottom:1px solid var(--lead2);
+    `
+    header.innerHTML = `
+      <span style="font-size:0.68rem;color:var(--text4)">
+        방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formatCode(this.session.code)}</b>
+        &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${this.session.seatNum}</b>번
+      </span>
+    `
+    this.content.appendChild(header)
+
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
-    const RX = 43, RY = 43
 
     // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
     const acRect  = document.getElementById('app-content')?.getBoundingClientRect()
@@ -361,6 +376,9 @@ export class PlayerApp {
     const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
     const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
     const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
+
+    // 내 자리가 6시 방향(하단 중앙)에 오도록 회전 오프셋 계산
+    const rotOffset = ovalSelfRotOffset(mySeat, playerCount)
 
     const MARKS = {
       evil:  { emoji: '🔴', label: '악인 의심', border: 'rgba(200,40,40,0.7)'  },
@@ -385,9 +403,7 @@ export class PlayerApp {
       const isOwn      = seatNum === mySeat
       const sus        = this._getSuspicions()
       const mark       = sus[seatNum] || null
-      const angle      = (2 * Math.PI * i) / playerCount - Math.PI / 2
-      const x          = 50 + RX * Math.cos(angle)
-      const y          = 50 + RY * Math.sin(angle)
+      const { x, y }   = ovalSlotPos(i, playerCount, rotOffset)
       const borderColor = isOwn
         ? (MY_TEAM_BORDER[myRole?.team] || 'var(--lead2)')
         : (mark ? MARKS[mark].border : 'var(--lead2)')
@@ -428,7 +444,9 @@ export class PlayerApp {
       }
       slot.appendChild(iconEl)
 
-      if (!isOwn) {
+      if (isOwn) {
+        slot.addEventListener('click', () => this._showMyRoleModal())
+      } else {
         slot.addEventListener('click', () => this._showSuspicionPicker(seatNum, oval, MARKS))
       }
       return slot
@@ -441,9 +459,7 @@ export class PlayerApp {
       // 자리 번호 레이블 (슬롯과 중심 사이)
       const seatNum = i + 1
       const isOwn = seatNum === mySeat
-      const angle = (2 * Math.PI * i) / playerCount - Math.PI / 2
-      const x = 50 + RX * Math.cos(angle)
-      const y = 50 + RY * Math.sin(angle)
+      const { x, y } = ovalSlotPos(i, playerCount, rotOffset)
       const labelX = 50 + (x - 50) * 0.55
       const labelY = 50 + (y - 50) * 0.55
       const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
@@ -530,5 +546,76 @@ export class PlayerApp {
   _refreshSeatSlot(seatNum, oval, MARKS) {
     // 전체 다시 그리기 대신 해당 슬롯만 교체
     this._switchTab('seats')
+  }
+
+  // ─────────────────────────────────────
+  // 나가기
+  // ─────────────────────────────────────
+
+  _showMyRoleModal() {
+    // 역할 카드를 오버레이로 표시
+    const overlay = document.createElement('div')
+    overlay.className = 'dict__overlay'
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+
+    const modal = document.createElement('div')
+    modal.className = 'dict__modal'
+
+    // 닫기 버튼
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'dict__modal-close'
+    closeBtn.textContent = '✕'
+    closeBtn.addEventListener('click', () => overlay.remove())
+    modal.appendChild(closeBtn)
+
+    // 역할 카드 렌더링
+    const cardWrap = document.createElement('div')
+    cardWrap.style.cssText = 'width:100%;'
+    modal.appendChild(cardWrap)
+
+    const screen = new RoleCardScreen({ roleId: this.session.roleId, team: this.session.team })
+    screen.mount(cardWrap)
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+
+    requestAnimationFrame(() => overlay.classList.add('dict__overlay--visible'))
+  }
+
+  _showExitConfirm() {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.textAlign = 'center'
+    box.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:12px">🏠</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--gold2);margin-bottom:8px">게임 나가기</div>
+      <div style="font-size:0.78rem;color:var(--text2);margin-bottom:16px;line-height:1.5">게임에서 나가시겠습니까?<br>저장된 메모는 유지됩니다.</div>
+      <div class="btn-grid-2">
+        <button class="btn" id="exit-cancel">취소</button>
+        <button class="btn btn-gold" id="exit-confirm">나가기</button>
+      </div>
+    `
+    overlay.appendChild(box)
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+    document.body.appendChild(overlay)
+
+    box.querySelector('#exit-cancel').addEventListener('click', () => overlay.remove())
+    box.querySelector('#exit-confirm').addEventListener('click', () => {
+      overlay.remove()
+      this.exitToHome()
+    })
+  }
+
+  exitToHome() {
+    // 세션 초기화 (메모는 localStorage에 남아있음)
+    this.session = null
+    localStorage.removeItem(STORAGE_KEY)
+
+    // 홈 화면으로
+    this.content.innerHTML = ''
+    this.tabBar.innerHTML = ''
+    this._showJoinForm()
   }
 }

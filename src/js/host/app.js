@@ -329,6 +329,7 @@ export class HostApp {
       this._history.push({
         type: 'phase-start', phase: 'night', round: engine.state.round,
         label: `🌙 밤 ${engine.state.round}`,
+        snapshot: engine.serialize(),
       })
 
       // 세이브 슬롯 생성 + 자동저장 시작
@@ -452,6 +453,7 @@ export class HostApp {
     this._history.push({
       type: 'phase-start', phase: 'night', round: engine.state.round,
       label: `🌙 밤 ${engine.state.round}`,
+      snapshot: engine.serialize(),
     })
     this._autoSave()  // 밤 전환 시 즉시 저장
 
@@ -473,6 +475,7 @@ export class HostApp {
         type: 'night-resolve', phase: 'night', round: engine.state.round,
         label: `💀 ${deathNames} 사망`,
         detail: `밤 ${engine.state.round} 결과: ${deathNames || '사망자 없음'}`,
+        snapshot: engine.serialize(),
       })
     }
 
@@ -485,6 +488,7 @@ export class HostApp {
     this._history.push({
       type: 'phase-start', phase: 'day', round: engine.state.round,
       label: `☀️ 낮 ${engine.state.round}`,
+      snapshot: engine.serialize(),
     })
     this._autoSave()  // 낮 전환 시 즉시 저장
 
@@ -519,6 +523,7 @@ export class HostApp {
             target: targetIds || [],
             label: `${roleName}${targetLabel ? ' ' + targetLabel : ''}`,
             detail: `${roleName} ${targetLabel}`,
+            snapshot: engine.serialize(),
           })
 
           engine.nextNightStep()
@@ -650,9 +655,19 @@ export class HostApp {
     `
     overlay.appendChild(card)
 
+    // 되돌리기 버튼 (snapshot 있을 때만)
+    if (entry.snapshot) {
+      const rewindBtn = document.createElement('button')
+      rewindBtn.className = 'btn btn-danger btn-full'
+      rewindBtn.style.cssText = 'margin:12px 16px 0;width:calc(100% - 32px);'
+      rewindBtn.textContent = '↩ 이 시점으로 되돌리기'
+      rewindBtn.addEventListener('click', () => this._confirmRewind(entry))
+      overlay.appendChild(rewindBtn)
+    }
+
     // 전후 탐색 버튼
     const navRow = document.createElement('div')
-    navRow.style.cssText = 'display:flex;gap:8px;padding:0 16px;'
+    navRow.style.cssText = 'display:flex;gap:8px;padding:0 16px;margin-top:10px;'
 
     const prevBtn = document.createElement('button')
     prevBtn.className = 'btn'
@@ -674,6 +689,68 @@ export class HostApp {
     this.container.style.position = 'relative'
     this.container.appendChild(overlay)
     this._viewerOverlay = overlay
+  }
+
+  _confirmRewind(entry) {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.textAlign = 'center'
+    box.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:12px">↩</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--gold2);margin-bottom:8px">되돌리기 확인</div>
+      <div style="font-size:0.78rem;color:var(--text2);margin-bottom:6px;line-height:1.5">
+        <b>"${entry.label}"</b> 시점으로 되돌립니다.
+      </div>
+      <div style="font-size:0.68rem;color:var(--rd-light);margin-bottom:16px;line-height:1.4">
+        이후의 모든 행동이 취소됩니다.<br>이 작업은 되돌릴 수 없습니다.
+      </div>
+      <div class="btn-grid-2">
+        <button class="btn" id="rewind-cancel">취소</button>
+        <button class="btn btn-danger" id="rewind-confirm">되돌리기</button>
+      </div>
+    `
+    overlay.appendChild(box)
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+    document.body.appendChild(overlay)
+
+    box.querySelector('#rewind-cancel').addEventListener('click', () => overlay.remove())
+    box.querySelector('#rewind-confirm').addEventListener('click', () => {
+      overlay.remove()
+      this._executeRewind(entry)
+    })
+  }
+
+  _executeRewind(entry) {
+    // 1) engine 상태 복원
+    engine.restore(entry.snapshot)
+
+    // 2) 히스토리에서 이후 엔트리 삭제
+    this._history.rewindTo(entry.id)
+
+    // 3) 열람 모드 해제
+    this._dismissViewer()
+
+    // 4) 호스트 상태 동기화
+    this.doneSteps = []
+    this.nightAction = null
+
+    // 5) 현재 phase에 맞는 화면 다시 표시
+    const phase = engine.state.phase
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
+
+    if (phase === 'day') {
+      this._showDayFlow()
+    } else {
+      this._showGrimoire()
+    }
+
+    // 6) 즉시 저장
+    this._autoSave()
   }
 
   _dismissViewer() {

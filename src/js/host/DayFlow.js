@@ -209,6 +209,7 @@ export class DayFlow {
       detail: result.virginTriggered
         ? `${nomId}번이 ${tgtId}번을 지명 (처녀 능력 발동!)`
         : `${nomId}번이 ${tgtId}번을 지명`,
+      snapshot: this.engine.serialize(),
     })
 
     if (result.virginTriggered) {
@@ -227,6 +228,7 @@ export class DayFlow {
       target: [playerId],
       label: `⚔️ ${playerId}번 처형`,
       detail: `${playerId}번 처형 확정`,
+      snapshot: this.engine.serialize(),
     })
 
     if (result.gameOver) {

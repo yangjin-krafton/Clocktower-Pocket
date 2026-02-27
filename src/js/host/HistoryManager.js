@@ -33,6 +33,7 @@ export class HistoryManager {
       result: partial.result ?? null,
       label: partial.label || '',
       detail: partial.detail ?? null,
+      snapshot: partial.snapshot ?? null,  // engine.serialize() 스냅샷
     }
     this._entries.push(entry)
 
@@ -109,6 +110,30 @@ export class HistoryManager {
     }
   }
 
+  /**
+   * 특정 엔트리 시점으로 되돌리기 (이후 엔트리 삭제)
+   * @returns {Object|null} 해당 엔트리 (snapshot 포함), 또는 실패 시 null
+   */
+  rewindTo(entryId) {
+    const idx = this._entries.findIndex(e => e.id === entryId)
+    if (idx === -1) return null
+
+    const entry = this._entries[idx]
+
+    // 이후 엔트리 삭제
+    const removed = this._entries.splice(idx + 1)
+
+    // 커서 초기화
+    this._cursor = -1
+
+    // UI 재구축
+    this._emit('reset')
+    this._entries.forEach(e => this._emit('push', e))
+    this._emit('rewind', { entry, removedCount: removed.length })
+
+    return entry
+  }
+
   isViewingHistory() {
     return this._cursor !== -1
   }
@@ -129,10 +154,19 @@ export class HistoryManager {
   // ── 직렬화 / 복원 ──
 
   serialize() {
-    return {
-      entries: JSON.parse(JSON.stringify(this._entries)),
-      nextId:  this._nextId,
-    }
+    // 최근 20개 엔트리만 snapshot 유지 (용량 최적화)
+    const MAX_SNAPSHOTS = 20
+    const len = this._entries.length
+    const entries = this._entries.map((e, i) => {
+      const clone = { ...e }
+      if (clone.snapshot && i < len - MAX_SNAPSHOTS) {
+        clone.snapshot = null
+      } else if (clone.snapshot) {
+        clone.snapshot = JSON.parse(JSON.stringify(clone.snapshot))
+      }
+      return clone
+    })
+    return { entries, nextId: this._nextId }
   }
 
   restore(data) {

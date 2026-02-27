@@ -1,7 +1,7 @@
 /**
- * P-03 RoleCardScreen — 내 역할 카드
+ * P-03 RoleCardScreen — 내 역할 카드 (규칙 페이지 표시)
  */
-import { renderRoleCard } from '../components/RoleCard.js'
+import { RulesScreen } from '../components/RulesScreen.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 export class RoleCardScreen {
@@ -9,6 +9,7 @@ export class RoleCardScreen {
     this.roleId = roleId
     this.team   = team
     this.el     = null
+    this.rulesScreen = null
   }
 
   mount(container) {
@@ -18,7 +19,10 @@ export class RoleCardScreen {
     container.appendChild(this.el)
   }
 
-  unmount() { this.el?.remove() }
+  unmount() {
+    this.rulesScreen?.unmount()
+    this.el?.remove()
+  }
 
   _render() {
     this.el.innerHTML = ''
@@ -43,32 +47,10 @@ export class RoleCardScreen {
       return
     }
 
-    const title = document.createElement('div')
-    title.className = 'rolecard-screen__title'
-    title.textContent = '내 역할'
-    this.el.appendChild(title)
-
-    this.el.appendChild(renderRoleCard(role, { compact: false }))
-
-    // 팀 정렬 배너
-    const teamBanner = document.createElement('div')
-    teamBanner.className = `rolecard-screen__team rolecard-screen__team--${this.team}`
-    teamBanner.textContent = this.team === 'good' ? '🕊️ 선 팀 (Good)' : '😈 악 팀 (Evil)'
-    this.el.appendChild(teamBanner)
-
-    // 능력 팁
-    if (role.firstNight || role.otherNights) {
-      const nightTip = document.createElement('div')
-      nightTip.className = 'card rolecard-screen__night-tip'
-      const nights = []
-      if (role.firstNight)  nights.push('첫째 밤')
-      if (role.otherNights) nights.push('매 밤')
-      nightTip.innerHTML = `
-        <div class="section-label">🌙 밤 행동</div>
-        <div style="font-size:0.78rem;color:var(--text2)">${nights.join(', ')}에 활성화됩니다</div>
-      `
-      this.el.appendChild(nightTip)
-    }
+    // 역할의 규칙 페이지를 RulesScreen으로 표시
+    const rulePage = `${role.id}.md`
+    this.rulesScreen = new RulesScreen({ initialPage: rulePage })
+    this.rulesScreen.mount(this.el)
   }
 }
 

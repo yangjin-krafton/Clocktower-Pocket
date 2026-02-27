@@ -16,7 +16,8 @@
  */
 
 export function mountHostDecisionPanel(data) {
-  const { roleId, actorSeatId, analysis, options, onDecide } = data
+  const { roleId, actorSeatId, roleName, roleIcon, roleIconEmoji, roleTeam,
+          roleAbility, accurateValue, isPoisoned, analysis, options, onDecide } = data
 
   const overlay = document.createElement('div')
   overlay.className = 'hdp-overlay'
@@ -30,12 +31,45 @@ export function mountHostDecisionPanel(data) {
   lockLabel.textContent = '🔒 호스트 전용'
   panel.appendChild(lockLabel)
 
-  // ── 역할 + 대상 헤더 ──
-  const roleHeader = document.createElement('div')
-  roleHeader.className = 'hdp__role-header'
-  // roleId → 역할명 표시는 NightAction에서 이미 처리
-  roleHeader.innerHTML = `<span class="hdp__actor-seat">${actorSeatId}번 자리</span> 행동`
-  panel.appendChild(roleHeader)
+  // ── 역할 컨텍스트 헤더 (아이콘 + 이름 + 대상 + 능력 + 계산 결과) ──
+  const ctxCard = document.createElement('div')
+  ctxCard.className = 'hdp__context-card'
+
+  // 역할 아이콘 + 이름 + 자리
+  const ctxTop = document.createElement('div')
+  ctxTop.className = 'hdp__context-top'
+  const iconHtml = roleIcon?.endsWith?.('.png')
+    ? `<img src="./asset/icons/${roleIcon}" style="width:32px;height:32px;object-fit:contain;">`
+    : `<span style="font-size:1.6rem;">${roleIconEmoji || '?'}</span>`
+  ctxTop.innerHTML = `
+    <div class="hdp__context-icon">${iconHtml}</div>
+    <div class="hdp__context-info">
+      <div class="hdp__context-name">${roleName || roleId}</div>
+      <div class="hdp__context-seat">${actorSeatId}번 자리${isPoisoned ? ' · <span style="color:var(--rd-light)">☠ 중독/취함</span>' : ''}</div>
+    </div>
+  `
+  ctxCard.appendChild(ctxTop)
+
+  // 능력 설명
+  if (roleAbility) {
+    const abilityEl = document.createElement('div')
+    abilityEl.className = 'hdp__context-ability'
+    abilityEl.textContent = roleAbility
+    ctxCard.appendChild(abilityEl)
+  }
+
+  // 정확한 계산 결과
+  const accurateLabel = _formatAccurateLabel(roleId, accurateValue, isPoisoned)
+  if (accurateLabel) {
+    const accEl = document.createElement('div')
+    accEl.className = 'hdp__context-accurate'
+    accEl.innerHTML = isPoisoned
+      ? `🎲 랜덤값 (중독): <b>${accurateLabel}</b>`
+      : `✅ 정확한 값: <b>${accurateLabel}</b>`
+    ctxCard.appendChild(accEl)
+  }
+
+  panel.appendChild(ctxCard)
 
   // ── 게임 상태 카드 ──
   const stateCard = document.createElement('div')
@@ -165,6 +199,28 @@ export function mountHostDecisionPanel(data) {
   return () => overlay.remove()
 }
 
+/** 정확한 계산값을 호스트에게 보기 쉬운 텍스트로 변환 */
+function _formatAccurateLabel(roleId, value, isPoisoned) {
+  if (value === null || value === undefined) return null
+  switch (roleId) {
+    case 'empath':  return `양옆 악 플레이어: ${value}명`
+    case 'chef':    return `이웃한 악 쌍: ${value}쌍`
+    case 'undertaker': {
+      if (!value) return '어젯밤 처형자 없음'
+      return `처형자: ${value.playerId}번 → ${value.roleId}`
+    }
+    case 'washerwoman':
+    case 'librarian':
+    case 'investigator': {
+      if (!value) return null
+      const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
+      return `${value.roleId} → ${pNums}`
+    }
+    default:
+      return typeof value === 'object' ? JSON.stringify(value) : String(value)
+  }
+}
+
 if (!document.getElementById('host-decision-panel-style')) {
   const style = document.createElement('style')
   style.id = 'host-decision-panel-style'
@@ -202,6 +258,62 @@ if (!document.getElementById('host-decision-panel-style')) {
   color: var(--text);
 }
 .hdp__actor-seat { color: var(--gold2); }
+
+/* 역할 컨텍스트 헤더 */
+.hdp__context-card {
+  background: var(--surface);
+  border: 1px solid var(--lead2);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hdp__context-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hdp__context-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hdp__context-info { flex: 1; }
+.hdp__context-name {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.hdp__context-seat {
+  font-size: 0.72rem;
+  color: var(--gold2);
+  margin-top: 1px;
+}
+.hdp__context-ability {
+  font-size: 0.68rem;
+  color: var(--text3);
+  line-height: 1.5;
+  padding: 6px 8px;
+  background: var(--surface2);
+  border-radius: 6px;
+}
+.hdp__context-accurate {
+  font-size: 0.75rem;
+  color: var(--tl-light);
+  padding: 6px 10px;
+  background: rgba(91,179,198,0.08);
+  border: 1px solid rgba(91,179,198,0.2);
+  border-radius: 6px;
+}
+.hdp__context-accurate b {
+  color: var(--text);
+  font-weight: 700;
+}
 
 /* 게임 상태 카드 */
 .hdp__state-card {

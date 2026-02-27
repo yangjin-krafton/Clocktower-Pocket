@@ -157,6 +157,13 @@ export class NightAction {
     this._unmount = mountHostDecisionPanel({
       roleId,
       actorSeatId: actor.id,
+      roleName:    role?.name || roleId,
+      roleIcon:    role?.icon || '?',
+      roleIconEmoji: role?.iconEmoji || '',
+      roleTeam:    role?.team || null,
+      roleAbility: role?.ability || '',
+      accurateValue: accurate,
+      isPoisoned,
       analysis:    adviseResult.analysis,
       options:     adviseResult.options,
       onDecide: (chosen) => {

@@ -965,6 +965,8 @@ export class HostApp {
 
     // 중심 파이 차트 — 자리번호를 각 슬롯 방향 쐐기 안에 표기
     drawOvalPieNumbers(oval, total, {
+      innerR: 20,
+      outerR: 130,       // 반경 3배 확대 → 원의 둘레가 화면 밖으로
       slices: players.map(p => ({
         opacity: p.status !== 'alive' ? 0.35 : undefined,
       })),

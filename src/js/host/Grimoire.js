@@ -314,6 +314,7 @@ export class Grimoire {
     // innerR=22: 중앙 조작 UI(버튼들)가 도넛 구멍 안에 들어오도록 여유 확보
     drawOvalPieNumbers(oval, total, {
       innerR: 22,
+      outerR: 130,       // 반경 3배 확대 → 원의 둘레가 화면 밖으로
       slices: seats.map(roleId => ({
         fill:    roleId ? 'var(--surface2)' : 'var(--bg)',
         opacity: roleId ? undefined : 0.55,

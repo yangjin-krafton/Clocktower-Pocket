@@ -374,12 +374,7 @@ export class PlayerApp {
     }
 
     const el = document.createElement('div')
-    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;`
-
-    const sub = document.createElement('div')
-    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
-    sub.textContent = `${playerCount}인 게임 · 자리 ${mySeat}번 · 다른 자리를 탭해 표시 추가`
-    el.appendChild(sub)
+    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
 
     const oval = document.createElement('div')
     oval.id = 'player-seats-oval'
@@ -433,30 +428,46 @@ export class PlayerApp {
       }
       slot.appendChild(iconEl)
 
-      // 자리 번호 배지
-      const badge = document.createElement('span')
-      badge.style.cssText = `
-        position:absolute;top:2px;left:50%;transform:translateX(-50%);
-        min-width:${badgeMinW}px;height:${badgeH}px;
-        padding:0 4px;border-radius:${Math.round(badgeH/2)}px;
-        background:rgba(10,9,22,0.72);
-        border:1px solid ${isOwn ? 'rgba(212,168,40,0.6)' : 'rgba(92,83,137,0.5)'};
-        font-size:${badgeFontPx}px;font-weight:700;
-        color:${isOwn ? 'var(--gold2)' : 'var(--tl-light)'};
-        display:flex;align-items:center;justify-content:center;z-index:2;
-        letter-spacing:0.01em;
-      `
-      badge.textContent = seatNum
-      slot.appendChild(badge)
-
       if (!isOwn) {
         slot.addEventListener('click', () => this._showSuspicionPicker(seatNum, oval, MARKS))
       }
       return slot
     }
 
-    for (let i = 0; i < playerCount; i++) oval.appendChild(buildSlot(i))
+    for (let i = 0; i < playerCount; i++) {
+      const slot = buildSlot(i)
+      oval.appendChild(slot)
+
+      // 자리 번호 레이블 (슬롯과 중심 사이)
+      const seatNum = i + 1
+      const isOwn = seatNum === mySeat
+      const angle = (2 * Math.PI * i) / playerCount - Math.PI / 2
+      const x = 50 + RX * Math.cos(angle)
+      const y = 50 + RY * Math.sin(angle)
+      const labelX = 50 + (x - 50) * 0.55
+      const labelY = 50 + (y - 50) * 0.55
+      const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
+
+      const label = document.createElement('div')
+      label.style.cssText = `
+        position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;
+        transform:translate(-50%,-50%);
+        font-size:${labelFontPx}px;font-weight:700;
+        color:${isOwn ? 'var(--gold2)' : 'var(--gold2)'};
+        pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);
+        z-index:1;
+      `
+      label.textContent = seatNum
+
+      oval.appendChild(label)
+    }
     el.appendChild(oval)
+
+    const sub = document.createElement('div')
+    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
+    sub.textContent = `${playerCount}인 게임 · 자리 ${mySeat}번 · 다른 자리를 탭해 표시 추가`
+    el.appendChild(sub)
+
     this.content.appendChild(el)
   }
 

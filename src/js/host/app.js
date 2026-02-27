@@ -888,12 +888,7 @@ export class HostApp {
     }
 
     const el = document.createElement('div')
-    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;`
-
-    const sub = document.createElement('div')
-    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
-    sub.textContent = `${total}인 게임 · 호스트 전용 전체 공개`
-    el.appendChild(sub)
+    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
 
     const oval = document.createElement('div')
     oval.style.cssText = `position:relative;width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`
@@ -983,6 +978,12 @@ export class HostApp {
     })
 
     el.appendChild(oval)
+
+    const sub = document.createElement('div')
+    sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);'
+    sub.textContent = `${total}인 게임 · 호스트 전용 전체 공개`
+    el.appendChild(sub)
+
     this.container.appendChild(el)
   }
 }

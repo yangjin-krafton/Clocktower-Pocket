@@ -15,7 +15,7 @@
  *   onConfirm   {Function}  onConfirm(selectedIds[])
  */
 
-import { calcSlotMetrics, ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+import { calcSlotMetrics, ovalSlotPos, ovalSelfRotOffset, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 
 const TEAM_TITLE_COLOR = {
   town:    'var(--bl-light)',
@@ -91,6 +91,10 @@ export function mountOvalSelectPanel(data) {
   const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
   const { slotPx } = calcSlotMetrics(total, containerW, 40)   // minSlot=40
 
+  // 중앙 파이 차트 (정적 — 선택 변경 시 재생성 불필요)
+  // innerR=14: 중앙 카운터 텍스트가 도넛 구멍 안에 들어오도록
+  let pieSvg = null
+
   // 중앙 카운터
   const center = document.createElement('div')
   center.className = 'oval-sel__center'
@@ -104,8 +108,10 @@ export function mountOvalSelectPanel(data) {
   }
 
   function buildSlots() {
-    // 기존 슬롯 제거 (center 제외)
-    Array.from(oval.children).forEach(c => { if (c !== center) c.remove() })
+    // 기존 슬롯 제거 (center·pieSvg 제외)
+    Array.from(oval.children).forEach(c => { if (c !== center && c !== pieSvg) c.remove() })
+    // pieSvg 가 있으면 맨 앞(z-order 가장 낮음)에 유지
+    if (pieSvg) oval.insertBefore(pieSvg, oval.firstChild)
 
     players.forEach((p, i) => {
       const { x, y } = ovalSlotPos(i, total, rotOffset)
@@ -163,6 +169,16 @@ export function mountOvalSelectPanel(data) {
 
   updateCenter()
   buildSlots()
+
+  // 파이 차트는 최초 1회만 생성 (슬롯 선택 변경 시 재생성 불필요)
+  pieSvg = drawOvalPieNumbers(oval, total, {
+    rotOffset,
+    innerR: 14,
+    slices: players.map(p => ({
+      opacity: p.status !== 'alive' ? 0.28 : undefined,
+    })),
+  })
+
   wrap.appendChild(oval)
   panel.appendChild(wrap)
 

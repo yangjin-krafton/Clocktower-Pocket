@@ -13,7 +13,7 @@ import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode }           from '../room-code.js'
-import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
+import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 
 export class Grimoire {
   /**
@@ -249,11 +249,6 @@ export class Grimoire {
     oval.style.width  = ovalW + 'px'
     oval.style.height = ovalH + 'px'
 
-    // Grimoire 전용 배지 크기 (가로형 pill 배지)
-    const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
-    const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
-    const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
-
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',
       outsider:  'rgba(91,179,198,0.65)',
@@ -306,20 +301,23 @@ export class Grimoire {
         iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.5)}px">+</span>`
       }
 
-      // 자리 번호 배지
-      const badge = document.createElement('span')
-      badge.className = 'gl-seat-num'
-      badge.style.cssText = `font-size:${badgeFontPx}px;min-width:${badgeMinW}px;height:${badgeH}px;border-radius:${Math.round(badgeH/2)}px;`
-      badge.textContent = i + 1
-
       slot.appendChild(iconEl)
-      slot.appendChild(badge)
 
       slot.addEventListener('click', () => {
         this._selectedSeat = (this._selectedSeat === i) ? null : i
         this._render()
       })
       oval.appendChild(slot)
+    })
+
+    // 중심 파이 차트 — 자리번호를 각 슬롯 방향 쐐기 안에 표기
+    // innerR=22: 중앙 조작 UI(버튼들)가 도넛 구멍 안에 들어오도록 여유 확보
+    drawOvalPieNumbers(oval, total, {
+      innerR: 22,
+      slices: seats.map(roleId => ({
+        fill:    roleId ? 'var(--surface2)' : 'var(--bg)',
+        opacity: roleId ? undefined : 0.55,
+      })),
     })
 
     // ── 타원 중앙 조작 UI ────────────────────────────────────

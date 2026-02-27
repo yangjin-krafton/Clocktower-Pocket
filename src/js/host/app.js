@@ -18,7 +18,7 @@ import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { encodeRoomCode, formatCode }           from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
-import { calcOvalLayout, ovalSlotPos }          from '../utils/ovalLayout.js'
+import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -877,7 +877,7 @@ export class HostApp {
     const total = players.length
 
     // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
-    const { ovalW, ovalH, rawH, slotPx, iconPx, badgeFontPx, badgeSize } = calcOvalLayout(total, 106)
+    const { ovalW, ovalH, rawH, slotPx, iconPx } = calcOvalLayout(total, 106)
     const contentH = rawH - 80   // el min-height 용 (subheader 제외)
 
     const TEAM_BORDER = {
@@ -930,17 +930,6 @@ export class HostApp {
       } else { iconEl.textContent = role?.iconEmoji || '?' }
       slot.appendChild(iconEl)
 
-      const badge = document.createElement('span')
-      badge.style.cssText = `
-        position:absolute;bottom:-4px;right:-4px;
-        min-width:${badgeSize}px;height:${badgeSize}px;padding:0 3px;border-radius:${Math.round(badgeSize/2)}px;
-        background:var(--surface2);border:1px solid var(--lead2);
-        font-size:${badgeFontPx}px;font-weight:700;color:var(--text3);
-        display:flex;align-items:center;justify-content:center;z-index:1;
-      `
-      badge.textContent = player.id
-      slot.appendChild(badge)
-
       slot.addEventListener('click', () => {
         document.getElementById('host-seat-popup')?.remove()
         const ov = document.createElement('div')
@@ -973,6 +962,13 @@ export class HostApp {
       })
 
       oval.appendChild(slot)
+    })
+
+    // 중심 파이 차트 — 자리번호를 각 슬롯 방향 쐐기 안에 표기
+    drawOvalPieNumbers(oval, total, {
+      slices: players.map(p => ({
+        opacity: p.status !== 'alive' ? 0.35 : undefined,
+      })),
     })
 
     el.appendChild(oval)

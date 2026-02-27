@@ -88,3 +88,98 @@ export function ovalSelfRotOffset(selfSeatId, total) {
   const selfIdx = selfSeatId != null ? selfSeatId - 1 : 0
   return Math.PI / 2 - (2 * Math.PI * selfIdx / total)
 }
+
+/**
+ * 타원 중심에 SVG 파이 차트를 그려 각 슬롯 방향의 자리번호를 표시합니다.
+ *
+ * 좌표계: viewBox="0 0 100 100" preserveAspectRatio="none"
+ *  → CSS left%/top% 와 동일한 퍼센트 기준 좌표계.
+ *  → 슬롯은 (50 + 43·cos θ, 50 + 43·sin θ) 에 위치.
+ *  → 파이 슬라이스도 같은 각도로 방사(放射)되어 각 슬롯 방향을 가리킴.
+ *  → 2:3 portrait 이므로 텍스트에 scale(1, 0.667) 적용해 세로 왜곡을 보정.
+ *
+ * @param {HTMLElement} ovalEl       position:relative 타원 컨테이너
+ * @param {number}      total        자리 수
+ * @param {Object}      [opts]
+ * @param {number}      [opts.rotOffset=-Math.PI/2]  회전 오프셋 (기본 12시 방향)
+ * @param {number}      [opts.innerR=8]              도넛 안쪽 반지름 (viewBox 단위)
+ *                                                   중앙 UI 가 있으면 크게 설정
+ * @param {Array}       [opts.slices]  per-slot 스타일 [{fill?, textFill?, opacity?}]
+ * @returns {SVGSVGElement}  생성된 SVG 요소
+ */
+export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
+  const { rotOffset = -Math.PI / 2, innerR = 8, slices = [] } = opts
+
+  // 파이 기하
+  const cx        = 50
+  const cy        = 50
+  const pieR      = 30          // 슬롯(반지름 43) 안쪽으로 충분한 여유
+  const textR     = innerR + (pieR - innerR) * 0.60
+  const halfSlice = Math.PI / total
+  const halfGap   = Math.min(0.025, halfSlice * 0.06)  // 슬라이스 간격
+
+  // 폰트 크기: 슬라이스 호 너비에 맞춰 조정 (viewBox 단위)
+  const chord  = 2 * textR * Math.sin(halfSlice)
+  const fontSz = Math.max(2.2, Math.min(chord * 0.72, 5.5))
+
+  const NS  = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(NS, 'svg')
+  svg.setAttribute('viewBox',             '0 0 100 100')
+  svg.setAttribute('preserveAspectRatio', 'none')
+  svg.setAttribute('width',              '100%')
+  svg.setAttribute('height',             '100%')
+  svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;overflow:visible;'
+
+  for (let i = 0; i < total; i++) {
+    const mid = (2 * Math.PI * i) / total + rotOffset
+    const a0  = mid - halfSlice + halfGap
+    const a1  = mid + halfSlice - halfGap
+    const sd  = slices[i] || {}
+
+    // 파이 슬라이스 경로
+    const ox0 = cx + pieR   * Math.cos(a0), oy0 = cy + pieR   * Math.sin(a0)
+    const ox1 = cx + pieR   * Math.cos(a1), oy1 = cy + pieR   * Math.sin(a1)
+    const ix1 = cx + innerR * Math.cos(a1), iy1 = cy + innerR * Math.sin(a1)
+    const ix0 = cx + innerR * Math.cos(a0), iy0 = cy + innerR * Math.sin(a0)
+    const lg  = (halfSlice * 2 - halfGap * 2) > Math.PI ? 1 : 0
+
+    const path = document.createElementNS(NS, 'path')
+    path.setAttribute('d', [
+      `M ${ox0.toFixed(2)} ${oy0.toFixed(2)}`,
+      `A ${pieR} ${pieR} 0 ${lg} 1 ${ox1.toFixed(2)} ${oy1.toFixed(2)}`,
+      `L ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+      `A ${innerR} ${innerR} 0 ${lg} 0 ${ix0.toFixed(2)} ${iy0.toFixed(2)}`,
+      'Z',
+    ].join(' '))
+    path.setAttribute('fill',         sd.fill   || 'var(--surface2)')
+    path.setAttribute('stroke',       sd.stroke || 'var(--lead2)')
+    path.setAttribute('stroke-width', '0.4')
+    if (sd.opacity != null) path.setAttribute('opacity', sd.opacity)
+    svg.appendChild(path)
+
+    // 자리번호 텍스트
+    // scale(1, 0.667) 로 2:3 종장(縱長) 왜곡을 보정 — 텍스트가 정방형으로 보임
+    const tx = cx + textR * Math.cos(mid)
+    const ty = cy + textR * Math.sin(mid)
+    const g  = document.createElementNS(NS, 'g')
+    g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) scale(1,0.667)`)
+
+    const text = document.createElementNS(NS, 'text')
+    text.setAttribute('x',                '0')
+    text.setAttribute('y',                '0')
+    text.setAttribute('text-anchor',      'middle')
+    text.setAttribute('dominant-baseline','middle')
+    text.setAttribute('font-size',        fontSz.toFixed(2))
+    text.setAttribute('font-weight',      '700')
+    text.setAttribute('fill',             sd.textFill || 'var(--text3)')
+    if (sd.opacity != null) text.setAttribute('opacity', sd.opacity)
+    text.textContent = i + 1
+
+    g.appendChild(text)
+    svg.appendChild(g)
+  }
+
+  // 슬롯보다 아래(z-order 낮음)에 삽입
+  ovalEl.insertBefore(svg, ovalEl.firstChild)
+  return svg
+}

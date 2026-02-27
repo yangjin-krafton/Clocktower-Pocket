@@ -874,22 +874,45 @@ export class HostApp {
 
     const { players } = state
     const total = players.length
-    const RX = 43, RY = 43
 
-    // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
-    const acRect  = document.getElementById('app-content')?.getBoundingClientRect()
-    const availW  = acRect?.width  || this.container.getBoundingClientRect().width || 320
-    const availH  = (acRect?.height || 520) - 80 - 26
-    const ovalW   = Math.floor(Math.min(availW, availH * 2 / 3))
-    const ovalH   = Math.floor(ovalW * 1.5)
-    const contentH = (acRect?.height || 520) - 80   // el min-height 용
+    // 가용 공간 (page-content: padding top12 + bottom68 = 80, sub header ~26px)
+    const acRect   = document.getElementById('app-content')?.getBoundingClientRect()
+    const availW   = this.container.getBoundingClientRect().width || (acRect?.width || 360)
+    const availH   = (acRect?.height || 520) - 80 - 26
+    const contentH = (acRect?.height || 520) - 80
 
-    const _RX_px    = ovalW * 0.43
-    const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
-    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(ovalW * 0.28)))
-    const iconPx      = Math.round(slotPx * 0.62)
+    // 식탁 배치: 화면 비율로 4변에 인원 분배 (세로 긴 quad)
+    const R        = availW / availH                        // 보통 portrait < 1
+    const nH_total = Math.round(total * R / (R + 1))        // 상+하 합계
+    const nV_total = total - nH_total                        // 좌+우 합계
+    const nTop     = Math.ceil(nH_total / 2)
+    const nBottom  = Math.floor(nH_total / 2)
+    const nRight   = Math.ceil(nV_total / 2)
+    const nLeft    = Math.floor(nV_total / 2)
+
+    // 슬롯 최대 크기: 가장 조밀한 변 기준 역산
+    const maxFromH  = availW / (Math.max(nTop, nBottom, 1) + 1) * 0.85
+    const maxFromV  = availH / (Math.max(nLeft, nRight, 1) + 1) * 0.85
+    const slotPx    = Math.max(28, Math.min(maxFromH, maxFromV, 104))
+    const iconPx    = Math.round(slotPx * 0.62)
     const badgeFontPx = Math.max(9,  Math.round(slotPx * 0.18))
-    const badgeSize   = Math.max(16, Math.round(slotPx * 0.22))
+    const badgeSize   = Math.max(14, Math.round(slotPx * 0.24))
+
+    // 위치 계산 (시계방향: 상→우→하←좌↑)
+    function getTablePos(idx) {
+      if (idx < nTop) {
+        return { x: availW * (idx + 1) / (nTop + 1),                y: slotPx / 2 }
+      } else if (idx < nTop + nRight) {
+        const j = idx - nTop
+        return { x: availW - slotPx / 2,                             y: availH * (j + 1) / (nRight + 1) }
+      } else if (idx < nTop + nRight + nBottom) {
+        const j = idx - nTop - nRight
+        return { x: availW * (nBottom - j) / (nBottom + 1),          y: availH - slotPx / 2 }
+      } else {
+        const j = idx - nTop - nRight - nBottom
+        return { x: slotPx / 2,                                       y: availH * (nLeft - j) / (nLeft + 1) }
+      }
+    }
 
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',
@@ -907,13 +930,13 @@ export class HostApp {
     el.appendChild(sub)
 
     const oval = document.createElement('div')
-    oval.style.cssText = `position:relative;width:${ovalW}px;height:${ovalH}px;overflow:visible;flex-shrink:0;`
+    oval.style.cssText = `position:relative;width:${availW}px;height:${availH}px;overflow:visible;flex-shrink:0;`
 
     players.forEach((player, i) => {
       const role  = ROLES_BY_ID[player.role]
-      const angle = (2 * Math.PI * i) / total - Math.PI / 2
-      const x = 50 + RX * Math.cos(angle)
-      const y = 50 + RY * Math.sin(angle)
+      const { x: _xPx, y: _yPx } = getTablePos(i)
+      const x = _xPx / availW * 100
+      const y = _yPx / availH * 100
       const isDead = player.status !== 'alive'
 
       const slot = document.createElement('div')

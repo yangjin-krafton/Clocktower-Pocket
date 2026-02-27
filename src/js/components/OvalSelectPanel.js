@@ -156,29 +156,6 @@ export function mountOvalSelectPanel(data) {
       }
 
       oval.appendChild(slot)
-
-      // 자리 번호 레이블 (슬롯과 중심 사이)
-      const labelX = 50 + (x - 50) * 0.55  // 슬롯과 중심 중간 지점
-      const labelY = 50 + (y - 50) * 0.55
-      const labelFontPx = Math.max(18, Math.round(slotPx * 0.5))
-
-      const label = document.createElement('div')
-      label.className = 'oval-sel__label'
-      label.style.cssText = `
-        position: absolute;
-        left: ${labelX.toFixed(2)}%;
-        top: ${labelY.toFixed(2)}%;
-        transform: translate(-50%, -50%);
-        font-size: ${labelFontPx}px;
-        font-weight: 700;
-        color: ${isDead ? 'rgba(212, 168, 40, 0.3)' : 'var(--gold2)'};
-        pointer-events: none;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-        z-index: 1;
-      `
-      label.textContent = p.id
-
-      oval.appendChild(label)
     })
 
     oval.appendChild(center)

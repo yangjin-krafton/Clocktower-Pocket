@@ -183,9 +183,9 @@ export class RulesScreen {
         i++; continue
       }
       // 테이블 (| 로 시작하는 줄 연속 수집)
-      if (line.startsWith('| ')) {
+      if (line.startsWith('|')) {
         const rows = []
-        while (i < lines.length && lines[i].startsWith('| ')) {
+        while (i < lines.length && lines[i].startsWith('|')) {
           rows.push(lines[i])
           i++
         }

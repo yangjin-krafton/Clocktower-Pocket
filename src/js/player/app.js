@@ -383,7 +383,6 @@ export class PlayerApp {
 
     const oval = document.createElement('div')
     oval.id = 'player-seats-oval'
-    oval.style.cssText = `position:relative;width:${ovalW}px;height:${ovalH}px;overflow:visible;flex-shrink:0;`
 
     const buildSlot = (i) => {
       const seatNum    = i + 1

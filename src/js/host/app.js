@@ -896,6 +896,7 @@ export class HostApp {
     el.appendChild(sub)
 
     const oval = document.createElement('div')
+    oval.style.cssText = `position:relative;width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`
 
     players.forEach((player, i) => {
       const role   = ROLES_BY_ID[player.role]

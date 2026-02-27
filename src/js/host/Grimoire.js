@@ -244,10 +244,8 @@ export class Grimoire {
     const oval = document.createElement('div')
     oval.className = 'gl-seat-oval'
 
-    // 뷰포트 높이 기준으로 타원 크기 계산 (CSS .gl-seat-oval 와 동일한 공식)
-    const { ovalW, ovalH, slotPx, iconPx } = calcOvalLayout(total, 360, true)
-    oval.style.width  = ovalW + 'px'
-    oval.style.height = ovalH + 'px'
+    // 뷰포트 높이 기준으로 타원 크기 계산 (슬롯 크기 계산용)
+    const { ovalW, slotPx, iconPx } = calcOvalLayout(total, 360, true)
 
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',

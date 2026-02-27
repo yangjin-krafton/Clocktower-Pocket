@@ -17,6 +17,7 @@ import { HistoryBar }                           from './HistoryBar.js'
 import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { encodeRoomCode, formatCode }           from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
+import { ThemeManager }                         from '../ThemeManager.js'
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -49,6 +50,7 @@ export class HostApp {
   }
 
   init() {
+    ThemeManager.set('host')
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
     this._buildTabs()
@@ -60,6 +62,7 @@ export class HostApp {
    * @param {string} saveId  GameSaveManager 슬롯 ID
    */
   initFromSave(saveId) {
+    ThemeManager.set('host')
     const data = GameSaveManager.load(saveId)
     if (!data) {
       this.init()

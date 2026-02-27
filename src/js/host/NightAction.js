@@ -8,6 +8,7 @@ import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
 import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
+import { ThemeManager } from '../ThemeManager.js'
 
 export class NightAction {
   constructor({ engine, onStepDone }) {
@@ -114,11 +115,12 @@ export class NightAction {
     this._unmount = mountSpyModeSelector({
       players: allPlayers,
       onSelected: (mode) => {
-        // ② 선택된 방식으로 오발 그리모어 공개
+        // ② 선택된 방식으로 오발 그리모어 공개 (참가자 화면)
+        ThemeManager.pushTemp('player')
         this._unmount = mountSpyGrimoirePanel({
           players: allPlayers,
           mode,
-          onNext: () => this._done('spy'),
+          onNext: () => { ThemeManager.popTemp(); this._done('spy') },
         })
       },
     })
@@ -233,6 +235,7 @@ export class NightAction {
       selectablePlayers = this.engine.state.players // 사망자도 포함
     }
 
+    ThemeManager.pushTemp('player')  // 참가자 지목 화면 → 참가자 테마
     this._unmount = mountOvalSelectPanel({
       title:      role?.name || roleId,
       roleIcon:   role?.icon || '?',
@@ -241,6 +244,7 @@ export class NightAction {
       selfSeatId: actor.id,
       maxSelect:  role?.maxSelect || 1,
       onConfirm: (ids) => {
+        ThemeManager.popTemp()  // 호스트 테마 복원
         this.engine.recordNightAction(roleId, actor.id, ids)
 
         // Fortune Teller: 정보 계산 후 RevealPanel 포함 InfoPanel 표시

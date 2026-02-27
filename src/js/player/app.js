@@ -11,6 +11,7 @@ import { Memo }                       from './Memo.js'
 import { CharacterDict }              from './CharacterDict.js'
 import { RulesScreen }                from '../components/RulesScreen.js'
 import { ROLES_BY_ID }                from '../data/roles-tb.js'
+import { ThemeManager }               from '../ThemeManager.js'
 
 const STORAGE_KEY = 'ctp_player_session'
 
@@ -56,6 +57,7 @@ export class PlayerApp {
   }
 
   init() {
+    ThemeManager.set('player')
     // 저장된 세션 복원 시도
     try {
       const saved = localStorage.getItem(STORAGE_KEY)

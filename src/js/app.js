@@ -3,6 +3,7 @@
  * 이야기꾼 모드로 진입합니다.
  */
 import { GameSaveManager } from './GameSaveManager.js'
+import { ThemeManager }    from './ThemeManager.js'
 
 const content = document.getElementById('app-content')
 const tabBar = document.getElementById('tab-bar')
@@ -62,6 +63,7 @@ window.switchTab = switchTab
 window.goHome = () => {
   appInstance = null
   currentTab  = 'role'
+  ThemeManager.set(null)  // 랜딩 기본 테마로 복원
   buildTabs()
   showLanding()
 }

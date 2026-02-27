@@ -13,6 +13,7 @@
 import { renderPlayerChip } from './PlayerChip.js'
 import { mountRevealPanel }  from './RevealPanel.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
+import { ThemeManager } from '../ThemeManager.js'
 
 // 캐릭터 이름 → 진영 매핑
 const ROLE_TEAM_MAP = {
@@ -103,9 +104,13 @@ export function mountInfoPanel(data) {
   const onConfirmOverride = data.revealData
     ? () => {
         overlay.remove()
+        ThemeManager.pushTemp('player')  // 참가자에게 보여주는 화면 → 참가자 테마
         mountRevealPanel({
           ...data.revealData,
-          onNext: () => data.onConfirm?.(),
+          onNext: () => {
+            ThemeManager.popTemp()  // 호스트 테마 복원
+            data.onConfirm?.()
+          },
         })
       }
     : () => {

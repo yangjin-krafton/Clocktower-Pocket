@@ -388,6 +388,82 @@ body {
 
 /* ── 카운트다운 스타일은 LobbyBanner.js 내부에서 관리 ── */
 
+/* ══════════════════════════════════════════════
+   테마: 호스트 (어두운 갈색 — warm brown)
+   ══════════════════════════════════════════════ */
+[data-theme="host"] {
+  --bg:       #110e08;
+  --surface:  #1c1810;
+  --surface2: #262014;
+  --lead:     #0e0c06;
+  --lead2:    #2a2418;
+
+  --pu-base:  #B09060;
+  --pu-light: #D0B888;
+  --pu-dark:  #806840;
+
+  --text:     #F5F0E8;
+  --text2:    #D4C8B0;
+  --text3:    #A89878;
+  --text4:    #7A6E58;
+}
+[data-theme="host"] body {
+  background: radial-gradient(ellipse at 50% 0%, #2a2010 0%, #080604 60%);
+}
+[data-theme="host"] .app {
+  box-shadow: 0 0 0 1px #3a3020, 0 0 40px rgba(176,144,96,0.1);
+}
+[data-theme="host"] .page-header::after,
+[data-theme="host"] .tab-bar::before {
+  background: linear-gradient(90deg,
+    transparent,
+    #4a3818  12%,
+    #B09060  30%,
+    #D4A828  50%,
+    #B09060  70%,
+    #4a3818  88%,
+    transparent
+  );
+}
+
+/* ══════════════════════════════════════════════
+   테마: 참가자 (어두운 보라 — deep purple)
+   ══════════════════════════════════════════════ */
+[data-theme="player"] {
+  --bg:       #0a0818;
+  --surface:  #12102a;
+  --surface2: #1a1636;
+  --lead:     #08061a;
+  --lead2:    #18143a;
+
+  --pu-base:  #8878C8;
+  --pu-light: #B0A8E0;
+  --pu-dark:  #5C509C;
+
+  --text:     #F0EDFF;
+  --text2:    #C8C0E8;
+  --text3:    #9C90C8;
+  --text4:    #746898;
+}
+[data-theme="player"] body {
+  background: radial-gradient(ellipse at 50% 0%, #1a1448 0%, #060410 60%);
+}
+[data-theme="player"] .app {
+  box-shadow: 0 0 0 1px #302870, 0 0 40px rgba(136,120,200,0.15);
+}
+[data-theme="player"] .page-header::after,
+[data-theme="player"] .tab-bar::before {
+  background: linear-gradient(90deg,
+    transparent,
+    #2a2060  12%,
+    #8878C8  30%,
+    #B0A8E0  50%,
+    #8878C8  70%,
+    #2a2060  88%,
+    transparent
+  );
+}
+
 /* ── 반응형: 600px 이상 (태블릿 / 넓은 폰) ── */
 /* body padding/align 변경 금지 — tab-bar는 position:fixed 뷰포트 기준이므로
    body에 padding을 주면 앱과 탭바 사이 gap이 생김 */

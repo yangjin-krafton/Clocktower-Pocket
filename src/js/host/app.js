@@ -875,12 +875,18 @@ export class HostApp {
     const { players } = state
     const total = players.length
     const RX = 43, RY = 43
-    const containerW  = this.container.getBoundingClientRect().width
-                     || document.getElementById('app-content')?.getBoundingClientRect().width
-                     || 320
-    const _RX_px    = containerW * 0.43
+
+    // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
+    const acRect  = document.getElementById('app-content')?.getBoundingClientRect()
+    const availW  = acRect?.width  || this.container.getBoundingClientRect().width || 320
+    const availH  = (acRect?.height || 520) - 80 - 26
+    const ovalW   = Math.floor(Math.min(availW, availH * 2 / 3))
+    const ovalH   = Math.floor(ovalW * 1.5)
+    const contentH = (acRect?.height || 520) - 80   // el min-height 용
+
+    const _RX_px    = ovalW * 0.43
     const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
-    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
+    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(ovalW * 0.28)))
     const iconPx      = Math.round(slotPx * 0.62)
     const badgeFontPx = Math.max(9,  Math.round(slotPx * 0.18))
     const badgeSize   = Math.max(16, Math.round(slotPx * 0.22))
@@ -893,7 +899,7 @@ export class HostApp {
     }
 
     const el = document.createElement('div')
-    el.style.cssText = 'padding:8px 0 4px;'
+    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;`
 
     const sub = document.createElement('div')
     sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
@@ -901,7 +907,7 @@ export class HostApp {
     el.appendChild(sub)
 
     const oval = document.createElement('div')
-    oval.style.cssText = 'position:relative;width:100%;aspect-ratio:2/3;overflow:visible;'
+    oval.style.cssText = `position:relative;width:${ovalW}px;height:${ovalH}px;overflow:visible;flex-shrink:0;`
 
     players.forEach((player, i) => {
       const role  = ROLES_BY_ID[player.role]

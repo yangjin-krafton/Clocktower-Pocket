@@ -345,10 +345,18 @@ export class PlayerApp {
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
     const RX = 43, RY = 43
-    const contentW  = this.content.getBoundingClientRect().width || 320
-    const _RX_px    = contentW * 0.43
+
+    // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
+    const acRect  = document.getElementById('app-content')?.getBoundingClientRect()
+    const availW  = acRect?.width  || this.content.getBoundingClientRect().width || 320
+    const availH  = (acRect?.height || 520) - 80 - 26
+    const ovalW   = Math.floor(Math.min(availW, availH * 2 / 3))
+    const ovalH   = Math.floor(ovalW * 1.5)
+    const contentH = (acRect?.height || 520) - 80
+
+    const _RX_px    = ovalW * 0.43
     const _minChord = 2 * Math.sin(Math.PI / playerCount) * _RX_px
-    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(contentW * 0.28)))
+    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(ovalW * 0.28)))
     const iconPx    = Math.round(slotPx * 0.62)
     const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
     const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
@@ -366,7 +374,7 @@ export class PlayerApp {
     }
 
     const el = document.createElement('div')
-    el.style.cssText = 'padding:8px 0 4px;'
+    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;`
 
     const sub = document.createElement('div')
     sub.style.cssText = 'text-align:center;font-size:0.65rem;color:var(--text4);margin-bottom:4px;'
@@ -375,7 +383,7 @@ export class PlayerApp {
 
     const oval = document.createElement('div')
     oval.id = 'player-seats-oval'
-    oval.style.cssText = 'position:relative;width:100%;aspect-ratio:2/3;overflow:visible;'
+    oval.style.cssText = `position:relative;width:${ovalW}px;height:${ovalH}px;overflow:visible;flex-shrink:0;`
 
     const buildSlot = (i) => {
       const seatNum    = i + 1

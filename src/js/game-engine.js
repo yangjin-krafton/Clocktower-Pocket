@@ -214,7 +214,7 @@ export class GameEngine {
           this._log('night', `수도사가 ${target.name}을(를) 보호했습니다.`)
         } else if (target.role === 'soldier' && !target.isPoisoned) {
           // 군인 면역
-          this._log('night', `군인 ${target.name}은(는) 데몬 공격에 면역입니다.`)
+          this._log('night', `군인 ${target.name}은(는) 임프 공격에 면역입니다.`)
         } else if (target.role === 'mayor' && !target.isPoisoned) {
           // 시장 튕김 — 살아있는 다른 플레이어로 튕김
           this._handleMayorBounce(impKillAction.actorId, targetId)
@@ -388,7 +388,7 @@ export class GameEngine {
     const isActualDemon = target.role === 'imp'
     if (isActualDemon && !actor.isPoisoned && !actor.isDrunk) {
       this.killPlayer(targetId, 'slayer')
-      this._log('day', `데몬 적중! ${target.name} 즉시 사망.`)
+      this._log('day', `임프 적중! ${target.name} 즉시 사망.`)
       this.emit('stateChanged', this.state)
       return { hit: true, ...this.checkWinCondition() }
     } else {
@@ -448,7 +448,7 @@ export class GameEngine {
     const n = players.length
     const left = players[(idx - 1 + n) % n]
     const right = players[(idx + 1) % n]
-    // 독/취함 시 오정보 가능 (스토리텔러 재량 → 앱은 정보 제공, 조작은 호스트가)
+    // 독/취함 시 오정보 가능 (이야기꾼 재량 → 앱은 정보 제공, 조작은 호스트가)
     let count = 0
     if (left.team === 'evil' || (left.role === 'recluse' && left.registeredAs === 'evil')) count++
     if (right.team === 'evil' || (right.role === 'recluse' && right.registeredAs === 'evil')) count++
@@ -524,7 +524,7 @@ export class GameEngine {
     const alive = this.state.players.filter(p => p.status === 'alive')
     const demon = alive.find(p => p.role === 'imp')
 
-    // 데몬 사망 → 선 승리 (Scarlet Woman 처리 후)
+    // 임프 사망 → 선 승리 (Scarlet Woman 처리 후)
     if (!demon) {
       return { gameOver: true, winner: 'good', reason: 'demon_dead' }
     }
@@ -596,7 +596,7 @@ export class GameEngine {
   }
 
   /**
-   * 데몬 블러프 3개 생성 (게임에 없는 townsfolk/outsider 역할)
+   * 임프 블러프 3개 생성 (게임에 없는 townsfolk/outsider 역할)
    */
   getBluffs() {
     const usedRoles = new Set(this.state.players.map(p => p.role))

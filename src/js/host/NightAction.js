@@ -61,7 +61,7 @@ export class NightAction {
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ')
     const demonNums  = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
 
-    const minionMsg = `미니언: ${minionNums}\n데몬: ${demonNums}\n블러프: ${bluffText || '없음'}`
+    const minionMsg = `미니언: ${minionNums}\n임프: ${demonNums}\n블러프: ${bluffText || '없음'}`
     this._unmount = mountInfoPanel({
       title:    '미니언 공개',
       roleIcon: '🎭',
@@ -71,14 +71,14 @@ export class NightAction {
         roleIcon: '🎭',
         roleName: '미니언 공개',
         roleTeam: 'minion',
-        message:  `데몬: ${demonNums}\n블러프: ${bluffText || '없음'}`,
+        message:  `임프: ${demonNums}\n블러프: ${bluffText || '없음'}`,
         players:  minions.map(p => ({ id: p.id })),
       },
       onConfirm: () => this._done('minion-info'),
     })
   }
 
-  // ── 데몬 정보 ──
+  // ── 임프 정보 ──
   _showDemonInfo(demons) {
     if (!demons || demons.length === 0) { this._done('demon-info'); return }
     const minions = this.engine.state.players.filter(p =>
@@ -90,13 +90,13 @@ export class NightAction {
 
     const demonMsg = `미니언: ${minionNums}\n블러프 3개: ${bluffText}`
     this._unmount = mountInfoPanel({
-      title:    '데몬 정보',
+      title:    '임프 정보',
       roleIcon: '👿',
       message:  demonMsg,
       players:  minions,
       revealData: {
         roleIcon: '👿',
-        roleName: '데몬 정보',
+        roleName: '임프 정보',
         roleTeam: 'demon',
         message:  `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
         players:  minions.map(p => ({ id: p.id })),
@@ -246,7 +246,7 @@ export class NightAction {
         // Fortune Teller: 정보 계산 후 RevealPanel 포함 InfoPanel 표시
         if (roleId === 'fortuneteller' && ids.length === 2) {
           const result = this.engine.calcFortuneTellerInfo(actor.id, ids)
-          const msg    = result ? '✅ 예, 그 중 한 명은 데몬입니다' : '❌ 아니오, 데몬이 없습니다'
+          const msg    = result ? '✅ 예, 그 중 한 명은 임프입니다' : '❌ 아니오, 임프가 없습니다'
           mountInfoPanel({
             title:    '점쟁이 결과',
             roleIcon: '🔮',

@@ -345,7 +345,7 @@ export class Grimoire {
     if (filledCnt > 0) {
       const badgeRow = document.createElement('div')
       badgeRow.className = 'gl-oval-center__badges'
-      const BADGE = { townsfolk:['badge-town','마을'], outsider:['badge-outside','아웃'], minion:['badge-minion','미니언'], demon:['badge-minion','데몬'] }
+      const BADGE = { townsfolk:['badge-town','마을'], outsider:['badge-outside','아웃'], minion:['badge-minion','미니언'], demon:['badge-minion','임프'] }
       Object.entries(counts).forEach(([team, cnt]) => {
         if (!cnt) return
         const [cls, label] = BADGE[team]
@@ -400,7 +400,7 @@ export class Grimoire {
     } else if (comp) {
       const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
       const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
-      if (counts.demon < 1)                 { msg = '데몬 1개 필요';                          shortMsg = '데몬 필요' }
+      if (counts.demon < 1)                 { msg = '임프 1개 필요';                          shortMsg = '임프 필요' }
       else if (counts.minion < comp.minion) { msg = `미니언 ${comp.minion}개 필요`;          shortMsg = `미니언 부족` }
       else if (counts.townsfolk < needTown) { msg = `마을주민 ${needTown}개 필요`;           shortMsg = `마을 부족` }
       else if (counts.outsider  < needOut)  { msg = `아웃사이더 ${needOut}개 필요`;          shortMsg = `아웃 부족` }
@@ -437,7 +437,7 @@ export class Grimoire {
     ph.appendChild(clearBtn)
     panel.appendChild(ph)
 
-    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
 
     ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
       const teamRoles = ROLES_TB.filter(r => r.team === team)

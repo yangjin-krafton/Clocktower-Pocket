@@ -435,7 +435,7 @@ export class HostApp {
     const startBtn = document.createElement('button')
     startBtn.className = 'btn btn-gold btn-full'
     startBtn.style.cssText = 'padding:14px;font-size:0.95rem;'
-    startBtn.textContent = '▶ 게임 시작 (스토리텔러 화면)'
+    startBtn.textContent = '▶ 게임 시작 (이야기꾼 화면)'
     startBtn.addEventListener('click', () => {
       overlay.remove()
       onStart()
@@ -954,7 +954,7 @@ export class HostApp {
         const box = document.createElement('div')
         box.className = 'popup-box'
         box.style.padding = '16px'
-        const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'데몬' }
+        const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
         box.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <div style="font-size:2rem;">${role?.iconEmoji || '?'}</div>

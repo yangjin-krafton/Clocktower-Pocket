@@ -1,6 +1,6 @@
 # ![](../asset/icons/imp.png) 임프 (Imp)
 
-**진영**: ![](../asset/editions/tb-demon.png) 데몬 (악 팀)
+**진영**: ![](../asset/editions/tb-demon.png) 임프 (악 팀)
 
 ---
 
@@ -69,7 +69,7 @@
 임프는 다음 역할을 사칭하기 좋습니다:
 
 - ![](../asset/icons/empath.png) **공감인**: 거짓 정보로 선 팀을 혼란시킴
-- ![](../asset/icons/fortuneteller.png) **점쟁이**: 거짓 데몬 조사로 의심 전환
+- ![](../asset/icons/fortuneteller.png) **점쟁이**: 거짓 임프 조사로 의심 전환
 - ![](../asset/icons/undertaker.png) **장의사**: 처형 결과 거짓말
 - ![](../asset/icons/monk.png) **수도사**: 보호 실패 변명 가능
 - ![](../asset/icons/ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지
@@ -108,10 +108,10 @@
 
 악 팀은 다음 조건에서 승리합니다:
 
-- **데몬 생존**: 게임 종료까지 데몬(당신)이 살아있음
-- **선 팀 실패**: 선 팀이 데몬을 찾지 못하거나 잘못 처형함
+- **임프 생존**: 게임 종료까지 임프(당신)이 살아있음
+- **선 팀 실패**: 선 팀이 임프를 찾지 못하거나 잘못 처형함
 - **최종 국면**: 생존자가 줄어들어 악 팀이 유리해짐
 
 ---
 
-→ [데몬 목록](demon.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+→ [임프 목록](demon.md) | [역할 분류](roles.md) | [규칙 메인](index.md)

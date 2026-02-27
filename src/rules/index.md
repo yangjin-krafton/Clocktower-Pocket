@@ -6,14 +6,14 @@
 
 ## 게임 목표
 
-![](../asset/editions/tb-townsfolk.png) **선 팀** — 데몬을 낮에 처형하면 승리합니다.
+![](../asset/editions/tb-townsfolk.png) **선 팀** — 임프를 낮에 처형하면 승리합니다.
 ![](../asset/icons/imp.png) **악 팀** — 마을 생존자가 2명 이하가 될 때까지 버티면 승리합니다.
 
 ---
 
 ## 목차
 
-- [역할 분류](roles.md) — 마을 주민·아웃사이더·미니언·데몬
+- [역할 분류](roles.md) — 마을 주민·아웃사이더·미니언·임프
 - [낮 진행](day.md) — 토론·지목·투표·처형
 - [밤 진행](night.md) — 밤 순서·첫날 밤 특수 처리
 - [주요 상태](statuses.md) — 생존·사망·중독·취함
@@ -33,7 +33,7 @@
 
 ## 인원 구성표
 
-| 인원 | ![](../asset/editions/tb-townsfolk.png) 마을 주민 | ![](../asset/editions/tb-outsider.png) 아웃사이더 | ![](../asset/editions/tb-minion.png) 미니언 | ![](../asset/editions/tb-demon.png) 데몬 |
+| 인원 | ![](../asset/editions/tb-townsfolk.png) 마을 주민 | ![](../asset/editions/tb-outsider.png) 아웃사이더 | ![](../asset/editions/tb-minion.png) 미니언 | ![](../asset/editions/tb-demon.png) 임프 |
 |------|------|------|------|------|
 | 5명  | 3 | 0 | 1 | 1 |
 | 6명  | 3 | 1 | 1 | 1 |

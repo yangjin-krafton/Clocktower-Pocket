@@ -8,25 +8,25 @@ import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 const SPECIAL_STEPS = {
   'minion-info': { name: '미니언 공개', icon: '🎭' },
-  'demon-info':  { name: '데몬 정보',   icon: '👿' },
+  'demon-info':  { name: '임프 정보',   icon: '👿' },
 }
 
-// 스토리텔러용 밤 행동 요약 (간결한 지시문)
+// 이야기꾼용 밤 행동 요약 (간결한 지시문)
 const NIGHT_HINTS = {
-  'minion-info':   '미니언 눈 뜨기 → 서로 확인 · 데몬 지목 · 블러프 3개 제공',
-  'demon-info':    '데몬 눈 뜨기 → 미니언 지목 · 블러프 3개 제공',
+  'minion-info':   '미니언 눈 뜨기 → 서로 확인 · 임프 지목 · 블러프 3개 제공',
+  'demon-info':    '임프 눈 뜨기 → 미니언 지목 · 블러프 3개 제공',
   'poisoner':      '1명 지목 → 오늘 밤 중독 (능력 오작동)',
   'washerwoman':   '마을주민 1명 포함, 2명 지목 → 역할 귓속말',
   'librarian':     '아웃사이더 1명 포함, 2명 지목 → 역할 귓속말',
   'investigator':  '미니언 1명 포함, 2명 지목 → 역할 귓속말',
   'chef':          '이웃한 악인 쌍의 수 귓속말',
   'empath':        '양옆 살아있는 이웃 중 악인 수(0/1/2) 귓속말',
-  'fortuneteller': '2명 지목 → 데몬 포함 여부 귓속말 (레드헤링 주의)',
+  'fortuneteller': '2명 지목 → 임프 포함 여부 귓속말 (레드헤링 주의)',
   'butler':        '주인 1명 지목',
   'spy':           '그리모어 공개 → 정보 확인',
   'baron':         '아웃사이더 +2 반영 확인 (첫 밤 한 번)',
   'undertaker':    '어제 처형된 플레이어의 역할 귓속말',
-  'monk':          '1명 지목 → 오늘 밤 데몬 공격으로부터 보호',
+  'monk':          '1명 지목 → 오늘 밤 임프 공격으로부터 보호',
   'ravenkeeper':   '이 밤 사망 시 — 1명 지목 → 역할 귓속말',
   'imp':           '1명 지목 → 처치 (자신 선택 시 미니언 승계)',
 }

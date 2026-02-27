@@ -24,19 +24,19 @@ Trouble Brewing에는 **4종**이 있습니다.
 
 ## ![](../asset/editions/tb-minion.png) 미니언 (Minion) — 악 팀
 
-데몬을 보좌하며 선 팀 조사를 방해합니다.
-첫날 밤에 서로와 데몬을 확인합니다.
+임프를 보좌하며 선 팀 조사를 방해합니다.
+첫날 밤에 서로와 임프를 확인합니다.
 
 → [미니언 역할 목록](minion.md)
 
 ---
 
-## ![](../asset/editions/tb-demon.png) 데몬 (Demon) — 악 팀
+## ![](../asset/editions/tb-demon.png) 임프 (Demon) — 악 팀
 
 악 팀의 우두머리. 매 밤 플레이어를 죽입니다.
-Trouble Brewing의 데몬은 ![](../asset/icons/imp.png) **임프(Imp)** 뿐입니다.
+Trouble Brewing의 임프은 ![](../asset/icons/imp.png) **임프(Imp)** 뿐입니다.
 
-→ [데몬 역할 목록](demon.md)
+→ [임프 역할 목록](demon.md)
 
 ---
 

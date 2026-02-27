@@ -29,7 +29,7 @@ export class Victory {
 
     const isGoodWin = this.winner === 'good'
     const reasonText = {
-      demon_dead: '데몬이 처형됩니다!',
+      demon_dead: '임프가 처형됩니다!',
       saint:      '성자이 처형되었습니다...',
       final_two:  '최종 2인, 악 팀 승리!',
       mayor:      '시장 능력, 선 팀 승리!',

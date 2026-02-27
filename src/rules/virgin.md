@@ -29,7 +29,7 @@
 - ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
 - ![](../asset/icons/poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
 - **1회 제한**: 한 번 사용하면 다시는 발동 안 됩니다 (성공 여부 무관).
-- **악 팀은 무효**: ![](../asset/icons/imp.png) 데몬이나 ![](../asset/editions/tb-minion.png) 미니언이 지목하면 **아무 일도 안 일어남**.
+- **악 팀은 무효**: ![](../asset/icons/imp.png) 임프나 ![](../asset/editions/tb-minion.png) 미니언이 지목하면 **아무 일도 안 일어남**.
 - **아웃사이더는 무효**: ![](../asset/editions/tb-outsider.png) 아웃사이더가 지목해도 **발동 안 됨**.
 
 ### 전략 팁
@@ -46,7 +46,7 @@
 
 - ![](../asset/editions/tb-townsfolk.png) **마을 주민**: 지목 시 처형됩니다 (능력 발동).
 - ![](../asset/editions/tb-outsider.png) **아웃사이더**: 지목해도 능력 발동 안 됩니다.
-- ![](../asset/editions/tb-minion.png) **미니언/데몬**: 지목해도 능력 발동 안 됩니다.
+- ![](../asset/editions/tb-minion.png) **미니언/임프**: 지목해도 능력 발동 안 됩니다.
 
 ---
 

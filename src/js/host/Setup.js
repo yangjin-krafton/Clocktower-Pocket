@@ -64,7 +64,7 @@ export class Setup {
       ? `<span class="badge badge-town">마을 ${comp.townsfolk}</span>
          <span class="badge badge-outside">아웃 ${comp.outsider}</span>
          <span class="badge badge-minion">미니언 ${comp.minion}</span>
-         <span class="badge badge-demon">데몬 ${comp.demon}</span>`
+         <span class="badge badge-demon">임프 ${comp.demon}</span>`
       : ''
     countSection.appendChild(compEl)
     this.el.appendChild(countSection)
@@ -76,7 +76,7 @@ export class Setup {
 
     // 팀별 그룹
     const teams = ['townsfolk','outsider','minion','demon']
-    const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'데몬' }
+    const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
     teams.forEach(team => {
       const teamRoles = ROLES_TB.filter(r => r.team === team)
       const groupEl = document.createElement('div')
@@ -183,7 +183,7 @@ export class Setup {
     const hasBaron = this.selectedRoles.has('baron')
     const needTown = comp.townsfolk - (hasBaron ? 2 : 0)
     const needOut  = comp.outsider  + (hasBaron ? 2 : 0)
-    if (counts.demon !== 1) return { ok: false, hint: '데몬(임프) 1개를 선택하세요.' }
+    if (counts.demon !== 1) return { ok: false, hint: '임프(임프) 1개를 선택하세요.' }
     if (counts.minion < comp.minion) return { ok: false, hint: `미니언 ${comp.minion}개가 필요합니다. (현재 ${counts.minion})` }
     if (counts.townsfolk < needTown) return { ok: false, hint: `마을 주민 ${needTown}개가 필요합니다. (현재 ${counts.townsfolk})` }
     if (counts.outsider < needOut) return { ok: false, hint: `아웃사이더 ${needOut}개가 필요합니다. (현재 ${counts.outsider})` }

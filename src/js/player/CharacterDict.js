@@ -8,7 +8,7 @@
  */
 import { ROLES_TB } from '../data/roles-tb.js'
 
-const TEAM_LABEL  = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+const TEAM_LABEL  = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
 const TEAM_COLOR  = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)' }
 const GEM_CLASS   = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'gem-minion', demon: 'gem-demon' }
 const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }

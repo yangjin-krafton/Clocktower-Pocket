@@ -1,4 +1,4 @@
-# ![](../asset/editions/tb-demon.png) 데몬 (Demon)
+# ![](../asset/editions/tb-demon.png) 임프 (Demon)
 
 [악 팀](roles.md)의 우두머리. Trouble Brewing에는 **임프(Imp)** 단 1명입니다.
 게임 내내 자신의 정체를 숨기며 매 밤 마을 주민을 제거합니다.
@@ -22,7 +22,7 @@
 ## 임프를 노리는 선 팀 역할
 
 - ![](../asset/icons/slayer.png) [학살자](townsfolk.md) — 낮에 1회, 임프를 직격 사살 가능
-- ![](../asset/icons/fortuneteller.png) [점술사](townsfolk.md) — 매 밤 2명 중 데몬 여부 확인
+- ![](../asset/icons/fortuneteller.png) [점술사](townsfolk.md) — 매 밤 2명 중 임프 여부 확인
 - ![](../asset/icons/undertaker.png) [장의사](townsfolk.md) — 처형된 플레이어 역할 확인으로 간접 추론
 - ![](../asset/icons/monk.png) [수도사](townsfolk.md) — 임프 공격 대상을 보호
 

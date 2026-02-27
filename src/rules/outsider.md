@@ -20,8 +20,8 @@ Trouble Brewing에는 4종이 있으며, 스크립트에 따라 0~2명이 배정
 → [취함 상태](statuses.md)
 
 ### ![](../asset/icons/recluse.png) [은둔자 (Recluse)](recluse.md)
-[탐정](townsfolk.md)·[공감자](townsfolk.md) 등의 정보에서 **미니언 또는 데몬**으로 잡힐 수 있다.
-스토리텔러 재량으로 악 팀으로 처리될 수 있다.
+[탐정](townsfolk.md)·[공감자](townsfolk.md) 등의 정보에서 **미니언 또는 임프**으로 잡힐 수 있다.
+이야기꾼 재량으로 악 팀으로 처리될 수 있다.
 
 ### ![](../asset/icons/saint.png) [성자 (Saint)](saint.md)
 자신을 **낮에 처형**하면 **선 팀 즉시 패배**.
@@ -31,7 +31,7 @@ Trouble Brewing에는 4종이 있으며, 스크립트에 따라 0~2명이 배정
 
 ## 주의사항
 
-- 아웃사이더는 선 팀이므로 데몬을 잡으면 선 팀 승리.
+- 아웃사이더는 선 팀이므로 임프를 잡으면 선 팀 승리.
 - 하지만 그 존재 자체가 선 팀의 정보를 교란하거나 약점이 됩니다.
 - ![](../asset/icons/saint.png) 성인·![](../asset/icons/drunk.png) 술꾼은 선 팀 패배 원인이 되므로 신중하게 처신하세요.
 

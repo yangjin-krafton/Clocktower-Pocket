@@ -1,6 +1,6 @@
 /**
  * Clocktower Pocket — 진입점
- * 스토리텔러 모드로 진입합니다.
+ * 이야기꾼 모드로 진입합니다.
  */
 import { GameSaveManager } from './GameSaveManager.js'
 
@@ -90,7 +90,7 @@ function showLanding() {
     <div class="landing__cards">
       <button class="landing__card landing__card--host" id="btn-host">
         <span class="landing__card-icon">👑</span>
-        <span class="landing__card-title">스토리텔러</span>
+        <span class="landing__card-title">이야기꾼</span>
         <span class="landing__card-desc">방을 만들고<br>게임을 진행합니다</span>
       </button>
 

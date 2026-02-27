@@ -7,7 +7,7 @@
 export function renderRoleCard(role, opts = {}) {
   const { compact = false } = opts
 
-  const teamLabel = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '데몬' }
+  const teamLabel = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
   const teamBadgeClass = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
   const gemClass = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'gem-minion', demon: 'gem-demon' }
   const borderColor = {

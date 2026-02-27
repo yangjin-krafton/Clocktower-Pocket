@@ -36,7 +36,7 @@ export const ROLES_TB = [
   },
   {
     id: 'fortuneteller', name: '점쟁이', team: 'townsfolk',
-    ability: '매 밤 2명을 선택해 그 중 데몬이 있는지 안다. 선 플레이어 1명은 항상 데몬처럼 잡힌다.',
+    ability: '매 밤 2명을 선택해 그 중 임프가 있는지 안다. 선 플레이어 1명은 항상 임프처럼 잡힌다.',
     firstNight: true, otherNights: true, icon: 'fortuneteller.png', iconEmoji: '🔮',
     nightType: 'select', maxSelect: 2
   },
@@ -48,7 +48,7 @@ export const ROLES_TB = [
   },
   {
     id: 'monk', name: '수도사', team: 'townsfolk',
-    ability: '매 밤(자신 제외) 1명을 보호해 데몬 공격으로부터 지킨다.',
+    ability: '매 밤(자신 제외) 1명을 보호해 임프 공격으로부터 지킨다.',
     firstNight: false, otherNights: true, icon: 'monk.png', iconEmoji: '🙏',
     nightType: 'select', maxSelect: 1
   },
@@ -66,19 +66,19 @@ export const ROLES_TB = [
   },
   {
     id: 'slayer', name: '처단자', team: 'townsfolk',
-    ability: '게임 중 1회, 낮에 1명을 지목. 그 대상이 데몬이면 즉시 사망한다.',
+    ability: '게임 중 1회, 낮에 1명을 지목. 그 대상이 임프면 즉시 사망한다.',
     firstNight: false, otherNights: false, icon: 'slayer.png', iconEmoji: '🗡️',
     nightType: null
   },
   {
     id: 'soldier', name: '군인', team: 'townsfolk',
-    ability: '데몬 공격으로는 죽지 않는다.',
+    ability: '임프 공격으로는 죽지 않는다.',
     firstNight: false, otherNights: false, icon: 'soldier.png', iconEmoji: '🛡️',
     nightType: null
   },
   {
     id: 'mayor', name: '시장', team: 'townsfolk',
-    ability: '최종 3인에서 처형 없이 낮이 끝나면 선 팀이 승리할 수 있다. 데몬 공격이 시장을 노리면 튕겨나갈 수 있다.',
+    ability: '최종 3인에서 처형 없이 낮이 끝나면 선 팀이 승리할 수 있다. 임프 공격이 시장을 노리면 튕겨나갈 수 있다.',
     firstNight: false, otherNights: false, icon: 'mayor.png', iconEmoji: '🎩',
     nightType: null
   },
@@ -98,7 +98,7 @@ export const ROLES_TB = [
   },
   {
     id: 'recluse', name: '은둔자', team: 'outsider',
-    ability: '선 팀이지만 악 팀 또는 데몬으로 등록될 수 있다.',
+    ability: '선 팀이지만 악 팀 또는 임프로 등록될 수 있다.',
     firstNight: false, otherNights: false, icon: 'recluse.png', iconEmoji: '🧎',
     nightType: null
   },
@@ -124,7 +124,7 @@ export const ROLES_TB = [
   },
   {
     id: 'scarletwoman', name: '진홍의 여인', team: 'minion',
-    ability: '생존자 5명 이상일 때 데몬이 죽으면 자신이 새 데몬으로 승계된다.',
+    ability: '생존자 5명 이상일 때 임프가 죽으면 자신이 새 임프로 승계된다.',
     firstNight: false, otherNights: false, icon: 'scarletwoman.png', iconEmoji: '💋',
     nightType: null
   },
@@ -173,7 +173,7 @@ export const PLAYER_COUNTS = {
  */
 export const NIGHT_ORDER_FIRST = [
   'minion-info',   // 미니언들 서로 공개 + 블러프 전달
-  'demon-info',    // 데몬이 미니언 + 블러프 확인
+  'demon-info',    // 임프가 미니언 + 블러프 확인
   'poisoner',
   'washerwoman',
   'librarian',
@@ -206,7 +206,7 @@ export const EMOJI_SIGNALS = [
   { emoji: '🤫', label: '나중에 얘기' },
   { emoji: '👀', label: '저 사람 주목' },
   { emoji: '❓', label: '이해 못함' },
-  { emoji: '🔪', label: '데몬 의심' },
+  { emoji: '🔪', label: '임프 의심' },
   { emoji: '🛡️', label: '선한 것 같아' },
   { emoji: '🤝', label: '우리 편' },
   { emoji: '😱', label: '놀람' },

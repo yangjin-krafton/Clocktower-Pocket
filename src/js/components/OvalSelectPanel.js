@@ -15,6 +15,8 @@
  *   onConfirm   {Function}  onConfirm(selectedIds[])
  */
 
+import { calcSlotMetrics, ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+
 const TEAM_TITLE_COLOR = {
   town:    'var(--bl-light)',
   outside: 'var(--tl-light)',
@@ -81,17 +83,13 @@ export function mountOvalSelectPanel(data) {
   oval.className = 'oval-sel__oval'
 
   // 오발 좌표 계산 — selfSeatId 를 6시(하단 중앙)에 배치
-  const total   = players.length
-  const selfIdx = selfSeatId != null ? selfSeatId - 1 : 0
-  const RX = 43, RY = 43
-  const rotOffset = Math.PI / 2 - (2 * Math.PI * selfIdx / total)
+  const total     = players.length
+  const rotOffset = ovalSelfRotOffset(selfSeatId, total)
 
-  // 컨테이너 너비 기반 슬롯 크기
-  const appContent  = document.getElementById('app-content')
-  const containerW  = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
-  const _RX_px    = containerW * 0.43
-  const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
-  const slotPx    = Math.max(40, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
+  // 컨테이너 너비 기반 슬롯 크기 (CSS oval 너비 = appContent.width - 32px padding)
+  const appContent = document.getElementById('app-content')
+  const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
+  const { slotPx } = calcSlotMetrics(total, containerW, 40)   // minSlot=40
 
   // 중앙 카운터
   const center = document.createElement('div')
@@ -110,9 +108,7 @@ export function mountOvalSelectPanel(data) {
     Array.from(oval.children).forEach(c => { if (c !== center) c.remove() })
 
     players.forEach((p, i) => {
-      const angle = (2 * Math.PI * i) / total + rotOffset
-      const x = 50 + RX * Math.cos(angle)
-      const y = 50 + RY * Math.sin(angle)
+      const { x, y } = ovalSlotPos(i, total, rotOffset)
 
       const isSelf     = p.id === selfSeatId
       const isDead     = p.status !== 'alive'

@@ -13,6 +13,7 @@ import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode }           from '../room-code.js'
+import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 
 export class Grimoire {
   /**
@@ -243,22 +244,15 @@ export class Grimoire {
     const oval = document.createElement('div')
     oval.className = 'gl-seat-oval'
 
-    // 컨테이너 너비 기반 슬롯 크기 (app-content 실측)
-    const appContent = document.getElementById('app-content')
-    const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
-    const _RX_px    = containerW * 0.43
-    const _minChord = 2 * Math.sin(Math.PI / total) * _RX_px
-    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(containerW * 0.28)))
+    // 뷰포트 높이 기준으로 타원 크기 계산 (CSS .gl-seat-oval 와 동일한 공식)
+    const { ovalW, ovalH, slotPx, iconPx } = calcOvalLayout(total, 360, true)
+    oval.style.width  = ovalW + 'px'
+    oval.style.height = ovalH + 'px'
 
-    const iconPx      = Math.round(slotPx * 0.62)
+    // Grimoire 전용 배지 크기 (가로형 pill 배지)
     const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
     const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
     const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
-
-    // 타원 반지름 (% 단위, 컨테이너 기준)
-    // rX = % of container width, rY = % of container height (aspect-ratio 3:2 → H = W*2/3)
-    // 2:3 portrait 컨테이너 기준 — rX: %of width, rY: %of height
-    const RX = 43, RY = 43
 
     const TEAM_BORDER = {
       townsfolk: 'rgba(46,74,143,0.65)',
@@ -272,10 +266,8 @@ export class Grimoire {
       const isSelected = this._selectedSeat === i
       const isAssigned = !!roleId
 
-      // 각도: 12시 방향 시작, 시계 방향
-      const angle = (2 * Math.PI * i) / total - Math.PI / 2
-      const x = 50 + RX * Math.cos(angle)   // % of width
-      const y = 50 + RY * Math.sin(angle)   // % of height
+      // 12시 방향 시작, 시계 방향
+      const { x, y } = ovalSlotPos(i, total)
 
       const borderColor = isSelected
         ? 'var(--gold2)'

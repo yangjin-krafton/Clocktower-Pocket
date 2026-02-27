@@ -12,6 +12,7 @@ import { RulesScreen }                from '../components/RulesScreen.js'
 import { ROLES_BY_ID }                from '../data/roles-tb.js'
 import { ThemeManager }               from '../ThemeManager.js'
 import { ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+import { GameSaveManager }            from '../GameSaveManager.js'
 
 const STORAGE_KEY = 'ctp_player_session'
 
@@ -137,6 +138,7 @@ export class PlayerApp {
     this.currentTab = 'seats'
     this.pendingRulesPage = null
     this.screens  = {}
+    this.saveId   = null   // 현재 게임 저장 ID
   }
 
   init() {
@@ -159,6 +161,17 @@ export class PlayerApp {
           this.session.team = role
             ? (role.team === 'townsfolk' || role.team === 'outsider' ? 'good' : 'evil')
             : 'good'
+
+          // 저장된 게임 찾기 (방 코드 + 자리 번호로 매칭)
+          const saves = GameSaveManager.listSaves().filter(s => s.mode === 'player')
+          const existingSave = saves.find(s => s.roomCode === parsed.code && s.seatNum === parsed.seatNum)
+          if (existingSave) {
+            this.saveId = existingSave.id
+          } else {
+            // 새 저장 ID 생성
+            this.saveId = GameSaveManager.createId()
+            this._savePlayerGame()
+          }
         }
       }
     } catch {}
@@ -243,6 +256,7 @@ export class PlayerApp {
 
   _showJoinForm() {
     const urlCode = new URLSearchParams(location.search).get('code') || ''
+    const saves = GameSaveManager.listSaves().filter(s => s.mode === 'player')
 
     const el = document.createElement('div')
     el.className = 'join-screen'
@@ -258,6 +272,13 @@ export class PlayerApp {
       <div class="join__logo">🏰</div>
       <h1 class="join__title">Clocktower Pocket</h1>
       <p class="join__sub">방 코드로 입장</p>
+
+      ${saves.length > 0 ? `
+        <div class="card" style="margin-bottom:8px;width:100%;">
+          <div class="section-label">저장된 게임</div>
+          <div id="saved-games" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
+        </div>
+      ` : ''}
 
       <div class="card join__form">
         <div class="join__field">
@@ -283,6 +304,37 @@ export class PlayerApp {
     this.content.appendChild(el)
 
     el.querySelector('#p-back-btn').addEventListener('click', () => window.goHome?.())
+
+    // 저장된 게임 목록 렌더링
+    if (saves.length > 0) {
+      const savedGamesEl = el.querySelector('#saved-games')
+      saves.forEach(save => {
+        const btn = document.createElement('button')
+        btn.className = 'btn'
+        btn.style.cssText = `
+          display:flex;align-items:center;justify-content:space-between;
+          padding:10px 12px;background:var(--surface2);
+          border:1px solid var(--lead2);border-radius:8px;
+          font-size:0.75rem;width:100%;text-align:left;
+        `
+        const role = ROLES_BY_ID[save.roleId]
+        btn.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-weight:700;color:var(--text);">
+              ${role?.iconEmoji || '🎭'} ${role?.name || '참가자'} · 자리 ${save.seatNum}번
+            </div>
+            <div style="font-size:0.62rem;color:var(--text4);">
+              방 ${formatCode(save.roomCode)} · ${save.playerCount}인 게임
+            </div>
+          </div>
+          <div style="font-size:0.6rem;color:var(--text4);">
+            ${GameSaveManager.formatTimeAgo(save.updatedAt)}
+          </div>
+        `
+        btn.addEventListener('click', () => this._loadPlayerGame(save.id))
+        savedGamesEl.appendChild(btn)
+      })
+    }
 
     const codeInput   = el.querySelector('#p-code')
     const codeError   = el.querySelector('#p-code-error')
@@ -352,6 +404,10 @@ export class PlayerApp {
 
       this.session = { code: rawCode, seatNum: selectedSeat, roleId, team, playerCount: decoded.playerCount }
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ code: rawCode, seatNum: selectedSeat })) } catch {}
+
+      // 게임 저장
+      this.saveId = GameSaveManager.createId()
+      this._savePlayerGame()
 
       this._switchTab('seats')
     })
@@ -753,13 +809,72 @@ export class PlayerApp {
   }
 
   exitToHome() {
+    // 게임 저장 (나가기 전)
+    this._savePlayerGame()
+
     // 세션 초기화 (메모는 localStorage에 남아있음)
     this.session = null
+    this.saveId = null
     localStorage.removeItem(STORAGE_KEY)
 
     // 홈 화면으로
     this.content.innerHTML = ''
     this.tabBar.innerHTML = ''
     this._showJoinForm()
+  }
+
+  // ─────────────────────────────────────
+  // 게임 저장/로드
+  // ─────────────────────────────────────
+
+  _savePlayerGame() {
+    if (!this.session || !this.saveId) return
+
+    const saveData = {
+      meta: {
+        mode: 'player',
+        playerCount: this.session.playerCount,
+        roomCode: this.session.code,
+        seatNum: this.session.seatNum,
+        roleId: this.session.roleId,
+      },
+      code: this.session.code,
+      seatNum: this.session.seatNum,
+      roleId: this.session.roleId,
+      team: this.session.team,
+      playerCount: this.session.playerCount,
+    }
+
+    GameSaveManager.save(this.saveId, saveData)
+  }
+
+  _loadPlayerGame(saveId) {
+    const saveData = GameSaveManager.load(saveId)
+    if (!saveData) {
+      alert('저장된 게임을 불러올 수 없습니다.')
+      return
+    }
+
+    // 방 코드 검증
+    const decoded = decodeRoomCode(saveData.code)
+    if (!decoded) {
+      alert('저장된 방 코드가 유효하지 않습니다.')
+      return
+    }
+
+    // 세션 복원
+    this.session = {
+      code: saveData.code,
+      seatNum: saveData.seatNum,
+      roleId: saveData.roleId,
+      team: saveData.team,
+      playerCount: saveData.playerCount,
+    }
+    this.saveId = saveId
+
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ code: saveData.code, seatNum: saveData.seatNum })) } catch {}
+
+    this._buildTabs()
+    this._switchTab('seats')
   }
 }

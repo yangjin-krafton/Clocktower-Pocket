@@ -31,19 +31,20 @@ export function renderPlayerGrid(players, opts = {}) {
     const total   = players.length
     const compact = total > 12   // 13인 이상은 이름 숨김
 
-    // 슬롯 너비 (chipPx × chipPx 정방형 카드)
-    const chipPx =
-      total <= 6  ? 62 :
-      total <= 9  ? 56 :
-      total <= 13 ? 50 :
-      total <= 16 ? 44 : 38
-
     // 타원 반지름 (% — rX: 너비 기준, rY: 높이 기준)
-    // 2:3 portrait 컨테이너 기준 — rX: %of width, rY: %of height
     const RX = 43, RY = 43
+
+    let _containerW = 0
+
+    function getChipPx() {
+      const w = _containerW || window.innerWidth * 0.88
+      const baseRatio = total <= 6 ? 0.23 : total <= 9 ? 0.21 : total <= 13 ? 0.18 : total <= 16 ? 0.16 : 0.14
+      return Math.min(88, Math.max(44, Math.round(w * baseRatio)))
+    }
 
     function rebuildRing() {
       el.innerHTML = ''
+      const chipPx = getChipPx()
 
       // 타원 컨테이너
       const oval = document.createElement('div')
@@ -97,6 +98,19 @@ export function renderPlayerGrid(players, opts = {}) {
     }
 
     rebuildRing()
+
+    // 컨테이너 크기 확정 후 재렌더 (DOM 마운트 이후)
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(entries => {
+        const w = entries[0].contentRect.width
+        if (w > 0 && Math.abs(w - _containerW) > 4) {
+          _containerW = w
+          rebuildRing()
+        }
+      })
+      ro.observe(el)
+    }
+
     return el
   }
 

@@ -89,8 +89,8 @@ export function mountOvalSelectPanel(data) {
   // 컨테이너 너비 기반 슬롯 크기
   const appContent  = document.getElementById('app-content')
   const containerW  = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
-  const baseRatio   = total <= 6 ? 0.20 : total <= 9 ? 0.18 : total <= 13 ? 0.16 : total <= 16 ? 0.14 : 0.12
-  const slotPx      = Math.min(72, Math.max(36, Math.round(containerW * baseRatio)))
+  const baseRatio   = total <= 6 ? 0.23 : total <= 9 ? 0.21 : total <= 13 ? 0.18 : total <= 16 ? 0.16 : 0.14
+  const slotPx      = Math.min(88, Math.max(40, Math.round(containerW * baseRatio)))
 
   // 중앙 카운터
   const center = document.createElement('div')

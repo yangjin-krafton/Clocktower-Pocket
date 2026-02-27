@@ -345,7 +345,9 @@ export class PlayerApp {
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
     const RX = 43, RY = 43
-    const slotPx = playerCount <= 6 ? 62 : playerCount <= 9 ? 56 : playerCount <= 13 ? 50 : playerCount <= 16 ? 44 : 38
+    const contentW = this.content.getBoundingClientRect().width || 320
+    const _baseR = playerCount <= 6 ? 0.23 : playerCount <= 9 ? 0.21 : playerCount <= 13 ? 0.18 : playerCount <= 16 ? 0.16 : 0.14
+    const slotPx = Math.min(88, Math.max(44, Math.round(contentW * _baseR)))
     const iconPx = Math.round(slotPx * 0.62)
 
     const MARKS = {

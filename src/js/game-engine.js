@@ -620,6 +620,46 @@ export class GameEngine {
   }
 
   // ─────────────────────────────────────
+  // 직렬화 / 복원
+  // ─────────────────────────────────────
+
+  /**
+   * 전체 게임 상태를 JSON-safe 객체로 직렬화
+   */
+  serialize() {
+    return {
+      state:            JSON.parse(JSON.stringify(this.state)),
+      logs:             JSON.parse(JSON.stringify(this.logs)),
+      nightActions:     JSON.parse(JSON.stringify(this.nightActions)),
+      pendingDeaths:    [...this.pendingDeaths],
+      monkProtect:      this.monkProtect,
+      redHerring:       this.redHerring,
+      virginTriggered:  this.virginTriggered,
+      slayerUsed:       this.slayerUsed,
+      butlerMasters:    { ...this.butlerMasters },
+      poisonedThisNight: this.poisonedThisNight,
+    }
+  }
+
+  /**
+   * 직렬화된 데이터로부터 게임 상태 복원
+   */
+  restore(data) {
+    if (!data || !data.state) return
+    this.state             = JSON.parse(JSON.stringify(data.state))
+    this.logs              = data.logs || []
+    this.nightActions      = data.nightActions || []
+    this.pendingDeaths     = data.pendingDeaths || []
+    this.monkProtect       = data.monkProtect ?? null
+    this.redHerring        = data.redHerring ?? null
+    this.virginTriggered   = data.virginTriggered ?? false
+    this.slayerUsed        = data.slayerUsed ?? false
+    this.butlerMasters     = data.butlerMasters || {}
+    this.poisonedThisNight = data.poisonedThisNight ?? null
+    this.emit('stateChanged', this.state)
+  }
+
+  // ─────────────────────────────────────
   // 이벤트 에미터
   // ─────────────────────────────────────
 

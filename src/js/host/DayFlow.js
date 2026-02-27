@@ -8,10 +8,11 @@ import { renderVoteBar } from '../components/VoteBar.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 export class DayFlow {
-  constructor({ engine, onStartNight, onGameOver }) {
+  constructor({ engine, onStartNight, onGameOver, onHistoryPush }) {
     this.engine = engine
-    this.onStartNight = onStartNight
-    this.onGameOver   = onGameOver
+    this.onStartNight   = onStartNight
+    this.onGameOver     = onGameOver
+    this.onHistoryPush  = onHistoryPush || (() => {})
     this.el = null
     this.nominatorId  = null
     this.targetId     = null
@@ -197,7 +198,19 @@ export class DayFlow {
 
   _registerNomination() {
     if (!this.nominatorId || !this.targetId) return
-    const result = this.engine.nominate(this.nominatorId, this.targetId)
+    const nomId = this.nominatorId
+    const tgtId = this.targetId
+    const result = this.engine.nominate(nomId, tgtId)
+
+    this.onHistoryPush({
+      type: 'nomination', phase: 'day', round: this.engine.state.round,
+      actor: nomId, target: [tgtId],
+      label: `${nomId}번 → ${tgtId}번 지명`,
+      detail: result.virginTriggered
+        ? `${nomId}번이 ${tgtId}번을 지명 (처녀 능력 발동!)`
+        : `${nomId}번이 ${tgtId}번을 지명`,
+    })
+
     if (result.virginTriggered) {
       this._showAlert('처녀 능력 발동!', '지목자가 마을 주민이어서 즉시 처형됩니다.')
     }
@@ -208,6 +221,14 @@ export class DayFlow {
 
   _execute(playerId) {
     const result = this.engine.execute(playerId)
+
+    this.onHistoryPush({
+      type: 'execution', phase: 'day', round: this.engine.state.round,
+      target: [playerId],
+      label: `⚔️ ${playerId}번 처형`,
+      detail: `${playerId}번 처형 확정`,
+    })
+
     if (result.gameOver) {
       this.onGameOver && this.onGameOver(result.winner, result.reason)
       return

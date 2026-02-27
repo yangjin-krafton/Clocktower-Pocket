@@ -12,8 +12,11 @@ import { Grimoire }                             from './Grimoire.js'
 import { NightAction }                          from './NightAction.js'
 import { DayFlow }                              from './DayFlow.js'
 import { Victory }                              from './Victory.js'
+import { HistoryManager }                       from './HistoryManager.js'
+import { HistoryBar }                           from './HistoryBar.js'
 import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { encodeRoomCode, formatCode }           from '../room-code.js'
+import { GameSaveManager }                      from '../GameSaveManager.js'
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -31,6 +34,18 @@ export class HostApp {
     this._grimoire          = null
     this.currentTab         = 'role'
     this._lastRoomCode      = null
+
+    // 히스토리 시스템
+    this._history    = new HistoryManager()
+    this._historyBar = new HistoryBar(this._history)
+    this._viewerOverlay = null  // 열람 모드 오버레이
+
+    // 저장 시스템
+    this._saveId = null
+    this._saveDebounce = null
+
+    // 열람 모드 전환 구독
+    this._history.on('navigate', (entry) => this._onHistoryNavigate(entry))
   }
 
   init() {
@@ -38,6 +53,59 @@ export class HostApp {
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
     this._buildTabs()
     this._switchTab('role')
+  }
+
+  /**
+   * 세이브 데이터로부터 게임 복원 후 진입
+   * @param {string} saveId  GameSaveManager 슬롯 ID
+   */
+  initFromSave(saveId) {
+    const data = GameSaveManager.load(saveId)
+    if (!data) {
+      this.init()
+      return
+    }
+
+    this._saveId = saveId
+
+    // engine 복원
+    engine.reset()
+    engine.restore(data.engineData)
+
+    // 호스트 상태 복원
+    const hs = data.hostState || {}
+    this.seatRoles          = hs.seatRoles || new Array(DEFAULT_PLAYER_COUNT).fill(null)
+    this.pendingPlayerCount = hs.pendingPlayerCount || this.seatRoles.length
+    this._lastRoomCode      = hs.roomCode || null
+    this.doneSteps          = hs.doneSteps || []
+    this._gameStarting      = true
+
+    // 히스토리 복원
+    this._history.restore(data.historyData)
+
+    // HistoryBar 마운트
+    this._mountHistoryBar()
+
+    // 탭 빌드 후 현재 phase에 맞는 화면 표시
+    this._buildTabs()
+    this.currentTab = 'role'
+    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'role')
+    })
+
+    const phase = engine.state?.phase || 'lobby'
+    if (phase === 'lobby') {
+      this._gameStarting = false
+      this._showGrimoire()
+    } else if (phase === 'day') {
+      this._showDayFlow()
+    } else {
+      // night — Grimoire 표시 (밤 화면)
+      this._showGrimoire()
+    }
+
+    // 자동저장 시작
+    this._startAutoSave()
   }
 
   // ─────────────────────────────────────
@@ -165,6 +233,7 @@ export class HostApp {
     this.currentScreen = null
     this._grimoire     = null
     this.container.innerHTML = ''
+    this._dismissViewer()  // 열람 모드 해제
   }
 
   _showGrimoire() {
@@ -212,6 +281,9 @@ export class HostApp {
     this.currentScreen = grimoire
     this._grimoire     = grimoire
 
+    // 게임 중이면 나가기 버튼 삽입
+    if (this._gameStarting) this._insertExitButton()
+
     engine.on('stateChanged', () => grimoire.refresh())
   }
 
@@ -246,8 +318,23 @@ export class HostApp {
       this._gameStarting = true
       const names = Array.from({ length: this.pendingPlayerCount }, (_, i) => `플레이어${i + 1}`)
       engine.reset()
+      this._history.reset()
       engine.initGame(names, assignedRoles, { preAssigned: true, redHerringId })
       engine.startNight()
+
+      // HistoryBar DOM 삽입 (app-content 바로 앞)
+      this._mountHistoryBar()
+
+      // 첫 밤 히스토리 기록
+      this._history.push({
+        type: 'phase-start', phase: 'night', round: engine.state.round,
+        label: `🌙 밤 ${engine.state.round}`,
+      })
+
+      // 세이브 슬롯 생성 + 자동저장 시작
+      this._saveId = GameSaveManager.createId()
+      this._autoSave()
+      this._startAutoSave()
 
       this.currentTab = 'role'
       this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
@@ -361,6 +448,13 @@ export class HostApp {
   _handleStartNight() {
     engine.startNight()
     this.doneSteps = []
+
+    this._history.push({
+      type: 'phase-start', phase: 'night', round: engine.state.round,
+      label: `🌙 밤 ${engine.state.round}`,
+    })
+    this._autoSave()  // 밤 전환 시 즉시 저장
+
     this.currentTab = 'role'
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === 'role')
@@ -370,11 +464,30 @@ export class HostApp {
 
   _handleStartDay() {
     engine.startDay()
+
+    // 밤 사망자 히스토리 기록
+    const deaths = engine.state.players.filter(p => p.status === 'dead')
+    const deathNames = deaths.map(p => `${p.id}번`).join(', ')
+    if (deaths.length > 0) {
+      this._history.push({
+        type: 'night-resolve', phase: 'night', round: engine.state.round,
+        label: `💀 ${deathNames} 사망`,
+        detail: `밤 ${engine.state.round} 결과: ${deathNames || '사망자 없음'}`,
+      })
+    }
+
     const winCheck = engine.checkWinCondition()
     if (winCheck.gameOver) {
       this._showVictory(winCheck.winner, winCheck.reason)
       return
     }
+
+    this._history.push({
+      type: 'phase-start', phase: 'day', round: engine.state.round,
+      label: `☀️ 낮 ${engine.state.round}`,
+    })
+    this._autoSave()  // 낮 전환 시 즉시 저장
+
     this.currentTab = 'role'
     this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === 'role')
@@ -391,8 +504,23 @@ export class HostApp {
     if (!this.nightAction) {
       this.nightAction = new NightAction({
         engine,
-        onStepDone: (roleId) => {
+        onStepDone: (roleId, targetIds) => {
           this.doneSteps.push(roleId)
+
+          // 밤 행동 히스토리 기록
+          const roleName = ROLES_BY_ID[roleId]?.name || roleId
+          const targetLabel = (targetIds && targetIds.length > 0)
+            ? `→ ${targetIds.map(id => `${id}번`).join(', ')}`
+            : ''
+          this._history.push({
+            type: 'night-action', phase: 'night', round: engine.state.round,
+            roleId,
+            actor: this._findActorForRole(roleId),
+            target: targetIds || [],
+            label: `${roleName}${targetLabel ? ' ' + targetLabel : ''}`,
+            detail: `${roleName} ${targetLabel}`,
+          })
+
           engine.nextNightStep()
           const next = engine.state.currentNightStep
           if (next) {
@@ -413,9 +541,11 @@ export class HostApp {
       engine,
       onStartNight: () => this._handleStartNight(),
       onGameOver:   (winner, reason) => this._showVictory(winner, reason),
+      onHistoryPush: (entry) => this._history.push(entry),
     })
     dayFlow.mount(this.container)
     this.currentScreen = dayFlow
+    this._insertExitButton()
     engine.on('stateChanged', () => dayFlow.refresh())
   }
 
@@ -430,7 +560,15 @@ export class HostApp {
       winner,
       reason,
       onNewGame: () => {
+        // 세이브 삭제 (게임 종료)
+        if (this._saveId) {
+          GameSaveManager.delete(this._saveId)
+          this._saveId = null
+        }
+        this._stopAutoSave()
         engine.reset()
+        this._history.reset()
+        this._historyBar.hide()
         this._gameStarting = false
         this.seatRoles     = new Array(this.pendingPlayerCount).fill(null)
         this._lastRoomCode = null
@@ -442,6 +580,210 @@ export class HostApp {
   }
 
   _handlePlayerAction(action, actorId) {}
+
+  // ─────────────────────────────────────
+  // 히스토리 시스템
+  // ─────────────────────────────────────
+
+  _mountHistoryBar() {
+    // 이미 DOM에 있으면 스킵
+    if (this._historyBar.el.parentNode) {
+      this._historyBar.show()
+      return
+    }
+    const app = this.container.parentNode
+    app.insertBefore(this._historyBar.el, this.container)
+    this._historyBar.show()
+  }
+
+  _onHistoryNavigate(entry) {
+    if (this._history.isViewingHistory() && entry) {
+      this._showViewer(entry)
+    } else {
+      this._dismissViewer()
+    }
+  }
+
+  _showViewer(entry) {
+    this._dismissViewer()
+
+    // 열람 배너 + 오버레이
+    const overlay = document.createElement('div')
+    overlay.className = 'hbar-viewer-overlay'
+
+    // 배너
+    const banner = document.createElement('div')
+    banner.className = 'hbar-viewing-banner'
+
+    const phaseKo = entry.phase === 'night' ? '밤' : '낮'
+    const bannerText = document.createElement('span')
+    bannerText.className = 'hbar-viewing-banner__text'
+    bannerText.textContent = `⚠️ ${phaseKo} ${entry.round} — ${entry.label} 열람 중`
+    banner.appendChild(bannerText)
+
+    const backBtn = document.createElement('button')
+    backBtn.className = 'hbar-viewing-banner__back'
+    backBtn.textContent = '현재로 돌아가기 →'
+    backBtn.addEventListener('click', () => this._history.goToLatest())
+    banner.appendChild(backBtn)
+
+    overlay.appendChild(banner)
+
+    // 엔트리 상세 카드
+    const card = document.createElement('div')
+    card.className = 'hbar-viewer-card'
+
+    const typeNames = {
+      'phase-start': '페이즈 시작',
+      'night-action': '밤 행동',
+      'night-resolve': '밤 결과',
+      'nomination': '지명',
+      'vote': '투표',
+      'execution': '처형',
+      'death': '사망',
+    }
+
+    card.innerHTML = `
+      <div class="hbar-viewer-card__type">${typeNames[entry.type] || entry.type}</div>
+      <div class="hbar-viewer-card__label">${entry.label}</div>
+      ${entry.detail ? `<div class="hbar-viewer-card__detail">${entry.detail}</div>` : ''}
+    `
+    overlay.appendChild(card)
+
+    // 전후 탐색 버튼
+    const navRow = document.createElement('div')
+    navRow.style.cssText = 'display:flex;gap:8px;padding:0 16px;'
+
+    const prevBtn = document.createElement('button')
+    prevBtn.className = 'btn'
+    prevBtn.style.flex = '1'
+    prevBtn.textContent = '‹ 이전'
+    prevBtn.addEventListener('click', () => this._history.goBack())
+    navRow.appendChild(prevBtn)
+
+    const nextBtn = document.createElement('button')
+    nextBtn.className = 'btn'
+    nextBtn.style.flex = '1'
+    nextBtn.textContent = '다음 ›'
+    nextBtn.addEventListener('click', () => this._history.goForward())
+    navRow.appendChild(nextBtn)
+
+    overlay.appendChild(navRow)
+
+    // app-content에 상대 위치 설정 후 오버레이 추가
+    this.container.style.position = 'relative'
+    this.container.appendChild(overlay)
+    this._viewerOverlay = overlay
+  }
+
+  _dismissViewer() {
+    if (this._viewerOverlay) {
+      this._viewerOverlay.remove()
+      this._viewerOverlay = null
+    }
+  }
+
+  _findActorForRole(roleId) {
+    if (roleId === 'minion-info' || roleId === 'demon-info' || roleId === 'spy') return null
+    const p = engine.state.players.find(p => p.role === roleId && p.status === 'alive')
+    return p ? p.id : null
+  }
+
+  // ─────────────────────────────────────
+  // 저장 시스템
+  // ─────────────────────────────────────
+
+  _autoSave() {
+    if (!this._saveId) return
+    const data = {
+      engineData:  engine.serialize(),
+      hostState: {
+        seatRoles:          [...this.seatRoles],
+        pendingPlayerCount: this.pendingPlayerCount,
+        roomCode:           this._lastRoomCode,
+        doneSteps:          [...this.doneSteps],
+        currentTab:         this.currentTab,
+      },
+      historyData: this._history.serialize(),
+    }
+    GameSaveManager.save(this._saveId, data)
+  }
+
+  _startAutoSave() {
+    this._stopAutoSave()
+    // stateChanged마다 디바운스 저장
+    this._autoSaveHandler = () => {
+      clearTimeout(this._saveDebounce)
+      this._saveDebounce = setTimeout(() => this._autoSave(), 1000)
+    }
+    engine.on('stateChanged', this._autoSaveHandler)
+
+    // 페이지 이탈 시 즉시 저장
+    this._beforeUnloadHandler = () => this._autoSave()
+    window.addEventListener('beforeunload', this._beforeUnloadHandler)
+  }
+
+  _stopAutoSave() {
+    if (this._autoSaveHandler) {
+      engine.off('stateChanged', this._autoSaveHandler)
+      this._autoSaveHandler = null
+    }
+    if (this._beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this._beforeUnloadHandler)
+      this._beforeUnloadHandler = null
+    }
+    clearTimeout(this._saveDebounce)
+  }
+
+  _insertExitButton() {
+    const btn = document.createElement('button')
+    btn.style.cssText = `
+      position:absolute;top:8px;right:8px;z-index:20;
+      background:rgba(255,255,255,0.06);border:1px solid var(--lead2);
+      border-radius:8px;padding:4px 10px;cursor:pointer;
+      font-size:0.62rem;color:var(--text4);
+      display:flex;align-items:center;gap:4px;
+    `
+    btn.textContent = '🏠 나가기'
+    btn.addEventListener('click', () => this._showExitConfirm())
+    this.container.style.position = 'relative'
+    this.container.appendChild(btn)
+  }
+
+  /** 호스트가 게임에서 나가기 (저장 후 홈으로) */
+  exitToHome() {
+    this._autoSave()
+    this._stopAutoSave()
+    this._historyBar.hide()
+    this._saveId = null
+    window.goHome?.()
+  }
+
+  _showExitConfirm() {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.textAlign = 'center'
+    box.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:12px">🏠</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--gold2);margin-bottom:8px">게임 나가기</div>
+      <div style="font-size:0.78rem;color:var(--text2);margin-bottom:16px;line-height:1.5">게임은 자동 저장됩니다.<br>나중에 이어서 플레이할 수 있습니다.</div>
+      <div class="btn-grid-2">
+        <button class="btn" id="exit-cancel">취소</button>
+        <button class="btn btn-gold" id="exit-confirm">나가기</button>
+      </div>
+    `
+    overlay.appendChild(box)
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+    document.body.appendChild(overlay)
+
+    box.querySelector('#exit-cancel').addEventListener('click', () => overlay.remove())
+    box.querySelector('#exit-confirm').addEventListener('click', () => {
+      overlay.remove()
+      this.exitToHome()
+    })
+  }
 
   // ─────────────────────────────────────
   // 자리 배치 탭 — 전체 공개 링 뷰

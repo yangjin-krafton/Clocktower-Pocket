@@ -202,44 +202,194 @@
   animation: ability-active-pulse 2.5s ease-in-out infinite;
 }
 
-/* 패시브 능력 활성화 상태 (Baron 등) */
-@keyframes passive-ability-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(140, 40, 50, 0.6),
-      0 0 16px rgba(140, 40, 50, 0.4),
-      0 0 32px rgba(140, 40, 50, 0.2);
+/* 패시브 능력 활성화 상태 (Baron 등) - 회전하는 링 파티클 효과 */
+
+/* 회전 애니메이션 */
+@keyframes ability-ring-rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
   }
-  50% {
-    box-shadow:
-      0 0 0 3px rgba(140, 40, 50, 0.8),
-      0 0 24px rgba(140, 40, 50, 0.6),
-      0 0 48px rgba(140, 40, 50, 0.3);
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
+@keyframes ability-ring-rotate-reverse {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+/* 파티클 펄스 애니메이션 */
+@keyframes ability-particles-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    box-shadow:
+      0 0 8px currentColor,
+      0 0 16px currentColor;
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 16px currentColor,
+      0 0 32px currentColor,
+      0 0 48px currentColor;
+  }
+}
+
+/* 팀별 패시브 능력 효과 - 회전하는 링 */
 .passive-ability-active {
-  animation: passive-ability-glow 3s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
 }
 
-/* 첫날 밤 능력 활성화 */
-@keyframes first-night-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(48, 100, 180, 0.5),
-      0 0 16px rgba(48, 100, 180, 0.4),
-      0 0 32px rgba(48, 100, 180, 0.2);
-  }
-  50% {
-    box-shadow:
-      0 0 0 3px rgba(48, 100, 180, 0.7),
-      0 0 24px rgba(48, 100, 180, 0.6),
-      0 0 48px rgba(48, 100, 180, 0.3);
-  }
+/* 첫 번째 회전 링 */
+.passive-ability-active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 140%;
+  border-radius: 12px;
+  border: 2px solid;
+  border-color: transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  pointer-events: none;
+  animation: ability-ring-rotate 3s linear infinite, ability-particles-pulse 2s ease-in-out infinite;
+  z-index: -1;
 }
 
+/* 두 번째 회전 링 (반대 방향) */
+.passive-ability-active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 165%;
+  height: 165%;
+  border-radius: 14px;
+  border: 2px dashed;
+  border-color: transparent;
+  border-bottom-color: currentColor;
+  border-left-color: currentColor;
+  pointer-events: none;
+  animation: ability-ring-rotate-reverse 4s linear infinite, ability-particles-pulse 2.5s ease-in-out infinite;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+/* 팀별 색상 적용 */
+.passive-ability-active.ability-team-townsfolk {
+  color: rgba(46, 74, 143, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(46, 74, 143, 0.5),
+    0 0 20px rgba(46, 74, 143, 0.5),
+    0 0 40px rgba(46, 74, 143, 0.25);
+}
+
+.passive-ability-active.ability-team-outsider {
+  color: rgba(91, 179, 198, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(91, 179, 198, 0.5),
+    0 0 20px rgba(91, 179, 198, 0.5),
+    0 0 40px rgba(91, 179, 198, 0.25);
+}
+
+.passive-ability-active.ability-team-minion {
+  color: rgba(140, 40, 50, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(140, 40, 50, 0.5),
+    0 0 20px rgba(140, 40, 50, 0.5),
+    0 0 40px rgba(140, 40, 50, 0.25);
+}
+
+.passive-ability-active.ability-team-demon {
+  color: rgba(160, 30, 40, 1);
+  box-shadow:
+    0 0 0 3px rgba(160, 30, 40, 0.6),
+    0 0 24px rgba(160, 30, 40, 0.6),
+    0 0 48px rgba(160, 30, 40, 0.3);
+}
+
+/* 첫날 밤 능력 활성화 - 회전하는 링 효과 (패시브와 동일) */
 .first-night-active {
-  animation: first-night-glow 2.5s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
+}
+
+/* 첫 번째 회전 링 */
+.first-night-active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 140%;
+  border-radius: 12px;
+  border: 2px solid;
+  border-color: transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  pointer-events: none;
+  animation: ability-ring-rotate 3s linear infinite, ability-particles-pulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* 두 번째 회전 링 (반대 방향) */
+.first-night-active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 165%;
+  height: 165%;
+  border-radius: 14px;
+  border: 2px dashed;
+  border-color: transparent;
+  border-bottom-color: currentColor;
+  border-left-color: currentColor;
+  pointer-events: none;
+  animation: ability-ring-rotate-reverse 4s linear infinite, ability-particles-pulse 2.5s ease-in-out infinite;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+/* 팀별 색상 적용 (첫날 밤 능력) */
+.first-night-active.ability-team-townsfolk {
+  color: rgba(46, 74, 143, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(46, 74, 143, 0.5),
+    0 0 20px rgba(46, 74, 143, 0.5),
+    0 0 40px rgba(46, 74, 143, 0.25);
+}
+
+.first-night-active.ability-team-outsider {
+  color: rgba(91, 179, 198, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(91, 179, 198, 0.5),
+    0 0 20px rgba(91, 179, 198, 0.5),
+    0 0 40px rgba(91, 179, 198, 0.25);
+}
+
+.first-night-active.ability-team-minion {
+  color: rgba(140, 40, 50, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(140, 40, 50, 0.5),
+    0 0 20px rgba(140, 40, 50, 0.5),
+    0 0 40px rgba(140, 40, 50, 0.25);
+}
+
+.first-night-active.ability-team-demon {
+  color: rgba(160, 30, 40, 1);
+  box-shadow:
+    0 0 0 3px rgba(160, 30, 40, 0.6),
+    0 0 24px rgba(160, 30, 40, 0.6),
+    0 0 48px rgba(160, 30, 40, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════

@@ -266,6 +266,7 @@ export class Grimoire {
       const isAssigned = !!roleId
       const hasPassiveAbility = roleId && PASSIVE_ABILITY_ROLES.includes(roleId)
       const hasFirstNightAbility = roleId && FIRST_NIGHT_ROLES.includes(roleId)
+      const team = role ? role.team : null
 
       // 12시 방향 시작, 시계 방향
       const { x, y } = ovalSlotPos(i, total)
@@ -280,6 +281,7 @@ export class Grimoire {
         + (isAssigned ? ' gl-seat-slot--assigned' : ' gl-seat-slot--empty')
         + (hasPassiveAbility ? ' passive-ability-active' : '')
         + (hasFirstNightAbility && !hasPassiveAbility ? ' first-night-active' : '')
+        + (team && (hasPassiveAbility || hasFirstNightAbility) ? ` ability-team-${team}` : '')
       slot.style.cssText = `
         left:${x.toFixed(2)}%;
         top:${y.toFixed(2)}%;

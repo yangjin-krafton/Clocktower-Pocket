@@ -14,6 +14,7 @@ import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode }           from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
+import { addBaronOutsiderGuide } from '../components/BaronOutsiderGuide.js'
 
 // 패시브 능력을 가진 역할 (게임 시작 시 자동 발동)
 const PASSIVE_ABILITY_ROLES = ['baron', 'drunk', 'recluse', 'saint']
@@ -233,13 +234,10 @@ export class Grimoire {
     // ── 2) 원형 자리 배치 휠 ─────────────────────────────────
     this._renderSeatWheel(total, seats)
 
+    // ── 3) 역할 선택 패널 (항상 표시) ──────────────────────
+    this._renderRolePanel(seats)
 
-    // ── 4) 역할 선택 패널 (자리 선택 시) ──────────────────────
-    if (this._selectedSeat !== null) {
-      this._renderRolePanel(seats)
-    }
-
-    // ── 5) 구성 상태 + 시작 버튼 ───────────────────────────────
+    // ── 4) 구성 상태 + 시작 버튼 ───────────────────────────────
     this._renderLobbyFooter(total, seats)
   }
 
@@ -259,6 +257,15 @@ export class Grimoire {
       minion:    'rgba(140,40,50,0.65)',
       demon:     'rgba(160,30,40,0.9)',
     }
+
+    // Baron이 있는지 확인하고 아웃사이더 수 계산
+    const hasBaron = seats.includes('baron')
+    const baseOutsiderCount = PLAYER_COUNTS[total]?.outsider || 0
+    const requiredOutsiders = hasBaron ? baseOutsiderCount + 2 : baseOutsiderCount
+    const currentOutsiders = seats.filter(r => {
+      const role = r ? ROLES_BY_ID[r] : null
+      return role && role.team === 'outsider'
+    }).length
 
     seats.forEach((roleId, i) => {
       const role       = roleId ? ROLES_BY_ID[roleId] : null
@@ -318,6 +325,13 @@ export class Grimoire {
         this._render()
       })
       oval.appendChild(slot)
+
+      // Baron 슬롯에 아웃사이더 가이드 추가
+      if (roleId === 'baron' && hasBaron) {
+        requestAnimationFrame(() => {
+          addBaronOutsiderGuide(slot, requiredOutsiders, currentOutsiders)
+        })
+      }
 
       // 자리 번호 레이블 (슬롯과 중심 사이)
       const labelX = 50 + (x - 50) * 0.55
@@ -422,8 +436,8 @@ export class Grimoire {
 
   _renderRolePanel(seats) {
     const si          = this._selectedSeat
-    const currentRole = seats[si] ?? null
-    const usedByOther = new Set(seats.filter((r, i) => r && i !== si))
+    const currentRole = si !== null ? (seats[si] ?? null) : null
+    const usedByOther = new Set(seats.filter((r, i) => r && (si === null || i !== si)))
 
     const panel = document.createElement('div')
     panel.className = 'card gl-role-panel'
@@ -435,73 +449,84 @@ export class Grimoire {
     const pt = document.createElement('div')
     pt.className = 'card-title'
     pt.style.marginBottom = '0'
-    pt.textContent = `자리 ${si + 1} 역할 선택`
+    pt.textContent = si !== null ? `자리 ${si + 1} 역할 선택` : '역할 선택'
 
     const clearBtn = document.createElement('button')
-    clearBtn.style.cssText = 'font-size:0.68rem;color:var(--text4);background:none;border:none;cursor:pointer;padding:2px 8px;'
+    clearBtn.style.cssText = `font-size:0.68rem;color:var(--text4);background:none;border:none;cursor:pointer;padding:2px 8px;${si === null ? 'visibility:hidden;' : ''}`
     clearBtn.textContent = '비우기'
-    clearBtn.addEventListener('click', () => this.onSeatRoleAssign?.(si, null))
+    clearBtn.addEventListener('click', () => {
+      if (si !== null) this.onSeatRoleAssign?.(si, null)
+    })
 
     ph.appendChild(pt)
     ph.appendChild(clearBtn)
     panel.appendChild(ph)
 
-    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
+    // 자리 미선택 시 안내 메시지
+    if (si === null) {
+      const hint = document.createElement('div')
+      hint.style.cssText = 'font-size:0.65rem;color:var(--text4);text-align:center;margin-bottom:8px;padding:4px 0;'
+      hint.textContent = '위 자리를 먼저 선택하세요'
+      panel.appendChild(hint)
+    }
 
-    ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
-      const teamRoles = ROLES_TB.filter(r => r.team === team)
-      const section   = document.createElement('div')
-      section.className = 'dict__section'
+    // 2행 가로 스크롤 그리드 컨테이너
+    const scrollContainer = document.createElement('div')
+    scrollContainer.className = 'gl-role-scroll' + (si === null ? ' gl-role-scroll--disabled' : '')
 
-      const heading = document.createElement('div')
-      heading.className = `dict__section-title dict__section-title--${team}`
-      heading.textContent = TEAM_LABEL[team]
-      section.appendChild(heading)
+    const grid = document.createElement('div')
+    grid.className = 'gl-role-grid'
 
-      const grid = document.createElement('div')
-      grid.className = 'dict__grid'
+    // 모든 역할을 진영 순서대로 배치
+    const allRoles = [
+      ...ROLES_TB.filter(r => r.team === 'townsfolk'),
+      ...ROLES_TB.filter(r => r.team === 'outsider'),
+      ...ROLES_TB.filter(r => r.team === 'minion'),
+      ...ROLES_TB.filter(r => r.team === 'demon'),
+    ]
 
-      teamRoles.forEach(role => {
-        const isCurrent = role.id === currentRole
-        const isUsed    = usedByOther.has(role.id)
-        const usedSeat  = isUsed ? seats.findIndex((r, i) => r === role.id && i !== si) + 1 : 0
+    allRoles.forEach(role => {
+      const isCurrent = role.id === currentRole
+      const isUsed    = usedByOther.has(role.id)
+      const usedSeat  = isUsed ? seats.findIndex((r, i) => r === role.id && i !== si) + 1 : 0
 
-        const btn = document.createElement('button')
-        btn.className = `dict__token dict__token--${role.team}`
-          + (isCurrent ? ' dict__token--on' : (isUsed ? ' dict__token--used' : ' dict__token--off'))
+      const btn = document.createElement('button')
+      btn.className = `dict__token dict__token--${role.team}`
+        + (isCurrent ? ' dict__token--on' : (isUsed ? ' dict__token--used' : ''))
 
-        const iconDiv = document.createElement('div')
-        iconDiv.className = 'dict__token-icon'
-        if (role.icon?.endsWith('.png')) {
-          const img = document.createElement('img')
-          img.src = `./asset/icons/${role.icon}`
-          img.alt = role.name
-          iconDiv.appendChild(img)
-        } else {
-          iconDiv.textContent = role.iconEmoji || '?'
-        }
+      const iconDiv = document.createElement('div')
+      iconDiv.className = 'dict__token-icon'
+      if (role.icon?.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/icons/${role.icon}`
+        img.alt = role.name
+        iconDiv.appendChild(img)
+      } else {
+        iconDiv.textContent = role.iconEmoji || '?'
+      }
 
-        const nameDiv = document.createElement('div')
-        nameDiv.className = 'dict__token-name'
-        nameDiv.textContent = role.name
-        if (isUsed) {
-          const usedTag = document.createElement('div')
-          usedTag.style.cssText = 'font-size:0.52rem;color:var(--text4);margin-top:1px;'
-          usedTag.textContent = `자리${usedSeat}`
-          nameDiv.appendChild(usedTag)
-        }
+      const nameDiv = document.createElement('div')
+      nameDiv.className = 'dict__token-name'
+      nameDiv.textContent = role.name
+      if (isUsed) {
+        const usedTag = document.createElement('div')
+        usedTag.style.cssText = 'font-size:0.52rem;color:var(--text4);margin-top:1px;'
+        usedTag.textContent = `자리${usedSeat}`
+        nameDiv.appendChild(usedTag)
+      }
 
-        btn.appendChild(iconDiv)
-        btn.appendChild(nameDiv)
-        btn.addEventListener('click', () => {
+      btn.appendChild(iconDiv)
+      btn.appendChild(nameDiv)
+      btn.addEventListener('click', () => {
+        if (si !== null) {
           this.onSeatRoleAssign?.(si, isCurrent ? null : role.id)
-        })
-        grid.appendChild(btn)
+        }
       })
-
-      section.appendChild(grid)
-      panel.appendChild(section)
+      grid.appendChild(btn)
     })
+
+    scrollContainer.appendChild(grid)
+    panel.appendChild(scrollContainer)
 
     this.el.appendChild(panel)
   }
@@ -751,7 +776,7 @@ if (!document.getElementById('grimoire-lobby-style')) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 2px solid var(--lead2);
+  border: 6px solid var(--lead2);
   background: var(--surface);
   transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s;
   overflow: visible;
@@ -813,6 +838,40 @@ if (!document.getElementById('grimoire-lobby-style')) {
 
 .gl-role-panel {
   margin-top: 4px;
+}
+
+/* ── 2행 가로 스크롤 그리드 ── */
+.gl-role-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0 8px;
+  margin: 0 -4px;
+}
+.gl-role-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.gl-role-scroll::-webkit-scrollbar-track {
+  background: var(--surface2);
+  border-radius: 3px;
+}
+.gl-role-scroll::-webkit-scrollbar-thumb {
+  background: var(--lead2);
+  border-radius: 3px;
+}
+.gl-role-scroll--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.gl-role-grid {
+  display: grid;
+  grid-template-rows: repeat(2, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 76px;
+  gap: 6px;
+  padding: 0 4px;
+  width: fit-content;
 }
 
 /* ── 타원 중앙 조작 패널 ── */

@@ -202,194 +202,16 @@
   animation: ability-active-pulse 2.5s ease-in-out infinite;
 }
 
-/* 패시브 능력 활성화 상태 (Baron 등) - 회전하는 링 파티클 효과 */
-
-/* 회전 애니메이션 */
-@keyframes ability-ring-rotate {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-@keyframes ability-ring-rotate-reverse {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(-360deg);
-  }
-}
-
-/* 파티클 펄스 애니메이션 */
-@keyframes ability-particles-pulse {
-  0%, 100% {
-    opacity: 0.6;
-    box-shadow:
-      0 0 8px currentColor,
-      0 0 16px currentColor;
-  }
-  50% {
-    opacity: 1;
-    box-shadow:
-      0 0 16px currentColor,
-      0 0 32px currentColor,
-      0 0 48px currentColor;
-  }
-}
-
-/* 팀별 패시브 능력 효과 - 회전하는 링 */
+/* 패시브 능력 활성화 상태 - 기본 스타일 */
 .passive-ability-active {
   position: relative;
   overflow: visible;
 }
 
-/* 첫 번째 회전 링 */
-.passive-ability-active::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 140%;
-  height: 140%;
-  border-radius: 12px;
-  border: 2px solid;
-  border-color: transparent;
-  border-top-color: currentColor;
-  border-right-color: currentColor;
-  pointer-events: none;
-  animation: ability-ring-rotate 3s linear infinite, ability-particles-pulse 2s ease-in-out infinite;
-  z-index: -1;
-}
-
-/* 두 번째 회전 링 (반대 방향) */
-.passive-ability-active::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 165%;
-  height: 165%;
-  border-radius: 14px;
-  border: 2px dashed;
-  border-color: transparent;
-  border-bottom-color: currentColor;
-  border-left-color: currentColor;
-  pointer-events: none;
-  animation: ability-ring-rotate-reverse 4s linear infinite, ability-particles-pulse 2.5s ease-in-out infinite;
-  opacity: 0.7;
-  z-index: -1;
-}
-
-/* 팀별 색상 적용 */
-.passive-ability-active.ability-team-townsfolk {
-  color: rgba(46, 74, 143, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(46, 74, 143, 0.5),
-    0 0 20px rgba(46, 74, 143, 0.5),
-    0 0 40px rgba(46, 74, 143, 0.25);
-}
-
-.passive-ability-active.ability-team-outsider {
-  color: rgba(91, 179, 198, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(91, 179, 198, 0.5),
-    0 0 20px rgba(91, 179, 198, 0.5),
-    0 0 40px rgba(91, 179, 198, 0.25);
-}
-
-.passive-ability-active.ability-team-minion {
-  color: rgba(140, 40, 50, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(140, 40, 50, 0.5),
-    0 0 20px rgba(140, 40, 50, 0.5),
-    0 0 40px rgba(140, 40, 50, 0.25);
-}
-
-.passive-ability-active.ability-team-demon {
-  color: rgba(160, 30, 40, 1);
-  box-shadow:
-    0 0 0 3px rgba(160, 30, 40, 0.6),
-    0 0 24px rgba(160, 30, 40, 0.6),
-    0 0 48px rgba(160, 30, 40, 0.3);
-}
-
-/* 첫날 밤 능력 활성화 - 회전하는 링 효과 (패시브와 동일) */
+/* 첫날 밤 능력 활성화 - 기본 스타일 */
 .first-night-active {
   position: relative;
   overflow: visible;
-}
-
-/* 첫 번째 회전 링 */
-.first-night-active::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 140%;
-  height: 140%;
-  border-radius: 12px;
-  border: 2px solid;
-  border-color: transparent;
-  border-top-color: currentColor;
-  border-right-color: currentColor;
-  pointer-events: none;
-  animation: ability-ring-rotate 3s linear infinite, ability-particles-pulse 2s ease-in-out infinite;
-  z-index: -1;
-}
-
-/* 두 번째 회전 링 (반대 방향) */
-.first-night-active::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 165%;
-  height: 165%;
-  border-radius: 14px;
-  border: 2px dashed;
-  border-color: transparent;
-  border-bottom-color: currentColor;
-  border-left-color: currentColor;
-  pointer-events: none;
-  animation: ability-ring-rotate-reverse 4s linear infinite, ability-particles-pulse 2.5s ease-in-out infinite;
-  opacity: 0.7;
-  z-index: -1;
-}
-
-/* 팀별 색상 적용 (첫날 밤 능력) */
-.first-night-active.ability-team-townsfolk {
-  color: rgba(46, 74, 143, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(46, 74, 143, 0.5),
-    0 0 20px rgba(46, 74, 143, 0.5),
-    0 0 40px rgba(46, 74, 143, 0.25);
-}
-
-.first-night-active.ability-team-outsider {
-  color: rgba(91, 179, 198, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(91, 179, 198, 0.5),
-    0 0 20px rgba(91, 179, 198, 0.5),
-    0 0 40px rgba(91, 179, 198, 0.25);
-}
-
-.first-night-active.ability-team-minion {
-  color: rgba(140, 40, 50, 0.9);
-  box-shadow:
-    0 0 0 2px rgba(140, 40, 50, 0.5),
-    0 0 20px rgba(140, 40, 50, 0.5),
-    0 0 40px rgba(140, 40, 50, 0.25);
-}
-
-.first-night-active.ability-team-demon {
-  color: rgba(160, 30, 40, 1);
-  box-shadow:
-    0 0 0 3px rgba(160, 30, 40, 0.6),
-    0 0 24px rgba(160, 30, 40, 0.6),
-    0 0 48px rgba(160, 30, 40, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -450,4 +272,118 @@
   box-shadow: none !important;
   animation: none !important;
   filter: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Baron 아웃사이더 가이드 (Baron Outsider Guide)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Baron 가이드 컨테이너 */
+.baron-outsider-guide {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  padding: 3px 6px;
+  background: rgba(10, 9, 22, 0.85);
+  border-radius: 8px;
+  border: 1px solid rgba(91, 179, 198, 0.4);
+  pointer-events: none;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+/* 아웃사이더 슬롯 */
+.baron-outsider-slot {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1.5px solid rgba(91, 179, 198, 0.4);
+  transition: all 0.25s ease;
+}
+
+/* 빈 슬롯 */
+.baron-outsider-slot--empty {
+  background: rgba(91, 179, 198, 0.1);
+}
+
+/* 채워진 슬롯 */
+.baron-outsider-slot--filled {
+  background: rgba(91, 179, 198, 0.7);
+  border-color: rgba(91, 179, 198, 0.9);
+  box-shadow:
+    inset 0 0 8px rgba(91, 179, 198, 0.5),
+    0 0 6px rgba(91, 179, 198, 0.4);
+}
+
+/* 경고 상태 - 강하고 빠르게 깜빡임 */
+@keyframes baron-warning-flash {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(160, 30, 40, 0.8),
+      0 0 20px rgba(160, 30, 40, 0.7),
+      0 0 40px rgba(160, 30, 40, 0.4);
+    border-color: rgba(160, 30, 40, 0.9);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(160, 30, 40, 1),
+      0 0 30px rgba(160, 30, 40, 0.9),
+      0 0 60px rgba(160, 30, 40, 0.6);
+    border-color: rgba(160, 30, 40, 1);
+  }
+}
+
+@keyframes baron-warning-slot-pulse {
+  0%, 100% {
+    background: rgba(160, 30, 40, 0.2);
+    border-color: rgba(160, 30, 40, 0.6);
+  }
+  50% {
+    background: rgba(160, 30, 40, 0.4);
+    border-color: rgba(160, 30, 40, 0.9);
+  }
+}
+
+.baron-outsider-guide--warning {
+  animation: baron-warning-flash 0.6s ease-in-out infinite;
+  border-color: rgba(160, 30, 40, 0.8);
+}
+
+.baron-outsider-guide--warning .baron-outsider-slot--empty {
+  animation: baron-warning-slot-pulse 0.6s ease-in-out infinite;
+}
+
+/* 완료 상태 - 은은하게 빛남 */
+@keyframes baron-complete-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(91, 179, 198, 0.5),
+      0 0 12px rgba(91, 179, 198, 0.4),
+      0 0 24px rgba(91, 179, 198, 0.2);
+    border-color: rgba(91, 179, 198, 0.6);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(91, 179, 198, 0.7),
+      0 0 16px rgba(91, 179, 198, 0.5),
+      0 0 32px rgba(91, 179, 198, 0.3);
+    border-color: rgba(91, 179, 198, 0.8);
+  }
+}
+
+.baron-outsider-guide--complete {
+  animation: baron-complete-glow 2.5s ease-in-out infinite;
+  border-color: rgba(91, 179, 198, 0.6);
+}
+
+.baron-outsider-guide--complete .baron-outsider-slot--filled {
+  background: rgba(91, 179, 198, 0.8);
+  border-color: rgba(91, 179, 198, 1);
+  box-shadow:
+    inset 0 0 10px rgba(91, 179, 198, 0.6),
+    0 0 8px rgba(91, 179, 198, 0.5);
 }

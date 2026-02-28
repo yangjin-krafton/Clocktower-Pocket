@@ -159,6 +159,7 @@
    능력 활성화 효과 (Ability Activation Effects)
    ═══════════════════════════════════════════════════════════ */
 
+/* 능력 발동 순간 애니메이션 (한 번만 실행) */
 @keyframes ability-activate {
   0% {
     box-shadow:
@@ -179,6 +180,66 @@
 
 .ability-activate {
   animation: ability-activate 0.6s ease-out;
+}
+
+/* 능력 활성화 상태 - 지속적인 펄스 효과 */
+@keyframes ability-active-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(212, 168, 40, 0.5),
+      0 0 12px rgba(212, 168, 40, 0.4),
+      0 0 24px rgba(212, 168, 40, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(212, 168, 40, 0.7),
+      0 0 20px rgba(212, 168, 40, 0.6),
+      0 0 40px rgba(212, 168, 40, 0.3);
+  }
+}
+
+.ability-active {
+  animation: ability-active-pulse 2.5s ease-in-out infinite;
+}
+
+/* 패시브 능력 활성화 상태 (Baron 등) */
+@keyframes passive-ability-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(140, 40, 50, 0.6),
+      0 0 16px rgba(140, 40, 50, 0.4),
+      0 0 32px rgba(140, 40, 50, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(140, 40, 50, 0.8),
+      0 0 24px rgba(140, 40, 50, 0.6),
+      0 0 48px rgba(140, 40, 50, 0.3);
+  }
+}
+
+.passive-ability-active {
+  animation: passive-ability-glow 3s ease-in-out infinite;
+}
+
+/* 첫날 밤 능력 활성화 */
+@keyframes first-night-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(48, 100, 180, 0.5),
+      0 0 16px rgba(48, 100, 180, 0.4),
+      0 0 32px rgba(48, 100, 180, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(48, 100, 180, 0.7),
+      0 0 24px rgba(48, 100, 180, 0.6),
+      0 0 48px rgba(48, 100, 180, 0.3);
+  }
+}
+
+.first-night-active {
+  animation: first-night-glow 2.5s ease-in-out infinite;
 }
 
 /* ═══════════════════════════════════════════════════════════

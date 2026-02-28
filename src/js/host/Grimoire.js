@@ -15,6 +15,12 @@ import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode }           from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 
+// 패시브 능력을 가진 역할 (게임 시작 시 자동 발동)
+const PASSIVE_ABILITY_ROLES = ['baron', 'drunk', 'recluse', 'saint']
+
+// 첫날 밤 능력을 가진 역할
+const FIRST_NIGHT_ROLES = ['washerwoman', 'librarian', 'investigator', 'chef', 'empath', 'fortuneteller', 'butler', 'poisoner', 'spy', 'baron']
+
 export class Grimoire {
   /**
    * @param {Object}   opts.engine
@@ -258,6 +264,8 @@ export class Grimoire {
       const role       = roleId ? ROLES_BY_ID[roleId] : null
       const isSelected = this._selectedSeat === i
       const isAssigned = !!roleId
+      const hasPassiveAbility = roleId && PASSIVE_ABILITY_ROLES.includes(roleId)
+      const hasFirstNightAbility = roleId && FIRST_NIGHT_ROLES.includes(roleId)
 
       // 12시 방향 시작, 시계 방향
       const { x, y } = ovalSlotPos(i, total)
@@ -270,6 +278,8 @@ export class Grimoire {
       slot.className = 'gl-seat-slot'
         + (isSelected ? ' gl-seat-slot--selected' : '')
         + (isAssigned ? ' gl-seat-slot--assigned' : ' gl-seat-slot--empty')
+        + (hasPassiveAbility ? ' passive-ability-active' : '')
+        + (hasFirstNightAbility && !hasPassiveAbility ? ' first-night-active' : '')
       slot.style.cssText = `
         left:${x.toFixed(2)}%;
         top:${y.toFixed(2)}%;

@@ -751,9 +751,25 @@ if (!document.getElementById('grimoire-lobby-style')) {
 }
 .gl-seat-slot--assigned {
   border-style: solid;
+  /* 기본 글로우 효과 - 역할이 배정되었을 때 */
+  box-shadow:
+    0 0 8px rgba(212, 168, 40, 0.2),
+    0 0 16px rgba(212, 168, 40, 0.1);
+}
+/* 호버 시 글로우 강화 */
+.gl-seat-slot--assigned:hover {
+  box-shadow:
+    0 0 12px rgba(212, 168, 40, 0.35),
+    0 0 24px rgba(212, 168, 40, 0.18);
 }
 .gl-seat-slot--selected {
   transform: translate(-50%, -50%) scale(1.18) !important;
+  /* 선택 시 강한 글로우 + 아웃라인 */
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 40, 0.4),
+    0 0 16px rgba(212, 168, 40, 0.5),
+    0 0 32px rgba(212, 168, 40, 0.25);
+  background: rgba(212, 168, 40, 0.08);
 }
 .gl-seat-slot:active {
   transform: translate(-50%, -50%) scale(0.88) !important;

@@ -1,0 +1,242 @@
+/**
+ * 공통 이펙트 모듈 (Common Effects Module)
+ * 재사용 가능한 글로우, 아웃라인, 애니메이션 효과
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   글로우 효과 (Glow Effects)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 기본 글로우 - 부드러운 외곽 빛 */
+.glow-soft {
+  box-shadow:
+    0 0 8px rgba(212, 168, 40, 0.3),
+    0 0 16px rgba(212, 168, 40, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 중간 강도 글로우 */
+.glow-medium {
+  box-shadow:
+    0 0 12px rgba(212, 168, 40, 0.5),
+    0 0 24px rgba(212, 168, 40, 0.25),
+    0 0 36px rgba(212, 168, 40, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 강한 글로우 */
+.glow-intense {
+  box-shadow:
+    0 0 16px rgba(212, 168, 40, 0.7),
+    0 0 32px rgba(212, 168, 40, 0.4),
+    0 0 48px rgba(212, 168, 40, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 팀 색상별 글로우 */
+.glow-townsfolk {
+  box-shadow:
+    0 0 12px rgba(48, 100, 180, 0.5),
+    0 0 24px rgba(48, 100, 180, 0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-outsider {
+  box-shadow:
+    0 0 12px rgba(80, 140, 210, 0.5),
+    0 0 24px rgba(80, 140, 210, 0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-minion {
+  box-shadow:
+    0 0 12px rgba(160, 30, 40, 0.5),
+    0 0 24px rgba(160, 30, 40, 0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-demon {
+  box-shadow:
+    0 0 12px rgba(120, 15, 25, 0.6),
+    0 0 24px rgba(120, 15, 25, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-traveler {
+  box-shadow:
+    0 0 12px rgba(120, 90, 150, 0.5),
+    0 0 24px rgba(120, 90, 150, 0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   펄스 애니메이션 (Pulse Animations)
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(212, 168, 40, 0.3),
+      0 0 16px rgba(212, 168, 40, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(212, 168, 40, 0.6),
+      0 0 32px rgba(212, 168, 40, 0.3),
+      0 0 48px rgba(212, 168, 40, 0.15);
+  }
+}
+
+@keyframes glow-pulse-slow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(212, 168, 40, 0.3),
+      0 0 16px rgba(212, 168, 40, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(212, 168, 40, 0.6),
+      0 0 32px rgba(212, 168, 40, 0.3),
+      0 0 48px rgba(212, 168, 40, 0.15);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.glow-pulse-slow {
+  animation: glow-pulse-slow 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   아웃라인 효과 (Outline Effects)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 기본 아웃라인 */
+.outline-default {
+  box-shadow: 0 0 0 2px rgba(212, 168, 40, 0.5);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 두꺼운 아웃라인 */
+.outline-thick {
+  box-shadow: 0 0 0 4px rgba(212, 168, 40, 0.6);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 아웃라인 + 글로우 조합 */
+.outline-glow {
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 40, 0.5),
+    0 0 12px rgba(212, 168, 40, 0.4),
+    0 0 24px rgba(212, 168, 40, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   선택 상태 효과 (Selection Effects)
+   ═══════════════════════════════════════════════════════════ */
+
+.effect-selected {
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 40, 0.35),
+    0 0 12px rgba(212, 168, 40, 0.4),
+    0 0 24px rgba(212, 168, 40, 0.2);
+  background: rgba(212, 168, 40, 0.08);
+  transition: all 0.13s ease;
+}
+
+/* 호버 효과 */
+.effect-hover:hover {
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 40, 0.4),
+    0 0 8px rgba(212, 168, 40, 0.3);
+  transition: box-shadow 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   능력 활성화 효과 (Ability Activation Effects)
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes ability-activate {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(212, 168, 40, 0.8),
+      0 0 0 0 rgba(212, 168, 40, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px rgba(212, 168, 40, 0.4),
+      0 0 16px rgba(212, 168, 40, 0.6);
+  }
+  100% {
+    box-shadow:
+      0 0 0 8px rgba(212, 168, 40, 0),
+      0 0 32px rgba(212, 168, 40, 0);
+  }
+}
+
+.ability-activate {
+  animation: ability-activate 0.6s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   특수 효과 (Special Effects)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 반짝임 효과 */
+@keyframes shimmer {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+.effect-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* 위험 경고 효과 */
+@keyframes warning-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(160, 30, 40, 0.3),
+      0 0 16px rgba(160, 30, 40, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(160, 30, 40, 0.6),
+      0 0 32px rgba(160, 30, 40, 0.3);
+  }
+}
+
+.effect-warning {
+  animation: warning-pulse 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   유틸리티 클래스 (Utility Classes)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 트랜지션 속도 */
+.transition-fast {
+  transition: all 0.13s ease;
+}
+
+.transition-normal {
+  transition: all 0.3s ease;
+}
+
+.transition-slow {
+  transition: all 0.5s ease;
+}
+
+/* 효과 비활성화 */
+.no-effect {
+  box-shadow: none !important;
+  animation: none !important;
+  filter: none !important;
+}

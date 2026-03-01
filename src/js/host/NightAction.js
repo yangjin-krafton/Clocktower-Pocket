@@ -6,16 +6,20 @@ import { mountInfoPanel }          from '../components/InfoPanel.js'
 import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
 import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
 import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
+import { mountBluffSelectPanel }    from '../components/BluffSelectPanel.js'
+import { mountDemonBluffPanel }     from '../components/DemonBluffPanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
+import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
 
 export class NightAction {
   constructor({ engine, onStepDone }) {
-    this.engine     = engine
-    this.onStepDone = onStepDone
-    this._unmount   = null
-    this._advisor   = new NightAdvisor()
+    this.engine        = engine
+    this.onStepDone    = onStepDone
+    this._unmount      = null
+    this._advisor      = new NightAdvisor()
+    this._bluffAdvisor = new DemonBluffAdvisor()
   }
 
   /**
@@ -56,24 +60,23 @@ export class NightAction {
   _showMinionInfo(minions) {
     if (!minions || minions.length === 0) { this._done('minion-info'); return }
     const demonPlayers = this.engine.state.players.filter(p => p.role === 'imp')
-    const bluffs = this.engine.getBluffs()
-    const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
-
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ')
     const demonNums  = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
 
-    const minionMsg = `미니언: ${minionNums}\n임프: ${demonNums}\n블러프: ${bluffText || '없음'}`
+    // 블러프는 demon-info에서 선택되므로 미니언 공개 시점엔 표시 안 함
     this._unmount = mountInfoPanel({
       title:    '미니언 공개',
       roleIcon: '🎭',
-      message:  minionMsg,
+      message:  `미니언: ${minionNums}\n임프: ${demonNums}`,
       players:  [...minions, ...demonPlayers],
       revealData: {
         roleIcon: '🎭',
         roleName: '미니언 공개',
         roleTeam: 'minion',
-        message:  `임프: ${demonNums}\n블러프: ${bluffText || '없음'}`,
-        players:  minions.map(p => ({ id: p.id })),
+        message:  `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
+        players:  [...minions, ...demonPlayers].map(p => ({ id: p.id })),
+        hint:     '당신의 동료들이 공개됩니다 — 함께하는 미니언 자리번호와 임프 자리번호를 확인하세요. 낮에는 서로 모르는 척 행동해야 합니다.',
+        action:   '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('minion-info'),
     })
@@ -82,6 +85,43 @@ export class NightAction {
   // ── 임프 정보 ──
   _showDemonInfo(demons) {
     if (!demons || demons.length === 0) { this._done('demon-info'); return }
+
+    // 이미 블러프가 선택돼 있으면 선택 단계 스킵 (재진입 방어)
+    if (this.engine.getBluffs().length === 3) {
+      this._showDemonInfoPanel(demons)
+      return
+    }
+
+    // 1단계: 어드바이저 분석 → 전략 선택 패널
+    const pool = this.engine.getBluffPool()
+    const { analysis, options } = this._bluffAdvisor.advise({
+      pool,
+      players: this.engine.state.players,
+    })
+
+    this._unmount = mountDemonBluffPanel({
+      analysis,
+      options,
+      onDecide: (roles) => {
+        if (roles) {
+          // 프리셋 선택 → 바로 임프 정보 패널
+          this.engine.setBluffs(roles)
+          this._showDemonInfoPanel(demons)
+        } else {
+          // 직접 선택 → BluffSelectPanel
+          this._unmount = mountBluffSelectPanel({
+            pool,
+            onConfirm: (selectedBluffs) => {
+              this.engine.setBluffs(selectedBluffs)
+              this._showDemonInfoPanel(demons)
+            },
+          })
+        }
+      },
+    })
+  }
+
+  _showDemonInfoPanel(demons) {
     const minions = this.engine.state.players.filter(p =>
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
@@ -89,11 +129,10 @@ export class NightAction {
     const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
 
-    const demonMsg = `미니언: ${minionNums}\n블러프 3개: ${bluffText}`
     this._unmount = mountInfoPanel({
       title:    '임프 정보',
       roleIcon: '👿',
-      message:  demonMsg,
+      message:  `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
       players:  minions,
       revealData: {
         roleIcon: '👿',
@@ -101,6 +140,8 @@ export class NightAction {
         roleTeam: 'demon',
         message:  `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
         players:  minions.map(p => ({ id: p.id })),
+        hint:     '당신은 악 팀 임프입니다 — 미니언 자리번호와, 들키지 않고 사칭할 수 있는 선 역할 3개를 알려줍니다. 블러프 역할 중 하나인 척 행동하면 선 팀이 당신을 찾기 어렵습니다.',
+        action:   '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('demon-info'),
     })
@@ -247,6 +288,7 @@ export class NightAction {
       title:      role?.name || roleId,
       roleIcon:   role?.icon || '?',
       roleTeam:   role?.team || null,
+      ability:    role?.ability || '',
       players:    selectablePlayers,
       selfSeatId: actor.id,
       maxSelect:  role?.maxSelect || 1,
@@ -269,6 +311,8 @@ export class NightAction {
               roleTeam: 'town',
               message:  msg,
               players:  ids.map(id => ({ id })),
+              hint:     '당신 능력이 발동됐습니다 — 방금 지목한 두 자리 중 임프가 있는지 알려줍니다. 예/아니오를 기억해 낮에 추리에 활용하세요.',
+              action:   '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
             },
             onConfirm: () => this._done(roleId, ids),
           })

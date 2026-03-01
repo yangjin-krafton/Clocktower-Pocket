@@ -227,6 +227,8 @@ export class NightAdvisor {
           roleTeam: role?.team || null,
           message:  `양옆 악 플레이어: ${value}명`,
           players:  [],
+          hint:     '당신 능력이 발동됐습니다 — 바로 왼쪽·오른쪽 플레이어 중 악 팀(미니언·임프) 수를 알려줍니다. 숫자가 높을수록 당신 주변에 악 팀이 있다는 뜻입니다.',
+          action:   '숫자를 기억한 뒤 눈을 감고 손을 내려주세요.',
         }
       case 'chef':
         return {
@@ -235,11 +237,15 @@ export class NightAdvisor {
           roleTeam: role?.team || null,
           message:  `이웃한 악 쌍: ${value}쌍`,
           players:  [],
+          hint:     '당신 능력이 발동됐습니다 — 테이블에서 나란히 앉은 악 팀 플레이어 쌍이 몇 쌍인지 알려줍니다. 0이면 악 팀이 서로 떨어져 있다는 뜻입니다.',
+          action:   '숫자를 기억한 뒤 눈을 감고 손을 내려주세요.',
         }
       case 'undertaker': {
         if (!value) return {
           roleIcon: role?.icon || '?', roleName: role?.name || roleId,
           roleTeam: role?.team || null, message: '어젯밤 처형자 없음', players: [],
+          hint:   '어젯밤 처형이 없었거나 정보를 알 수 없습니다.',
+          action: '확인한 뒤 눈을 감고 손을 내려주세요.',
         }
         const r = ROLES_BY_ID[value.roleId]
         return {
@@ -248,6 +254,8 @@ export class NightAdvisor {
           roleTeam: role?.team || null,
           message:  `처형: ${value.playerId}번 → ${r?.iconEmoji || r?.icon || ''} ${r?.name || value.roleId}`,
           players:  [{ id: value.playerId }],
+          hint:     '당신 능력이 발동됐습니다 — 어젯밤 처형된 플레이어의 실제 역할을 알 수 있습니다. 번호와 역할을 함께 기억하세요.',
+          action:   '자리번호와 역할을 기억한 뒤 눈을 감고 손을 내려주세요.',
         }
       }
       case 'washerwoman':
@@ -255,15 +263,23 @@ export class NightAdvisor {
       case 'investigator': {
         if (!value) return null
         const r = ROLES_BY_ID[value.roleId]
-        const label = roleId === 'washerwoman' ? '마을 사람' : roleId === 'librarian' ? '아웃사이더' : '미니언'
-        // fullyWrong: 완전히 잘못된 정보, decoySwapped: 한 명만 교체
-        const msgNote = value.fullyWrong ? ' (※ 오정보)' : ''
+        const label    = roleId === 'washerwoman' ? '마을 주민' : roleId === 'librarian' ? '아웃사이더' : '미니언'
+        const roleHint = roleId === 'washerwoman'
+          ? `당신 능력이 발동됐습니다 — 아래 두 자리 중 정확히 한 명이 ${r?.name || label}(마을 주민)입니다. 어느 쪽인지는 알 수 없으니 낮에 추리하세요.`
+          : roleId === 'librarian'
+          ? `당신 능력이 발동됐습니다 — 아래 두 자리 중 한 명이 ${r?.name || label}(아웃사이더)입니다. 게임에 아웃사이더가 없으면 이 정보는 표시되지 않습니다.`
+          : `당신 능력이 발동됐습니다 — 아래 두 자리 중 한 명이 ${r?.name || label}(악 팀·미니언)입니다. 둘 중 하나는 반드시 악 팀이므로 낮에 주목하세요.`
+        const roleAction = roleId === 'investigator'
+          ? '두 자리번호와 역할명을 기억한 뒤 눈을 감고 손을 내려주세요.'
+          : '두 자리번호를 기억한 뒤 눈을 감고 손을 내려주세요.'
         return {
           roleIcon: role?.icon || '?',
           roleName: role?.name || roleId,
           roleTeam: role?.team || null,
-          message:  `이 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || label}입니다${msgNote}`,
+          message:  `이 중 한 명이 ${r?.iconEmoji || r?.icon || ''} ${r?.name || label}입니다`,
           players:  (value.players || []).map(p => ({ id: p.id })),
+          hint:     roleHint,
+          action:   roleAction,
         }
       }
       case 'spy':
@@ -273,6 +289,8 @@ export class NightAdvisor {
           roleTeam: 'minion',
           message:  typeof value === 'string' ? value : '그리모어 열람',
           players:  [],
+          hint:     '당신 능력이 발동됐습니다 — 이야기꾼이 그리모어를 공개합니다. 모든 플레이어의 역할을 확인할 수 있습니다.',
+          action:   '그리모어를 모두 확인한 뒤 눈을 감고 손을 내려주세요.',
         }
       default:
         return {

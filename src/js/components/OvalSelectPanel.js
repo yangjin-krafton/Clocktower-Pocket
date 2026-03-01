@@ -26,7 +26,7 @@ const TEAM_TITLE_COLOR = {
 
 export function mountOvalSelectPanel(data) {
   const {
-    title, roleIcon = '🎯', roleTeam,
+    title, roleIcon = '🎯', roleTeam, ability,
     players = [], selfSeatId,
     maxSelect = 1, onConfirm,
   } = data
@@ -67,9 +67,15 @@ export function mountOvalSelectPanel(data) {
 
   const hintEl = document.createElement('div')
   hintEl.className = 'oval-sel__hint'
-  hintEl.textContent = '자리를 탭해 선택하세요'
+  hintEl.textContent = `자리를 탭해 선택하세요 (최대 ${maxSelect}개)`
 
   titleWrap.appendChild(titleEl)
+  if (ability) {
+    const abilityEl = document.createElement('div')
+    abilityEl.className = 'oval-sel__ability'
+    abilityEl.textContent = ability
+    titleWrap.appendChild(abilityEl)
+  }
   titleWrap.appendChild(hintEl)
   hdr.appendChild(iconEl)
   hdr.appendChild(titleWrap)
@@ -232,7 +238,13 @@ if (!document.getElementById('oval-select-panel-style')) {
   font-weight: 700;
   color: var(--gold2);
 }
-.oval-sel__hint { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+.oval-sel__ability {
+  font-size: 0.72rem;
+  color: var(--text2);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.oval-sel__hint { font-size: 0.68rem; color: var(--text4); margin-top: 3px; }
 
 .oval-sel__wrap {
   flex: 1;

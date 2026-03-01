@@ -22,6 +22,7 @@ export class GameEngine {
       executedToday: null,
       nightOrder: [],
       currentNightStep: null,
+      bluffs: null,
     }
     this.logs = []
     this.nightActions = []  // { round, roleId, actorId, targetIds, infoSent }
@@ -118,7 +119,7 @@ export class GameEngine {
    * 이번 밤 순서 생성 (존재하는 역할만 필터)
    */
   buildNightOrder() {
-    const order = this.state.round === 0 ? NIGHT_ORDER_FIRST : NIGHT_ORDER_OTHER
+    const order = this.state.round === 1 ? NIGHT_ORDER_FIRST : NIGHT_ORDER_OTHER
     const activeRoleIds = new Set(
       this.state.players
         .filter(p => p.status === 'alive')
@@ -127,8 +128,8 @@ export class GameEngine {
 
     return order.filter(roleId => {
       if (roleId === 'minion-info' || roleId === 'demon-info') {
-        // 항상 첫밤에 포함
-        return this.state.round === 0
+        // 첫 밤(round === 1)에만 포함
+        return this.state.round === 1
       }
       if (roleId === 'ravenkeeper') {
         // 이번 밤 사망자 중 까마귀 사육사가 있을 때만
@@ -595,17 +596,23 @@ export class GameEngine {
     return this.state.players.filter(p => p.role === step && p.status === 'alive')
   }
 
-  /**
-   * 임프 블러프 3개 생성 (게임에 없는 townsfolk/outsider 역할)
-   */
-  getBluffs() {
+  /** 블러프 후보 풀 (게임에 없는 townsfolk/outsider) */
+  getBluffPool() {
     const usedRoles = new Set(this.state.players.map(p => p.role))
-    const pool = ROLES_TB.filter(r =>
+    return ROLES_TB.filter(r =>
       !usedRoles.has(r.id) &&
       (r.team === 'townsfolk' || r.team === 'outsider')
     )
-    const shuffled = [...pool].sort(() => Math.random() - 0.5)
-    return shuffled.slice(0, 3)
+  }
+
+  /** 호스트가 선택한 블러프 3개를 state에 저장 */
+  setBluffs(roles) {
+    this.state.bluffs = roles
+  }
+
+  /** 저장된 블러프 반환 (미설정이면 빈 배열) */
+  getBluffs() {
+    return this.state.bluffs || []
   }
 
   _log(phase, event) {

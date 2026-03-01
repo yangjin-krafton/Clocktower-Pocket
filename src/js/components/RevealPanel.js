@@ -24,7 +24,7 @@ const TEAM_COLORS = {
 }
 
 export function mountRevealPanel(data) {
-  const { roleIcon, roleName, roleTeam, message, players = [], onNext } = data
+  const { roleIcon, roleName, roleTeam, message, players = [], hint, action, onNext } = data
 
   const overlay = document.createElement('div')
   overlay.className = 'reveal-overlay'
@@ -35,11 +35,11 @@ export function mountRevealPanel(data) {
   const tc = TEAM_COLORS[roleTeam] || TEAM_COLORS.default
   panel.style.background = `radial-gradient(ellipse 90% 60% at 50% 20%, ${tc.glow} 0%, transparent 65%)`
 
-  // ── 상단 힌트 라벨 (호스트용, 거의 안 보임) ──
-  const label = document.createElement('div')
-  label.className = 'reveal__label'
-  label.textContent = '👁 참가자 화면'
-  panel.appendChild(label)
+  // ── 상단: 참가자 화면 + 야간 상황 안내 ──
+  const topBar = document.createElement('div')
+  topBar.className = 'reveal__top-bar'
+  topBar.innerHTML = `<span class="reveal__label-chip">👁 참가자 화면</span><span class="reveal__label-night">🌙 밤 — 역할 정보 수령</span>`
+  panel.appendChild(topBar)
 
   // ── 역할 아이콘 ──
   const iconEl = document.createElement('div')
@@ -63,21 +63,22 @@ export function mountRevealPanel(data) {
   nameEl.style.textShadow = `0 0 20px ${tc.shadow}`
   panel.appendChild(nameEl)
 
-  // ── 정보 메시지 ──
-  if (message) {
-    const msgEl = document.createElement('div')
-    msgEl.className = 'reveal__msg'
-    msgEl.textContent = message
-    panel.appendChild(msgEl)
+  // ── 안내 카드 (뭘 봐야 하는지) ──
+  if (hint) {
+    const hintEl = document.createElement('div')
+    hintEl.className = 'reveal__hint-card'
+    hintEl.innerHTML = `<span class="reveal__hint-icon">💡</span><span class="reveal__hint-text">${hint}</span>`
+    panel.appendChild(hintEl)
   }
 
-  // ── 번호 칩 (이름 없음, 번호만) ──
+  // ── 번호 칩 (message 앞에 배치 — 중요 대상을 먼저 인식) ──
   if (players.length > 0) {
     const chipsEl = document.createElement('div')
     chipsEl.className = 'reveal__players'
     players.forEach(p => {
       const chip = document.createElement('div')
       chip.className = 'reveal__num-chip'
+      chip.style.borderColor = tc.color
       chip.innerHTML = `
         <span class="reveal__num-val">${p.id}</span>
         <span class="reveal__num-unit">번</span>
@@ -86,6 +87,22 @@ export function mountRevealPanel(data) {
     })
     panel.appendChild(chipsEl)
   }
+
+  // ── 정보 메시지 ──
+  if (message) {
+    const msgEl = document.createElement('div')
+    msgEl.className = 'reveal__msg'
+    msgEl.style.borderColor = `color-mix(in srgb, ${tc.color} 30%, transparent)`
+    msgEl.textContent = message
+    panel.appendChild(msgEl)
+  }
+
+  // ── 이후 행동 안내 ──
+  const actionText = action || '확인했으면 눈을 감고 손을 내려주세요'
+  const actionEl = document.createElement('div')
+  actionEl.className = 'reveal__action-card'
+  actionEl.innerHTML = `<span class="reveal__action-icon">→</span><span class="reveal__action-text">${actionText}</span>`
+  panel.appendChild(actionEl)
 
   // ── [호스트] 다음 버튼 ──
   const nextBtn = document.createElement('button')
@@ -123,19 +140,33 @@ if (!document.getElementById('reveal-panel-style')) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px 24px;
-  gap: 20px;
+  padding: 16px 24px 20px;
+  gap: 14px;
 }
-.reveal__label {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.62rem;
+
+/* 상단 바 */
+.reveal__top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  flex-shrink: 0;
+}
+.reveal__label-chip {
+  font-size: 0.6rem;
   color: var(--text4);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  pointer-events: none;
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  border-radius: 10px;
+  padding: 2px 8px;
+  letter-spacing: 0.04em;
+}
+.reveal__label-night {
+  font-size: 0.6rem;
+  color: var(--pu-light);
+  opacity: 0.8;
+  letter-spacing: 0.04em;
 }
 .reveal__icon {
   font-size: 5rem;
@@ -160,20 +191,27 @@ if (!document.getElementById('reveal-panel-style')) {
   text-align: center;
   line-height: 1.2;
 }
-.reveal__msg {
-  font-size: 1.6rem;
-  color: var(--text);
-  text-align: center;
-  line-height: 1.5;
-  background: var(--surface);
-  border: 1px solid rgba(92,83,137,0.3);
-  border-radius: 16px;
-  padding: 20px 24px;
+/* 안내 카드 */
+.reveal__hint-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   width: 100%;
-  max-width: 340px;
-  word-break: keep-all;
-  white-space: pre-line;
+  max-width: 360px;
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  border-radius: 10px;
+  padding: 10px 14px;
 }
+.reveal__hint-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+.reveal__hint-text {
+  font-size: 0.75rem;
+  color: var(--text2);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+/* 번호 칩 */
 .reveal__players {
   display: flex;
   justify-content: center;
@@ -181,8 +219,8 @@ if (!document.getElementById('reveal-panel-style')) {
   flex-wrap: wrap;
 }
 .reveal__num-chip {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: var(--surface);
   border: 2px solid var(--lead2);
@@ -191,9 +229,11 @@ if (!document.getElementById('reveal-panel-style')) {
   align-items: center;
   justify-content: center;
   gap: 1px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  transition: border-color 0.2s;
 }
 .reveal__num-val {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: var(--gold2);
   line-height: 1;
@@ -203,6 +243,50 @@ if (!document.getElementById('reveal-panel-style')) {
   color: var(--text4);
   line-height: 1;
 }
+
+/* 메시지 */
+.reveal__msg {
+  font-size: 1.45rem;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.55;
+  background: var(--surface);
+  border: 1px solid rgba(92,83,137,0.3);
+  border-radius: 16px;
+  padding: 18px 22px;
+  width: 100%;
+  max-width: 340px;
+  word-break: keep-all;
+  white-space: pre-line;
+}
+
+/* 이후 행동 안내 */
+.reveal__action-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+  background: color-mix(in srgb, var(--pu-base) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pu-base) 30%, transparent);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.reveal__action-icon {
+  font-size: 0.85rem;
+  color: var(--pu-light);
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.reveal__action-text {
+  font-size: 0.75rem;
+  color: var(--pu-light);
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+/* 다음 버튼 */
 .reveal__next {
   width: 100%;
   max-width: 300px;

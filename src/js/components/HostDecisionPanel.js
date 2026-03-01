@@ -39,8 +39,11 @@ export function mountHostDecisionPanel(data) {
   const ctxTop = document.createElement('div')
   ctxTop.className = 'hdp__context-top'
   const iconHtml = roleIcon?.endsWith?.('.png')
-    ? `<img src="./asset/icons/${roleIcon}" style="width:32px;height:32px;object-fit:contain;">`
-    : `<span style="font-size:1.6rem;">${roleIconEmoji || '?'}</span>`
+    ? `<div class="hdp__context-icon--token">
+         <img class="hdp__token-bg"   src="./asset/token.png" alt="">
+         <img class="hdp__token-icon" src="./asset/icons/${roleIcon}" alt="${roleName || roleId}">
+       </div>`
+    : `<div style="font-size:1.6rem;display:flex;align-items:center;justify-content:center;">${roleIconEmoji || roleIcon || '?'}</div>`
   ctxTop.innerHTML = `
     <div class="hdp__context-icon">${iconHtml}</div>
     <div class="hdp__context-info">
@@ -282,6 +285,20 @@ if (!document.getElementById('host-decision-panel-style')) {
   justify-content: center;
   flex-shrink: 0;
 }
+.hdp__context-icon--token {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.hdp__token-bg,
+.hdp__token-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hdp__token-icon { object-fit: contain; }
 .hdp__context-info { flex: 1; }
 .hdp__context-name {
   font-family: 'Noto Serif KR', serif;

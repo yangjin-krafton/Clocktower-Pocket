@@ -18,7 +18,10 @@ export function mountBluffSelectPanel({ pool = [], onConfirm }) {
   const hdr = document.createElement('div')
   hdr.className = 'bluff-sel__hdr'
   hdr.innerHTML = `
-    <span class="bluff-sel__hdr-icon">👿</span>
+    <div class="bluff-sel__hdr-icon">
+      <img class="bluff-sel__token-bg"   src="./asset/token.png" alt="">
+      <img class="bluff-sel__token-icon-hdr" src="./asset/icons/imp.png" alt="임프">
+    </div>
     <div class="bluff-sel__hdr-text">
       <div class="bluff-sel__title">블러프 3개 선택</div>
       <div class="bluff-sel__subtitle">임프에게 전달할 역할을 3개 고르세요</div>
@@ -124,14 +127,19 @@ if (!document.getElementById('bluff-select-panel-style')) {
   flex-shrink: 0;
 }
 .bluff-sel__hdr-icon {
-  font-size: 2.2rem;
+  position: relative;
   width: 48px;
   height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
 }
+.bluff-sel__token-bg,
+.bluff-sel__token-icon-hdr {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.bluff-sel__token-icon-hdr { object-fit: contain; }
 .bluff-sel__title {
   font-family: 'Noto Serif KR', serif;
   font-size: 1.2rem;

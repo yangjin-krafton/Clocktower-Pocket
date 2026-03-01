@@ -32,10 +32,11 @@ export function renderPlayerChip(player, opts = {}) {
   const el = document.createElement('div')
   el.className = 'player-chip'
     + ` dict__token dict__token--${tokenTeam}`
-    + (selectable ? ' player-chip--selectable' : '')
-    + (selected   ? ' player-chip--selected'   : '')
-    + (dead       ? ' player-chip--dead'        : '')
-    + (executed   ? ' player-chip--executed'    : '')
+    + (selectable      ? ' player-chip--selectable' : '')
+    + (selected        ? ' player-chip--selected'   : '')
+    + (dead            ? ' player-chip--dead'        : '')
+    + (executed        ? ' player-chip--executed'    : '')
+    + (player.isPoisoned ? ' player-chip--poisoned'  : '')
   el.dataset.id = player.id
 
   // ── 자리 번호 배지 (카드 우상단) ─────────────────────────
@@ -63,12 +64,29 @@ export function renderPlayerChip(player, opts = {}) {
     iconWrap.innerHTML = '<span style="color:var(--text4);font-size:1rem;">?</span>'
   }
 
-  // 독 뱃지
+  // 독 뱃지 + 파티클
   if (player.isPoisoned) {
     const badge = document.createElement('div')
     badge.className = 'player-chip__badge player-chip__badge--poison'
     badge.textContent = '☠'
     iconWrap.appendChild(badge)
+
+    // 파티클 (7개, 위치·딜레이 분산)
+    const PARTICLES = [
+      { left: '18%', delay: '0s',    dur: '1.6s', color: '#4ade80' },
+      { left: '50%', delay: '0.3s',  dur: '1.3s', color: '#a855f7' },
+      { left: '78%', delay: '0.6s',  dur: '1.8s', color: '#4ade80' },
+      { left: '32%', delay: '0.9s',  dur: '1.4s', color: '#a855f7' },
+      { left: '64%', delay: '0.2s',  dur: '1.7s', color: '#86efac' },
+      { left: '10%', delay: '1.1s',  dur: '1.5s', color: '#c084fc' },
+      { left: '88%', delay: '0.7s',  dur: '1.2s', color: '#4ade80' },
+    ]
+    PARTICLES.forEach(p => {
+      const particle = document.createElement('span')
+      particle.className = 'poison-particle'
+      particle.style.cssText = `left:${p.left};animation-delay:${p.delay};animation-duration:${p.dur};background:${p.color};`
+      el.appendChild(particle)
+    })
   }
   // 취함 뱃지
   if (player.isDrunk) {
@@ -221,6 +239,30 @@ if (!document.getElementById('player-chip-style')) {
 .player-chip--executed {
   border-color: var(--rd-light) !important;
   box-shadow: 0 0 8px rgba(110,27,31,0.5) !important;
+}
+
+/* 독 상태 — 테두리 글로우 */
+.player-chip--poisoned {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 10px rgba(22,163,74,0.55), 0 0 20px rgba(22,163,74,0.2) !important;
+  overflow: visible;
+}
+
+/* 독 파티클 */
+@keyframes poison-particle {
+  0%   { transform: translateX(-50%) translateY(0)     scale(1);   opacity: 0.9; }
+  60%  { opacity: 0.7; }
+  100% { transform: translateX(-50%) translateY(-28px) scale(0.2); opacity: 0; }
+}
+.poison-particle {
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: poison-particle linear infinite;
+  z-index: 10;
 }
   `
   document.head.appendChild(style)

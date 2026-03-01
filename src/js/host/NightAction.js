@@ -66,11 +66,11 @@ export class NightAction {
     // 블러프는 demon-info에서 선택되므로 미니언 공개 시점엔 표시 안 함
     this._unmount = mountInfoPanel({
       title:    '미니언 공개',
-      roleIcon: '🎭',
+      roleIcon: 'minion.png',
       message:  `미니언: ${minionNums}\n임프: ${demonNums}`,
       players:  [...minions, ...demonPlayers],
       revealData: {
-        roleIcon: '🎭',
+        roleIcon: 'minion.png',
         roleName: '미니언 공개',
         roleTeam: 'minion',
         message:  `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
@@ -126,16 +126,16 @@ export class NightAction {
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
     const bluffs = this.engine.getBluffs()
-    const bluffText = bluffs.map(r => `${r.iconEmoji || r.icon} ${r.name}`).join(', ')
+    const bluffText = bluffs.map(r => r.name).join(', ')
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
 
     this._unmount = mountInfoPanel({
       title:    '임프 정보',
-      roleIcon: '👿',
+      roleIcon: 'imp.png',
       message:  `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
       players:  minions,
       revealData: {
-        roleIcon: '👿',
+        roleIcon: 'imp.png',
         roleName: '임프 정보',
         roleTeam: 'demon',
         message:  `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
@@ -302,11 +302,11 @@ export class NightAction {
           const msg    = result ? '✅ 예, 그 중 한 명은 임프입니다' : '❌ 아니오, 임프가 없습니다'
           mountInfoPanel({
             title:    '점쟁이 결과',
-            roleIcon: '🔮',
+            roleIcon: 'fortuneteller.png',
             message:  msg,
             players:  ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
             revealData: {
-              roleIcon: '🔮',
+              roleIcon: 'fortuneteller.png',
               roleName: '점쟁이 결과',
               roleTeam: 'town',
               message:  msg,

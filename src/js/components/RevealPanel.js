@@ -41,16 +41,16 @@ export function mountRevealPanel(data) {
   topBar.innerHTML = `<span class="reveal__label-chip">👁 참가자 화면</span><span class="reveal__label-night">🌙 밤 — 역할 정보 수령</span>`
   panel.appendChild(topBar)
 
-  // ── 역할 아이콘 ──
+  // ── 역할 아이콘 (PNG: token 오버레이, 그 외: emoji) ──
   const iconEl = document.createElement('div')
-  iconEl.className = 'reveal__icon'
   if (roleIcon && roleIcon.endsWith('.png')) {
-    const img = document.createElement('img')
-    img.src = `./asset/icons/${roleIcon}`
-    img.alt = roleName
-    img.className = 'reveal__icon-img'
-    iconEl.appendChild(img)
+    iconEl.className = 'reveal__icon reveal__icon--token'
+    iconEl.innerHTML = `
+      <img class="reveal__token-bg"   src="./asset/token.png" alt="">
+      <img class="reveal__token-icon" src="./asset/icons/${roleIcon}" alt="${roleName}">
+    `
   } else {
+    iconEl.className = 'reveal__icon'
     iconEl.textContent = roleIcon || '🎴'
   }
   panel.appendChild(iconEl)
@@ -178,12 +178,20 @@ if (!document.getElementById('reveal-panel-style')) {
   justify-content: center;
   filter: drop-shadow(0 0 20px rgba(212,168,40,0.5));
 }
-.reveal__icon-img {
+/* token 오버레이 모드 */
+.reveal__icon--token {
+  position: relative;
+  font-size: 0;
+  filter: drop-shadow(0 0 20px rgba(212,168,40,0.4));
+}
+.reveal__token-bg,
+.reveal__token-icon {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 0 16px rgba(212,168,40,0.5));
 }
+.reveal__token-icon { object-fit: contain; }
 .reveal__name {
   font-family: 'Noto Serif KR', serif;
   font-size: 2rem;

@@ -52,8 +52,13 @@ export class HostApp {
 
   init() {
     ThemeManager.set('host')
+    engine.reset()                                           // 이전 게임 상태 초기화
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
+    this._gameStarting      = false
+    this._lastRoomCode      = null
+    this._history.reset()
+    this._historyBar.hide()
     this._buildTabs()
     this._switchTab('role')
   }
@@ -179,8 +184,9 @@ export class HostApp {
       this.tabBar.appendChild(btn)
     })
 
-    // 게임 진행 중이면 나가기 탭 추가 (가장 오른쪽)
-    if (this._gameStarting) {
+    // 게임 진행 중이면 나가기 탭 추가 (lobby 이외 phase이거나 _gameStarting 플래그)
+    const inGame = this._gameStarting || (engine.state?.phase && engine.state.phase !== 'lobby')
+    if (inGame) {
       const exitBtn = document.createElement('button')
       exitBtn.className = 'tab-item tab-item--exit'
       exitBtn.dataset.tab = 'exit'
@@ -467,9 +473,7 @@ export class HostApp {
     this._autoSave()  // 밤 전환 시 즉시 저장
 
     this.currentTab = 'role'
-    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === 'role')
-    })
+    this._buildTabs()
     this._showGrimoire()
   }
 
@@ -502,9 +506,7 @@ export class HostApp {
     this._autoSave()  // 낮 전환 시 즉시 저장
 
     this.currentTab = 'role'
-    this.tabBar.querySelectorAll('.tab-item').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === 'role')
-    })
+    this._buildTabs()
     this._showDayFlow()
   }
 

@@ -35,13 +35,13 @@ export function renderInfoPanel(data) {
   const iconEl = document.createElement('div')
   iconEl.className = 'info-panel__icon'
 
-  // PNG 이미지면 img 태그로, 아니면 emoji로 표시
+  // PNG: token.png 배경 위에 역할 아이콘 오버레이
   if (roleIcon && roleIcon.endsWith('.png')) {
-    const img = document.createElement('img')
-    img.src = `./asset/icons/${roleIcon}`
-    img.alt = title
-    img.className = 'info-panel__icon-img'
-    iconEl.appendChild(img)
+    iconEl.className = 'info-panel__icon info-panel__icon--token'
+    iconEl.innerHTML = `
+      <img class="info-panel__token-bg"   src="./asset/token.png" alt="">
+      <img class="info-panel__token-icon" src="./asset/icons/${roleIcon}" alt="${title}">
+    `
   } else {
     iconEl.textContent = roleIcon
   }
@@ -171,11 +171,21 @@ if (!document.getElementById('info-panel-style')) {
   align-items: center;
   justify-content: center;
 }
-.info-panel__icon-img {
+/* token 오버레이 모드 */
+.info-panel__icon--token {
+  position: relative;
+  font-size: 0;
+}
+.info-panel__token-bg,
+.info-panel__token-icon {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+}
+.info-panel__token-icon {
   object-fit: contain;
-  filter: drop-shadow(0 0 16px rgba(212,168,40,0.5));
+  filter: drop-shadow(0 0 12px rgba(212,168,40,0.4));
 }
 .info-panel__title {
   font-family: 'Noto Serif KR', serif;

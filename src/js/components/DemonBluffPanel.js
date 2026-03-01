@@ -28,7 +28,10 @@ export function mountDemonBluffPanel({ analysis, options, onDecide }) {
   const hdr = document.createElement('div')
   hdr.className = 'dbp__hdr'
   hdr.innerHTML = `
-    <span class="dbp__hdr-icon">👿</span>
+    <div class="dbp__hdr-icon">
+      <img class="dbp__hdr-token-bg"   src="./asset/token.png" alt="">
+      <img class="dbp__hdr-token-icon" src="./asset/icons/imp.png" alt="임프">
+    </div>
     <div>
       <div class="dbp__hdr-title">임프 블러프 전략</div>
       <div class="dbp__hdr-sub">임프에게 전달할 블러프 세트를 선택하세요</div>
@@ -198,14 +201,19 @@ if (!document.getElementById('demon-bluff-panel-style')) {
   gap: 12px;
 }
 .dbp__hdr-icon {
-  font-size: 2rem;
+  position: relative;
   width: 44px;
   height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
 }
+.dbp__hdr-token-bg,
+.dbp__hdr-token-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.dbp__hdr-token-icon { object-fit: contain; }
 .dbp__hdr-title {
   font-family: 'Noto Serif KR', serif;
   font-size: 1.1rem;

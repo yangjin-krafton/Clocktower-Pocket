@@ -177,6 +177,11 @@ export class RulesScreen {
         result.push(`<h2 class="rules-h2">${this._inline(line.slice(3))}</h2>`)
         i++; continue
       }
+      // H4 (H3보다 먼저 체크)
+      if (line.startsWith('#### ')) {
+        result.push(`<h4 class="rules-h4">${this._inline(line.slice(5))}</h4>`)
+        i++; continue
+      }
       // H3
       if (line.startsWith('### ')) {
         result.push(`<h3 class="rules-h3">${this._inline(line.slice(4))}</h3>`)
@@ -442,6 +447,12 @@ if (!document.getElementById('rules-screen-style')) {
   font-weight: 700;
   color: var(--pu-light);
   padding: 10px 0 2px;
+}
+.rules-h4 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text2);
+  padding: 8px 0 2px;
 }
 
 /* 가로선 */

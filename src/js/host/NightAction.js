@@ -185,12 +185,39 @@ export class NightAction {
 
     this.engine.recordNightAction(roleId, actor.id, [], String(realAccurate))
 
-    // 직접 선택 옵션
+    // 옵션 생성
     const customType = ['empath','chef'].includes(roleId) ? 'number'
       : ['washerwoman','librarian','investigator','undertaker'].includes(roleId) ? 'player-pick'
       : 'number'
 
-    const options = [{
+    const options = []
+
+    if (isPoisoned) {
+      // 중독/취함: 거짓 정보 옵션 추가
+      const falseVal = this._calcFalseValue(roleId, realAccurate)
+      options.push({
+        id:          'false-info',
+        icon:        '🔴',
+        label:       '거짓 정보 (추천)',
+        preview:     this._formatPreviewSimple(roleId, falseVal),
+        impact:      '중독/취함 상태 — 오정보를 제공합니다.',
+        stateReason: '',
+        recommended: true,
+        revealData:  this._buildSimpleRevealData(roleId, role, falseVal),
+      })
+      options.push({
+        id:          'true-info',
+        icon:        '🔵',
+        label:       '정확한 정보',
+        preview:     this._formatPreviewSimple(roleId, realAccurate),
+        impact:      '정확한 정보를 그대로 전달합니다.',
+        stateReason: '',
+        recommended: false,
+        revealData:  this._buildSimpleRevealData(roleId, role, realAccurate),
+      })
+    }
+
+    options.push({
       id:          'custom',
       icon:        '✏️',
       label:       '직접 선택',
@@ -200,7 +227,7 @@ export class NightAction {
       recommended: false,
       revealData:  null,
       customType,
-    }]
+    })
 
     this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
       roleId,
@@ -300,6 +327,72 @@ export class NightAction {
     }
   }
 
+  /** 거짓 정보 값 생성 (정확한 값과 다른 값) */
+  _calcFalseValue(roleId, accurate) {
+    switch (roleId) {
+      case 'empath': {
+        const n = typeof accurate === 'number' ? accurate : 0
+        return n === 0 ? 1 : 0
+      }
+      case 'chef': {
+        const n = typeof accurate === 'number' ? accurate : 0
+        return n === 0 ? 1 : 0
+      }
+      case 'washerwoman':
+      case 'librarian':
+      case 'investigator':
+        return this._calcPoisonedValue(roleId)
+      case 'undertaker':
+        if (!accurate) return null
+        const pool = Object.keys(ROLES_BY_ID).filter(id => id !== accurate.roleId)
+        return { ...accurate, roleId: pool[Math.floor(Math.random() * pool.length)] }
+      default:
+        return accurate
+    }
+  }
+
+  /** 간단한 미리보기 텍스트 */
+  _formatPreviewSimple(roleId, value) {
+    if (value === null || value === undefined) return '정보 없음'
+    switch (roleId) {
+      case 'empath': return `양옆 악 플레이어: ${value}명`
+      case 'chef':   return `이웃한 악 쌍: ${value}쌍`
+      case 'undertaker': {
+        if (!value) return '처형자 없음'
+        const r = ROLES_BY_ID[value.roleId]
+        return `${value.playerId}번 → ${r?.name || value.roleId}`
+      }
+      case 'washerwoman':
+      case 'librarian':
+      case 'investigator': {
+        if (!value) return '정보 없음'
+        const r = ROLES_BY_ID[value.roleId]
+        const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
+        return `${r?.name || value.roleId} → ${pNums}`
+      }
+      default: return String(value)
+    }
+  }
+
+  /** 간단한 RevealData 생성 */
+  _buildSimpleRevealData(roleId, role, value) {
+    if (value === null || value === undefined) return null
+    const message = this._formatPreviewSimple(roleId, value)
+    const players = (roleId === 'washerwoman' || roleId === 'librarian' || roleId === 'investigator')
+      ? (value?.players || []).map(p => ({ id: p.id }))
+      : []
+    return {
+      roleIcon:    role?.icon || '?',
+      roleName:    role?.name || roleId,
+      roleTeam:    role?.team || null,
+      roleAbility: role?.ability || '',
+      message,
+      players,
+      hint: '당신의 능력이 발동됐습니다.',
+      action: '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
+    }
+  }
+
   // ── 선택 역할 ──
   _showRoleSelect(roleId, actors) {
     if (!actors || actors.length === 0) { this._done(roleId); return }
@@ -328,26 +421,78 @@ export class NightAction {
         ThemeManager.popTemp()  // 호스트 테마 복원
         this.engine.recordNightAction(roleId, actor.id, ids)
 
-        // Fortune Teller: 정보 계산 후 RevealPanel 포함 InfoPanel 표시
+        // Fortune Teller: 정보 계산
         if (roleId === 'fortuneteller' && ids.length === 2) {
+          const isPoisonedFT = actor.isPoisoned || actor.isDrunk
           const result = this.engine.calcFortuneTellerInfo(actor.id, ids)
-          const msg    = result ? '✅ 예, 그 중 한 명은 임프입니다' : '❌ 아니오, 임프가 없습니다'
-          mountInfoPanel({
-            title:    '점쟁이 결과',
+          const msgYes = '✅ 예, 그 중 한 명은 임프입니다'
+          const msgNo  = '❌ 아니오, 임프가 없습니다'
+          const accurateMsg = result ? msgYes : msgNo
+
+          const buildFTReveal = (msg) => ({
             roleIcon: 'fortuneteller.png',
+            roleName: '점쟁이 결과',
+            roleTeam: 'town',
+            roleAbility: role?.ability || '',
             message:  msg,
-            players:  ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
-            revealData: {
-              roleIcon: 'fortuneteller.png',
-              roleName: '점쟁이 결과',
-              roleTeam: 'town',
-              message:  msg,
-              players:  ids.map(id => ({ id })),
-              hint:     '당신 능력이 발동됐습니다 — 방금 지목한 두 자리 중 임프가 있는지 알려줍니다. 예/아니오를 기억해 낮에 추리에 활용하세요.',
-              action:   '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
-            },
-            onConfirm: () => this._done(roleId, ids),
+            players:  ids.map(id => ({ id })),
+            hint:     '당신 능력이 발동됐습니다 — 방금 지목한 두 자리 중 임프가 있는지 알려줍니다.',
+            action:   '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
           })
+
+          if (isPoisonedFT) {
+            // 중독/취함: 호스트가 예/아니오 선택
+            const falseMsg = result ? msgNo : msgYes
+            this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
+              roleId: 'fortuneteller',
+              actorSeatId: actor.id,
+              roleName: '점쟁이',
+              roleIcon: 'fortuneteller.png',
+              roleIconEmoji: '🔮',
+              roleTeam: 'townsfolk',
+              roleAbility: role?.ability || '',
+              accurateValue: accurateMsg,
+              isPoisoned: true,
+              analysis: { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
+              players: this.engine.state.players,
+              options: [
+                {
+                  id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
+                  preview: falseMsg, impact: '중독/취함 — 오정보를 제공합니다.',
+                  stateReason: '', recommended: true,
+                  revealData: buildFTReveal(falseMsg),
+                },
+                {
+                  id: 'true-info', icon: '🔵', label: '정확한 정보',
+                  preview: accurateMsg, impact: '정확한 정보를 그대로 전달합니다.',
+                  stateReason: '', recommended: false,
+                  revealData: buildFTReveal(accurateMsg),
+                },
+              ],
+              onDecide: (chosen) => {
+                const finalRevealData = chosen.revealData || null
+                const finalMessage = chosen.preview || accurateMsg
+                this._unmount = this._trackOverlay(() => mountInfoPanel({
+                  title: '점쟁이 결과',
+                  roleIcon: 'fortuneteller.png',
+                  message: finalMessage,
+                  players: ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
+                  revealData: finalRevealData,
+                  onConfirm: () => this._done(roleId, ids),
+                }))
+              },
+            }))
+          } else {
+            // 정상: 바로 결과 표시
+            mountInfoPanel({
+              title:    '점쟁이 결과',
+              roleIcon: 'fortuneteller.png',
+              message:  accurateMsg,
+              players:  ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
+              revealData: buildFTReveal(accurateMsg),
+              onConfirm: () => this._done(roleId, ids),
+            })
+          }
         } else {
           this._done(roleId, ids)
         }

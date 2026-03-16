@@ -200,11 +200,7 @@ export class GameEngine {
    * 밤 결과 처리 (내부)
    */
   _resolveNight() {
-    // 독약꾼 적용
-    if (this.poisonedThisNight !== null) {
-      const p = this.getPlayer(this.poisonedThisNight)
-      if (p) p.isPoisoned = true
-    }
+    // 독약꾼 적용은 recordNightAction에서 즉시 처리됨 (밤 순서 반영)
 
     // 임프 킬 처리
     const impKillAction = this.nightActions
@@ -436,6 +432,9 @@ export class GameEngine {
     // 특수 처리
     if (roleId === 'poisoner' && targetIds.length > 0) {
       this.poisonedThisNight = targetIds[0]
+      // 즉시 중독 적용 (이후 밤 행동에 영향)
+      const poisonTarget = this.getPlayer(targetIds[0])
+      if (poisonTarget) poisonTarget.isPoisoned = true
     }
     if (roleId === 'monk' && targetIds.length > 0) {
       this.monkProtect = targetIds[0]

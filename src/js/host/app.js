@@ -36,6 +36,7 @@ export class HostApp {
     this._grimoire          = null
     this.currentTab         = 'role'
     this._lastRoomCode      = null
+    this.drunkBluffRoleId   = null  // 주정뱅이에게 보여줄 마을 주민 역할 ID
 
     // 히스토리 시스템
     this._history    = new HistoryManager()
@@ -57,6 +58,7 @@ export class HostApp {
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
     this._gameStarting      = false
     this._lastRoomCode      = null
+    this.drunkBluffRoleId   = null
     this._history.reset()
     this._historyBar.hide()
     this._buildTabs()
@@ -87,6 +89,7 @@ export class HostApp {
     this.pendingPlayerCount = hs.pendingPlayerCount || this.seatRoles.length
     this._lastRoomCode      = hs.roomCode || null
     this.doneSteps          = hs.doneSteps || []
+    this.drunkBluffRoleId   = hs.drunkBluffRoleId || null
     this._gameStarting      = true
 
     // 히스토리 복원
@@ -263,9 +266,10 @@ export class HostApp {
     const grimoire = new Grimoire({
       engine,
       getLobbyConfig:  () => ({
-        playerCount: this.pendingPlayerCount,
-        seatRoles:   this.seatRoles,
-        roomCode:    this._lastRoomCode,
+        playerCount:      this.pendingPlayerCount,
+        seatRoles:        this.seatRoles,
+        roomCode:         this._lastRoomCode,
+        drunkBluffRoleId: this.drunkBluffRoleId,
       }),
       onStartGame:         () => this._handleManualStart(),
       onStartNight:        () => this._handleStartNight(),
@@ -284,6 +288,10 @@ export class HostApp {
         this._grimoire?.refresh()
       },
       onSeatRoleAssign: (seatIdx, roleId) => {
+        // 주정뱅이 배정 해제 시 블러프 초기화
+        if (this.seatRoles[seatIdx] === 'drunk' && roleId !== 'drunk') {
+          this.drunkBluffRoleId = null
+        }
         // 같은 역할이 다른 자리에 있으면 제거
         if (roleId) {
           this.seatRoles = this.seatRoles.map((r, i) => (r === roleId && i !== seatIdx) ? null : r)
@@ -293,6 +301,11 @@ export class HostApp {
       },
       onAutoAssign: () => {
         this.seatRoles = this._autoRoles(this.pendingPlayerCount)
+        this.drunkBluffRoleId = null
+        this._grimoire?.refresh()
+      },
+      onDrunkBluffAssign: (roleId) => {
+        this.drunkBluffRoleId = roleId || null
         this._grimoire?.refresh()
       },
     })
@@ -327,7 +340,7 @@ export class HostApp {
       : 0
 
     // 방 코드 생성
-    const code = encodeRoomCode(this.pendingPlayerCount, assignedRoles, redHerringId)
+    const code = encodeRoomCode(this.pendingPlayerCount, assignedRoles, redHerringId, this.drunkBluffRoleId)
     this._lastRoomCode = code
 
     // 코드 팝업 표시 → 닫으면 게임 시작
@@ -587,6 +600,7 @@ export class HostApp {
         this._gameStarting = false
         this.seatRoles     = new Array(this.pendingPlayerCount).fill(null)
         this._lastRoomCode = null
+        this.drunkBluffRoleId = null
         this._switchTab('role')
       },
     })
@@ -793,6 +807,7 @@ export class HostApp {
         roomCode:           this._lastRoomCode,
         doneSteps:          [...this.doneSteps],
         currentTab:         this.currentTab,
+        drunkBluffRoleId:   this.drunkBluffRoleId,
       },
       historyData: this._history.serialize(),
     }

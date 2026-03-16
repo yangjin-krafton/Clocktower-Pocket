@@ -5,15 +5,16 @@
  *   [4 bits]     playerCount - 5   (0=5명, 10=15명)
  *   [5 bits × N] 각 자리 역할 인덱스  (ROLES_TB 순서, 0-21)
  *   [4 bits]     레드헤링 플레이어 ID (1-based 1-15, 0=없음)
+ *   [5 bits]     주정뱅이 블러프 역할 인덱스 (0-21, 31=없음)
  *
  * Base32 인코딩 (혼동 없는 알파벳 — 0/1/I/O 제외):
  *   ALPHABET = ABCDEFGHJKLMNPQRSTUVWXYZ23456789
  *
  * 코드 길이:
- *   5인 →  7자  (4+25+4=33 bits)
- *   7인 →  9자  (4+35+4=43 bits)
- *  10인 → 12자  (4+50+4=58 bits)
- *  15인 → 17자  (4+75+4=83 bits)
+ *   5인 →  8자  (4+25+4+5=38 bits)
+ *   7인 → 10자  (4+35+4+5=48 bits)
+ *  10인 → 13자  (4+50+4+5=63 bits)
+ *  15인 → 18자  (4+75+4+5=88 bits)
  */
 
 import { ROLES_TB } from './data/roles-tb.js'
@@ -46,12 +47,13 @@ function readBits(bits, pos, nbits) {
 
 /**
  * 게임 설정을 방 코드로 인코딩
- * @param {number}   playerCount    5-15
- * @param {string[]} assignedRoles  자리 순서 역할 ID 배열 (길이 = playerCount)
- * @param {number}   redHerringId   점쟁이 레드헤링 플레이어 ID (1-based, 0=없음)
+ * @param {number}   playerCount       5-15
+ * @param {string[]} assignedRoles     자리 순서 역할 ID 배열 (길이 = playerCount)
+ * @param {number}   redHerringId      점쟁이 레드헤링 플레이어 ID (1-based, 0=없음)
+ * @param {string|null} drunkBluffRoleId  주정뱅이가 자신이라 믿는 마을 주민 역할 ID (없으면 null)
  * @returns {string} 방 코드 (대문자 영숫자)
  */
-export function encodeRoomCode(playerCount, assignedRoles, redHerringId = 0) {
+export function encodeRoomCode(playerCount, assignedRoles, redHerringId = 0, drunkBluffRoleId = null) {
   const bits = []
 
   writeBits(bits, playerCount - 5, 4)
@@ -62,6 +64,10 @@ export function encodeRoomCode(playerCount, assignedRoles, redHerringId = 0) {
   }
 
   writeBits(bits, redHerringId & 0xF, 4)
+
+  // 주정뱅이 블러프 역할 (5 bits): 0-21 = 역할 인덱스, 31 = 없음
+  const drunkBluffIdx = drunkBluffRoleId ? ROLE_IDS.indexOf(drunkBluffRoleId) : -1
+  writeBits(bits, drunkBluffIdx >= 0 ? drunkBluffIdx : 31, 5)
 
   // bits → base32 문자
   let result = ''
@@ -105,8 +111,19 @@ export function decodeRoomCode(code) {
   }
 
   const redHerringId = readBits(bits, pos, 4)
+  pos += 4
 
-  return { playerCount, assignedRoles, redHerringId }
+  // 주정뱅이 블러프 역할 (5 bits) — 새 형식 코드에만 존재 (구 코드는 남은 비트가 2개뿐이므로 부족)
+  let drunkBluffRoleId = null
+  if (pos + 5 <= bits.length) {
+    const idx = readBits(bits, pos, 5)
+    if (idx >= 0 && idx < ROLE_IDS.length) {
+      drunkBluffRoleId = ROLE_IDS[idx]
+    }
+    // idx === 31 → 블러프 없음 (drunkBluffRoleId stays null)
+  }
+
+  return { playerCount, assignedRoles, redHerringId, drunkBluffRoleId }
 }
 
 /**

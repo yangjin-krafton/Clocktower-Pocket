@@ -150,10 +150,15 @@ export class PlayerApp {
         const parsed = JSON.parse(saved)
         const decoded = decodeRoomCode(parsed.code)
         if (decoded && parsed.seatNum >= 1 && parsed.seatNum <= decoded.playerCount) {
+          let roleId = decoded.assignedRoles[parsed.seatNum - 1]
+          // 주정뱅이는 블러프 역할로 대체 (참가자는 자신이 주정뱅이임을 모름)
+          if (roleId === 'drunk' && decoded.drunkBluffRoleId) {
+            roleId = decoded.drunkBluffRoleId
+          }
           this.session = {
             code:        parsed.code,
             seatNum:     parsed.seatNum,
-            roleId:      decoded.assignedRoles[parsed.seatNum - 1],
+            roleId:      roleId,
             team:        null,
             playerCount: decoded.playerCount,
           }
@@ -396,7 +401,11 @@ export class PlayerApp {
     joinBtn.addEventListener('click', () => {
       if (!decoded || !selectedSeat) return
       const rawCode = codeInput.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
-      const roleId = decoded.assignedRoles[selectedSeat - 1]
+      let roleId = decoded.assignedRoles[selectedSeat - 1]
+      // 주정뱅이는 블러프 역할로 대체 (참가자는 자신이 주정뱅이임을 모름)
+      if (roleId === 'drunk' && decoded.drunkBluffRoleId) {
+        roleId = decoded.drunkBluffRoleId
+      }
       const role = ROLES_BY_ID[roleId]
       const team = role
         ? (role.team === 'townsfolk' || role.team === 'outsider' ? 'good' : 'evil')

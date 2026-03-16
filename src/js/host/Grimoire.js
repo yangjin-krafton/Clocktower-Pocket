@@ -39,6 +39,7 @@ export class Grimoire {
     onPlayerCountChange,
     onSeatRoleAssign,
     onAutoAssign,
+    onDrunkBluffAssign,
   }) {
     this.engine              = engine
     this.getLobbyConfig      = getLobbyConfig     || (() => ({ playerCount: 7, seatRoles: [], roomCode: null }))
@@ -50,6 +51,7 @@ export class Grimoire {
     this.onPlayerCountChange = onPlayerCountChange|| null
     this.onSeatRoleAssign    = onSeatRoleAssign   || null
     this.onAutoAssign        = onAutoAssign       || null
+    this.onDrunkBluffAssign  = onDrunkBluffAssign || null
     this.el                       = null
     this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
     this._playerSectionCollapsed  = false  // 게임 중 플레이어 섹션 접힘 상태
@@ -185,6 +187,7 @@ export class Grimoire {
     const config = this.getLobbyConfig()
     const total  = config.playerCount
     const seats  = Array.from({ length: total }, (_, i) => config.seatRoles?.[i] ?? null)
+    const drunkBluffRoleId = config.drunkBluffRoleId || null
 
     this.el.classList.add('grimoire--lobby')
 
@@ -235,7 +238,7 @@ export class Grimoire {
     this._renderSeatWheel(total, seats)
 
     // ── 3) 역할 선택 패널 (항상 표시) ──────────────────────
-    this._renderRolePanel(seats)
+    this._renderRolePanel(seats, drunkBluffRoleId)
 
     // ── 4) 구성 상태 + 시작 버튼 ───────────────────────────────
     this._renderLobbyFooter(total, seats)
@@ -434,7 +437,7 @@ export class Grimoire {
     return { valid, msg, shortMsg, counts, filledCnt }
   }
 
-  _renderRolePanel(seats) {
+  _renderRolePanel(seats, drunkBluffRoleId = null) {
     const si          = this._selectedSeat
     const currentRole = si !== null ? (seats[si] ?? null) : null
     const usedByOther = new Set(seats.filter((r, i) => r && (si === null || i !== si)))
@@ -527,6 +530,70 @@ export class Grimoire {
 
     scrollContainer.appendChild(grid)
     panel.appendChild(scrollContainer)
+
+    // ── 주정뱅이 블러프 역할 선택 (주정뱅이가 배정된 자리 선택 시) ──
+    if (currentRole === 'drunk') {
+      const bluffSection = document.createElement('div')
+      bluffSection.style.cssText = 'margin-top:12px;border-top:1px solid var(--lead2);padding-top:10px;'
+
+      const bluffLabel = document.createElement('div')
+      bluffLabel.style.cssText = 'font-size:0.68rem;color:var(--tl-light);font-weight:600;margin-bottom:6px;'
+      bluffLabel.textContent = '🍾 주정뱅이 블러프 역할 (마을 주민)'
+      bluffSection.appendChild(bluffLabel)
+
+      const bluffHint = document.createElement('div')
+      bluffHint.style.cssText = 'font-size:0.6rem;color:var(--text4);margin-bottom:8px;line-height:1.4;'
+      bluffHint.textContent = '참가자는 자신이 주정뱅이임을 모릅니다. 대신 보여줄 마을 주민 역할을 선택하세요.'
+      bluffSection.appendChild(bluffHint)
+
+      const bluffScroll = document.createElement('div')
+      bluffScroll.className = 'gl-role-scroll'
+
+      const bluffGrid = document.createElement('div')
+      bluffGrid.className = 'gl-role-grid'
+
+      const townsfolkRoles = ROLES_TB.filter(r => r.team === 'townsfolk')
+      townsfolkRoles.forEach(role => {
+        const isBluff = role.id === drunkBluffRoleId
+
+        const btn = document.createElement('button')
+        btn.className = `dict__token dict__token--townsfolk` + (isBluff ? ' dict__token--on' : '')
+
+        const iconDiv = document.createElement('div')
+        iconDiv.className = 'dict__token-icon'
+        if (role.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${role.icon}`
+          img.alt = role.name
+          iconDiv.appendChild(img)
+        } else {
+          iconDiv.textContent = role.iconEmoji || '?'
+        }
+
+        const nameDiv = document.createElement('div')
+        nameDiv.className = 'dict__token-name'
+        nameDiv.textContent = role.name
+
+        btn.appendChild(iconDiv)
+        btn.appendChild(nameDiv)
+        btn.addEventListener('click', () => {
+          this.onDrunkBluffAssign?.(isBluff ? null : role.id)
+        })
+        bluffGrid.appendChild(btn)
+      })
+
+      bluffScroll.appendChild(bluffGrid)
+      bluffSection.appendChild(bluffScroll)
+
+      if (!drunkBluffRoleId) {
+        const bluffWarn = document.createElement('div')
+        bluffWarn.style.cssText = 'font-size:0.62rem;color:rgba(212,168,40,0.8);margin-top:6px;'
+        bluffWarn.textContent = '⚠ 블러프 역할을 선택하지 않으면 참가자에게 주정뱅이 카드가 표시됩니다.'
+        bluffSection.appendChild(bluffWarn)
+      }
+
+      panel.appendChild(bluffSection)
+    }
 
     this.el.appendChild(panel)
   }

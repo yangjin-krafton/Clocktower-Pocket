@@ -455,6 +455,11 @@ export class NightAction {
           const msgNo  = '❌ 아니오, 임프가 없습니다'
           const accurateMsg = result ? msgYes : msgNo
 
+          // 은둔자/스파이 감지
+          const hasRecluse = ids.some(id => { const p = this.engine.getPlayer(id); return p?.role === 'recluse' })
+          const hasSpy     = ids.some(id => { const p = this.engine.getPlayer(id); return p?.role === 'spy' })
+          const needHostChoice = isPoisonedFT || hasRecluse || hasSpy
+
           const buildFTReveal = (msg) => ({
             roleIcon: 'fortuneteller.png',
             roleName: '점쟁이 결과',
@@ -466,9 +471,54 @@ export class NightAction {
             action:   '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
           })
 
-          if (isPoisonedFT) {
-            // 중독/취함: 호스트가 예/아니오 선택
-            const falseMsg = result ? msgNo : msgYes
+          if (needHostChoice) {
+            // 호스트가 예/아니오 선택
+            const ftOptions = []
+
+            if (isPoisonedFT) {
+              const falseMsg = result ? msgNo : msgYes
+              ftOptions.push({
+                id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
+                preview: falseMsg, impact: '중독/취함 — 오정보를 제공합니다.',
+                stateReason: '', recommended: true,
+                revealData: buildFTReveal(falseMsg),
+              })
+              ftOptions.push({
+                id: 'true-info', icon: '🔵', label: '정확한 정보',
+                preview: accurateMsg, impact: '정확한 정보를 그대로 전달합니다.',
+                stateReason: '', recommended: false,
+                revealData: buildFTReveal(accurateMsg),
+              })
+            } else {
+              // 정상 (은둔자/스파이만)
+              ftOptions.push({
+                id: 'accurate', icon: '🔵', label: '기본 결과',
+                preview: accurateMsg, impact: '레드헤링/임프 기준 결과입니다.',
+                stateReason: '', recommended: true,
+                revealData: buildFTReveal(accurateMsg),
+              })
+            }
+
+            if (hasRecluse) {
+              const recluseId = ids.find(id => this.engine.getPlayer(id)?.role === 'recluse')
+              ftOptions.push({
+                id: 'recluse-demon', icon: '🧎', label: '은둔자 → 임프로 인식',
+                preview: msgYes, impact: `${recluseId}번 은둔자를 임프로 등록합니다.`,
+                stateReason: '', recommended: false,
+                revealData: buildFTReveal(msgYes),
+              })
+            }
+
+            if (hasSpy) {
+              const spyId = ids.find(id => this.engine.getPlayer(id)?.role === 'spy')
+              ftOptions.push({
+                id: 'spy-good', icon: '🕵️', label: '스파이 → 선으로 인식',
+                preview: msgNo, impact: `${spyId}번 스파이를 선 팀으로 등록합니다.`,
+                stateReason: '', recommended: false,
+                revealData: buildFTReveal(msgNo),
+              })
+            }
+
             this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
               roleId: 'fortuneteller',
               actorSeatId: actor.id,
@@ -478,23 +528,10 @@ export class NightAction {
               roleTeam: 'townsfolk',
               roleAbility: role?.ability || '',
               accurateValue: accurateMsg,
-              isPoisoned: true,
+              isPoisoned: isPoisonedFT,
               analysis: { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
               players: this.engine.state.players,
-              options: [
-                {
-                  id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
-                  preview: falseMsg, impact: '중독/취함 — 오정보를 제공합니다.',
-                  stateReason: '', recommended: true,
-                  revealData: buildFTReveal(falseMsg),
-                },
-                {
-                  id: 'true-info', icon: '🔵', label: '정확한 정보',
-                  preview: accurateMsg, impact: '정확한 정보를 그대로 전달합니다.',
-                  stateReason: '', recommended: false,
-                  revealData: buildFTReveal(accurateMsg),
-                },
-              ],
+              options: ftOptions,
               onDecide: (chosen) => {
                 const finalRevealData = chosen.revealData || null
                 const finalMessage = chosen.preview || accurateMsg
@@ -509,7 +546,7 @@ export class NightAction {
               },
             }))
           } else {
-            // 정상: 바로 결과 표시
+            // 정상 + 은둔자/스파이 없음: 바로 결과 표시
             mountInfoPanel({
               title:    '점쟁이 결과',
               roleIcon: 'fortuneteller.png',

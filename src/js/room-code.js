@@ -124,3 +124,24 @@ export function formatCode(code) {
 export function validateRoomCode(code) {
   return decodeRoomCode(code) !== null
 }
+
+/**
+ * 방 코드 공유 텍스트 생성 + 클립보드 복사
+ * @param {string} code  원본 방 코드
+ * @returns {Promise<boolean>}
+ */
+export async function copyRoomCode(code) {
+  const formatted = formatCode(code)
+  const baseUrl = location.origin + location.pathname
+  const link = `${baseUrl}?code=${code}`
+  const text = `🏰 Clocktower Pocket\n\n방 코드: ${formatted}\n접속 링크: ${link}`
+
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    // fallback
+    try { await navigator.clipboard.writeText(code) } catch {}
+    return false
+  }
+}

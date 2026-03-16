@@ -337,6 +337,7 @@ function _formatAccurateLabel(roleId, value, isPoisoned) {
     case 'librarian':
     case 'investigator': {
       if (!value) return null
+      if (value.noOutsider) return '아웃사이더 없음'
       const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
       return `${value.roleId} → ${pNums}`
     }

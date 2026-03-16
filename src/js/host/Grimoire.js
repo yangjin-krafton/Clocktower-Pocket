@@ -12,7 +12,7 @@ import { renderLogList }        from '../components/LogEntry.js'
 import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
-import { formatCode }           from '../room-code.js'
+import { formatCode, copyRoomCode } from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 import { addBaronOutsiderGuide } from '../components/BaronOutsiderGuide.js'
 
@@ -124,7 +124,7 @@ export class Grimoire {
         <span style="font-size:0.6rem;color:var(--text4)">탭=복사</span>
       `
       codeBadge.addEventListener('click', () => {
-        navigator.clipboard?.writeText(cfg.roomCode).catch(() => {})
+        copyRoomCode(cfg.roomCode)
         codeBadge.querySelector('span:last-child').textContent = '✓ 복사됨!'
         setTimeout(() => { codeBadge.querySelector('span:last-child').textContent = '탭=복사' }, 1500)
       })

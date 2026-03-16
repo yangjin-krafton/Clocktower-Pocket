@@ -15,7 +15,7 @@ import { Victory }                              from './Victory.js'
 import { HistoryManager }                       from './HistoryManager.js'
 import { HistoryBar }                           from './HistoryBar.js'
 import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
-import { encodeRoomCode, formatCode }           from '../room-code.js'
+import { encodeRoomCode, formatCode, copyRoomCode } from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
@@ -422,8 +422,8 @@ export class HostApp {
       <div style="font-size:0.65rem;color:var(--text4);margin-top:6px;">탭하여 복사</div>
     `
     codeDisplay.addEventListener('click', () => {
-      navigator.clipboard?.writeText(code).catch(() => {})
-      codeDisplay.querySelector('div:last-child').textContent = '✓ 복사됨!'
+      copyRoomCode(code)
+      codeDisplay.querySelector('div:last-child').textContent = '✓ 코드+링크 복사됨!'
       setTimeout(() => { codeDisplay.querySelector('div:last-child').textContent = '탭하여 복사' }, 1500)
     })
     box.appendChild(codeDisplay)

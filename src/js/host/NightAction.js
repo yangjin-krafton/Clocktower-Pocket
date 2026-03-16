@@ -217,6 +217,31 @@ export class NightAction {
       })
     }
 
+    // 사서: "아웃사이더 없음" 옵션 (중독 여부 무관)
+    if (roleId === 'librarian') {
+      const noOutVal = { roleId: null, players: [], noOutsider: true }
+      const isAccurateNoOut = realAccurate?.noOutsider === true
+      options.push({
+        id:          'no-outsider',
+        icon:        '🚫',
+        label:       '아웃사이더 없음',
+        preview:     '아웃사이더 없음',
+        impact:      isAccurateNoOut ? '정확한 정보입니다.' : '거짓 — 실제로는 아웃사이더가 있습니다.',
+        stateReason: '',
+        recommended: isAccurateNoOut && !isPoisoned,
+        revealData: {
+          roleIcon:    role?.icon || '?',
+          roleName:    role?.name || roleId,
+          roleTeam:    role?.team || null,
+          roleAbility: role?.ability || '',
+          message:     '이 게임에 아웃사이더가 없습니다.',
+          players:     [],
+          hint:        '당신 능력이 발동됐습니다 — 이 게임에는 아웃사이더가 포함되어 있지 않습니다.',
+          action:      '확인한 뒤 눈을 감고 손을 내려주세요.',
+        },
+      })
+    }
+
     options.push({
       id:          'custom',
       icon:        '✏️',
@@ -274,7 +299,7 @@ export class NightAction {
         const outsiders = this.engine.state.players.filter(
           p => ['butler','drunk','recluse','saint'].includes(p.role) && p.status === 'alive'
         )
-        if (!outsiders.length) return null
+        if (!outsiders.length) return { roleId: null, players: [], noOutsider: true }
         const target = outsiders[Math.floor(Math.random() * outsiders.length)]
         const decoy  = this._pickDecoy(target.id)
         return { roleId: target.role, players: [target, decoy].filter(Boolean) }
@@ -366,6 +391,7 @@ export class NightAction {
       case 'librarian':
       case 'investigator': {
         if (!value) return '정보 없음'
+        if (value.noOutsider) return '아웃사이더 없음'
         const r = ROLES_BY_ID[value.roleId]
         const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
         return `${r?.name || value.roleId} → ${pNums}`

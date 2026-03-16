@@ -10,7 +10,7 @@ import { mountBluffSelectPanel }    from '../components/BluffSelectPanel.js'
 import { mountDemonBluffPanel }     from '../components/DemonBluffPanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
 import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
-import { ROLES_BY_ID } from '../data/roles-tb.js'
+import { ROLES_TB, ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
 
 export class NightAction {
@@ -490,6 +490,91 @@ export class NightAction {
               message:  accurateMsg,
               players:  ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
               revealData: buildFTReveal(accurateMsg),
+              onConfirm: () => this._done(roleId, ids),
+            })
+          }
+        } else if (roleId === 'ravenkeeper' && ids.length === 1) {
+          // 까마귀 사육사: 선택한 플레이어의 역할 공개
+          const isPoisonedRK = actor.isPoisoned || actor.isDrunk
+          const target = this.engine.getPlayer(ids[0])
+          const targetRole = target ? ROLES_BY_ID[target.role] : null
+          // 주정뱅이는 drunkAs 역할로 표시
+          const displayRoleId = (target?.role === 'drunk' && target?.drunkAs) ? target.drunkAs : target?.role
+          const displayRole = ROLES_BY_ID[displayRoleId]
+          const accurateMsg = `${target?.id}번 → ${displayRole?.name || displayRoleId || '?'}`
+
+          const buildRKReveal = (msg) => ({
+            roleIcon: 'ravenkeeper.png',
+            roleName: '까마귀 사육사 결과',
+            roleTeam: 'town',
+            roleAbility: role?.ability || '',
+            message: msg,
+            players: [{ id: ids[0] }],
+            hint: '당신 능력이 발동됐습니다 — 지목한 플레이어의 역할을 알 수 있습니다.',
+            action: '역할을 기억한 뒤 눈을 감고 손을 내려주세요.',
+          })
+
+          if (isPoisonedRK) {
+            // 중독: 호스트가 역할 선택
+            const allRoles = [...ROLES_TB.filter(r => r.team === 'townsfolk' || r.team === 'outsider'),
+                              ...ROLES_TB.filter(r => r.team === 'minion'),
+                              ...ROLES_TB.filter(r => r.team === 'demon')]
+            const falseRole = allRoles.find(r => r.id !== displayRoleId) || allRoles[0]
+            const falseMsg = `${target?.id}번 → ${falseRole?.name || '?'}`
+
+            this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
+              roleId: 'ravenkeeper',
+              actorSeatId: actor.id,
+              roleName: '까마귀 사육사',
+              roleIcon: 'ravenkeeper.png',
+              roleIconEmoji: '🐦‍⬛',
+              roleTeam: 'townsfolk',
+              roleAbility: role?.ability || '',
+              accurateValue: accurateMsg,
+              isPoisoned: true,
+              analysis: { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
+              players: this.engine.state.players,
+              options: [
+                {
+                  id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
+                  preview: falseMsg, impact: '중독/취함 — 거짓 역할을 알려줍니다.',
+                  stateReason: '', recommended: true,
+                  revealData: buildRKReveal(falseMsg),
+                  customType: 'player-pick',
+                },
+                {
+                  id: 'true-info', icon: '🔵', label: '정확한 정보',
+                  preview: accurateMsg, impact: '정확한 역할을 그대로 전달합니다.',
+                  stateReason: '', recommended: false,
+                  revealData: buildRKReveal(accurateMsg),
+                },
+                {
+                  id: 'custom', icon: '✏️', label: '직접 선택',
+                  preview: '호스트가 직접 결정', impact: '', stateReason: '',
+                  recommended: false, revealData: null, customType: 'number',
+                },
+              ],
+              onDecide: (chosen) => {
+                const finalRevealData = chosen.revealData || null
+                const finalMessage = chosen.preview || accurateMsg
+                this._unmount = this._trackOverlay(() => mountInfoPanel({
+                  title: '까마귀 사육사 결과',
+                  roleIcon: 'ravenkeeper.png',
+                  message: finalMessage,
+                  players: [],
+                  revealData: finalRevealData,
+                  onConfirm: () => this._done(roleId, ids),
+                }))
+              },
+            }))
+          } else {
+            // 정상: 바로 결과 표시
+            mountInfoPanel({
+              title: '까마귀 사육사 결과',
+              roleIcon: 'ravenkeeper.png',
+              message: accurateMsg,
+              players: [],
+              revealData: buildRKReveal(accurateMsg),
               onConfirm: () => this._done(roleId, ids),
             })
           }

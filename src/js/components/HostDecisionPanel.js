@@ -174,9 +174,13 @@ export function mountHostDecisionPanel(data) {
           const customOpt = {
             ...opt,
             customValue: n,
-            revealData: opt.revealData
-              ? { ...opt.revealData, message: String(n) }
-              : { message: String(n), players: [] },
+            preview: String(n),
+            revealData: {
+              roleIcon, roleName, roleTeam, roleAbility,
+              message: String(n), players: [],
+              hint: `당신의 능력이 발동됐습니다.`,
+              action: '숫자를 기억한 뒤 눈을 감고 손을 내려주세요.',
+            },
           }
           _selectOption(card, customOpt)
         })
@@ -215,7 +219,7 @@ export function mountHostDecisionPanel(data) {
             ...opt,
             preview: `${rFullName} → ${pNumsStr}`,
             revealData: {
-              roleIcon: roleIcon, roleName: roleName, roleTeam: roleTeam,
+              roleIcon, roleName, roleTeam, roleAbility,
               message: `이 중 한 명이 ${rFullName}입니다`,
               players: pickedPlayerIds.map(id => ({ id })),
               hint: `당신 능력이 발동됐습니다 — 아래 자리 중 한 명이 ${rFullName}입니다.`,
@@ -273,9 +277,18 @@ export function mountHostDecisionPanel(data) {
     }
 
     card.addEventListener('click', () => {
-      // custom 카드도 클릭으로 바로 선택 가능 (기본 모드: 호스트가 구두 전달)
       if (opt.id === 'custom') {
-        _selectOption(card, { ...opt, preview: '호스트가 직접 전달', revealData: null })
+        _selectOption(card, {
+          ...opt,
+          preview: '호스트가 직접 전달',
+          revealData: {
+            roleIcon, roleName, roleTeam, roleAbility,
+            message: '호스트가 직접 전달합니다.',
+            players: [],
+            hint: '이야기꾼이 당신에게 정보를 알려줍니다.',
+            action: '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
+          },
+        })
       } else {
         _selectOption(card, opt)
       }

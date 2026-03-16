@@ -24,7 +24,7 @@ const TEAM_COLORS = {
 }
 
 export function mountRevealPanel(data) {
-  const { roleIcon, roleName, roleTeam, message, players = [], hint, action, onNext } = data
+  const { roleIcon, roleName, roleTeam, roleAbility, message, players = [], hint, action, onNext } = data
 
   const overlay = document.createElement('div')
   overlay.className = 'reveal-overlay'
@@ -41,34 +41,38 @@ export function mountRevealPanel(data) {
   topBar.innerHTML = `<span class="reveal__label-chip">👁 참가자 화면</span><span class="reveal__label-night">🌙 밤 — 역할 정보 수령</span>`
   panel.appendChild(topBar)
 
-  // ── 역할 아이콘 (PNG: token 오버레이, 그 외: emoji) ──
+  // ── 역할 아이콘 (작게) + 역할명 한 줄 ──
+  const headerRow = document.createElement('div')
+  headerRow.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;max-width:360px;'
+
   const iconEl = document.createElement('div')
   if (roleIcon && roleIcon.endsWith('.png')) {
     iconEl.className = 'reveal__icon reveal__icon--token'
+    iconEl.style.cssText = 'width:48px;height:48px;flex-shrink:0;'
     iconEl.innerHTML = `
       <img class="reveal__token-bg"   src="./asset/token.png" alt="">
       <img class="reveal__token-icon" src="./asset/icons/${roleIcon}" alt="${roleName}">
     `
   } else {
-    iconEl.className = 'reveal__icon'
+    iconEl.style.cssText = 'font-size:2rem;flex-shrink:0;'
     iconEl.textContent = roleIcon || '🎴'
   }
-  panel.appendChild(iconEl)
+  headerRow.appendChild(iconEl)
 
-  // ── 역할명 ──
   const nameEl = document.createElement('div')
   nameEl.className = 'reveal__name'
+  nameEl.style.cssText = `font-size:1.4rem;text-align:left;color:${tc.color};text-shadow:0 0 20px ${tc.shadow};`
   nameEl.textContent = roleName
-  nameEl.style.color      = tc.color
-  nameEl.style.textShadow = `0 0 20px ${tc.shadow}`
-  panel.appendChild(nameEl)
+  headerRow.appendChild(nameEl)
 
-  // ── 안내 카드 (뭘 봐야 하는지) ──
-  if (hint) {
-    const hintEl = document.createElement('div')
-    hintEl.className = 'reveal__hint-card'
-    hintEl.innerHTML = `<span class="reveal__hint-icon">💡</span><span class="reveal__hint-text">${hint}</span>`
-    panel.appendChild(hintEl)
+  panel.appendChild(headerRow)
+
+  // ── 규칙 설명 (능력 텍스트) ──
+  if (roleAbility) {
+    const abilityEl = document.createElement('div')
+    abilityEl.className = 'reveal__ability'
+    abilityEl.textContent = roleAbility
+    panel.appendChild(abilityEl)
   }
 
   // ── 번호 칩 (message 앞에 배치 — 중요 대상을 먼저 인식) ──
@@ -199,6 +203,21 @@ if (!document.getElementById('reveal-panel-style')) {
   text-align: center;
   line-height: 1.2;
 }
+/* 규칙 설명 */
+.reveal__ability {
+  width: 100%;
+  max-width: 360px;
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.65;
+  background: var(--surface);
+  border: 1px solid var(--lead2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  word-break: keep-all;
+  text-align: center;
+}
+
 /* 안내 카드 */
 .reveal__hint-card {
   display: flex;

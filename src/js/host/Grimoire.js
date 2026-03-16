@@ -353,6 +353,20 @@ export class Grimoire {
         `
         badge.textContent = '🍾'
         iconWrap.appendChild(badge)
+      } else if (roleId === 'drunk' && !drunkAsRoleId) {
+        // drunkAs 미선택 → 경고 배지
+        const warnBadge = document.createElement('div')
+        warnBadge.style.cssText = `
+          position:absolute;top:-4px;right:-4px;
+          width:${Math.round(iconPx*0.4)}px;height:${Math.round(iconPx*0.4)}px;
+          border-radius:50%;background:var(--rd-light);
+          display:flex;align-items:center;justify-content:center;
+          font-size:${Math.round(iconPx*0.22)}px;line-height:1;
+          border:1px solid var(--surface);z-index:2;
+          animation:drunk-pulse 1.5s infinite;
+        `
+        warnBadge.textContent = '❗'
+        iconWrap.appendChild(warnBadge)
       }
 
       slot.appendChild(iconWrap)
@@ -473,8 +487,8 @@ export class Grimoire {
       const config = this.getLobbyConfig()
       if (!config.drunkAsRole) {
         valid = false
-        msg = '주정뱅이의 믿는 역할을 선택하세요'
-        shortMsg = '🍾 역할 필요'
+        msg = '아래에서 주정뱅이가 믿는 역할을 선택하세요'
+        shortMsg = '🍾 선택 필요 ↓'
       }
     }
     return { valid, msg, shortMsg, counts, filledCnt }
@@ -583,14 +597,18 @@ export class Grimoire {
       const usedRoleIds = new Set(seats.filter(Boolean))
 
       const drunkPanel = document.createElement('div')
-      drunkPanel.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--lead2);'
+      drunkPanel.style.cssText = drunkAs
+        ? 'margin-top:10px;padding-top:10px;border-top:1px solid var(--lead2);'
+        : 'margin-top:10px;padding:10px;border-radius:10px;border:2px solid rgba(124,58,237,0.5);background:rgba(124,58,237,0.08);animation:drunk-pulse 1.5s infinite;'
 
       const dpHeader = document.createElement('div')
       dpHeader.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;'
       dpHeader.innerHTML = `
         <span style="font-size:0.82rem;">🍾</span>
-        <span style="font-size:0.72rem;font-weight:600;color:var(--text2);">주정뱅이가 믿는 역할</span>
-        ${drunkAs ? `<span style="font-size:0.65rem;color:var(--tl-light);margin-left:auto;">${ROLES_BY_ID[drunkAs]?.name || ''}</span>` : '<span style="font-size:0.62rem;color:var(--rd-light);margin-left:auto;">선택 필요</span>'}
+        <span style="font-size:0.75rem;font-weight:700;color:${drunkAs ? 'var(--text2)' : '#a78bfa'};">주정뱅이가 믿는 역할</span>
+        ${drunkAs
+          ? `<span style="font-size:0.68rem;color:var(--tl-light);margin-left:auto;">✓ ${ROLES_BY_ID[drunkAs]?.name || ''}</span>`
+          : '<span style="font-size:0.65rem;color:var(--rd-light);margin-left:auto;">⬇ 아래에서 선택하세요</span>'}
       `
       drunkPanel.appendChild(dpHeader)
 
@@ -1064,6 +1082,12 @@ if (!document.getElementById('grimoire-lobby-style')) {
   padding: 14px;
   margin-top: 8px;
   font-size: 0.92rem;
+}
+
+/* ── 주정뱅이 드렁크As 패널 펄스 ── */
+@keyframes drunk-pulse {
+  0%, 100% { border-color: rgba(124,58,237,0.5); }
+  50% { border-color: rgba(124,58,237,0.9); box-shadow: 0 0 12px rgba(124,58,237,0.25); }
 }
 
 /* ── 대기 점 ── */

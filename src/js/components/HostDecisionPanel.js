@@ -68,10 +68,21 @@ export function mountHostDecisionPanel(data) {
   if (accurateLabel) {
     const accEl = document.createElement('div')
     accEl.className = 'hdp__context-accurate'
-    accEl.innerHTML = isPoisoned
-      ? `🎲 랜덤값 (중독): <b>${accurateLabel}</b>`
-      : `✅ 정확한 값: <b>${accurateLabel}</b>`
+    accEl.innerHTML = `✅ 정확한 값: <b>${accurateLabel}</b>`
     ctxCard.appendChild(accEl)
+  }
+
+  // 중독/취함 경고 + 거짓 정보 안내
+  if (isPoisoned) {
+    const warnEl = document.createElement('div')
+    warnEl.style.cssText = `
+      font-size:0.75rem;padding:8px 10px;border-radius:6px;line-height:1.5;
+      background:rgba(140,48,48,0.12);border:1px solid rgba(140,48,48,0.3);
+      color:var(--rd-light);
+    `
+    warnEl.innerHTML = `⚠️ <b>중독/취함 상태</b> — 거짓 정보를 줘야 합니다.<br>
+      <span style="font-size:0.65rem;color:var(--text3)">위 정확한 값을 참고하여 다른 값을 선택하세요.</span>`
+    ctxCard.appendChild(warnEl)
   }
 
   panel.appendChild(ctxCard)

@@ -173,21 +173,19 @@ export class NightAction {
     }))
   }
 
-  // ── 정보 전달 역할 (직접 선택만) ──
+  // ── 정보 전달 역할 ──
   _showRoleInfo(roleId, actors) {
     if (!actors || actors.length === 0) { this._done(roleId); return }
     const actor     = actors[0]
     const role      = ROLES_BY_ID[roleId]
     const isPoisoned = actor.isPoisoned || actor.isDrunk
 
-    // 정확한 값 계산 (중독이면 랜덤)
-    const accurate = isPoisoned
-      ? this._calcPoisonedValue(roleId)
-      : this._calcAccurateValue(roleId, actor)
+    // 항상 정확한 값 계산 (호스트 참고용)
+    const realAccurate = this._calcAccurateValue(roleId, actor)
 
-    this.engine.recordNightAction(roleId, actor.id, [], String(accurate))
+    this.engine.recordNightAction(roleId, actor.id, [], String(realAccurate))
 
-    // 직접 선택 옵션만 생성
+    // 직접 선택 옵션
     const customType = ['empath','chef'].includes(roleId) ? 'number'
       : ['washerwoman','librarian','investigator','undertaker'].includes(roleId) ? 'player-pick'
       : 'number'
@@ -212,14 +210,14 @@ export class NightAction {
       roleIconEmoji: role?.iconEmoji || '',
       roleTeam:    role?.team || null,
       roleAbility: role?.ability || '',
-      accurateValue: accurate,
+      accurateValue: realAccurate,
       isPoisoned,
       analysis:    { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
       options,
       players:     this.engine.state.players,
       onDecide: (chosen) => {
         const finalRevealData = chosen.revealData || null
-        const finalMessage    = chosen.preview || String(accurate)
+        const finalMessage    = chosen.preview || String(realAccurate)
 
         this._unmount = this._trackOverlay(() => mountInfoPanel({
           title:      role?.name || roleId,

@@ -19,8 +19,10 @@ export class DemonBluffAdvisor {
    */
   advise({ pool, players, drunkAsRoleId = null }) {
     const analysis = this._analyzeState(players, pool, drunkAsRoleId)
-    // 제안용 풀: 마을 주민만 (아웃사이더 제외)
-    const townsfolkPool = pool.filter(r => r.team === 'townsfolk')
+    // 제안용 풀: 마을 주민만 (아웃사이더 제외) + 주정뱅이 인지 역할 제외
+    const townsfolkPool = pool.filter(r =>
+      r.team === 'townsfolk' && r.id !== drunkAsRoleId
+    )
     const options  = this._buildOptions(townsfolkPool.length >= 3 ? townsfolkPool : pool, analysis)
     return { analysis, options }
   }

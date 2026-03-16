@@ -177,7 +177,7 @@ if (!document.getElementById('select-panel-style')) {
   style.textContent = `
 .select-panel-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 200;
   display: flex;

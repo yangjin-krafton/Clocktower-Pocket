@@ -196,7 +196,7 @@ if (!document.getElementById('oval-select-panel-style')) {
   style.textContent = `
 .oval-sel-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 200;
   display: flex;

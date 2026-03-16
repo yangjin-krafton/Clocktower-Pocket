@@ -126,7 +126,7 @@ if (!document.getElementById('reveal-panel-style')) {
   style.textContent = `
 .reveal-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 210;
   display: flex;

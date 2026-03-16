@@ -50,7 +50,27 @@ export class NightAction {
   _done(step, targetIds = []) {
     this._unmount && this._unmount()
     this._unmount = null
+    this._overlayEl = null
     this.onStepDone && this.onStepDone(step, targetIds)
+  }
+
+  /** mount 함수 호출 후 오버레이 요소 추적 */
+  _trackOverlay(mountFn) {
+    const before = document.body.lastElementChild
+    const unmount = mountFn()
+    const after = document.body.lastElementChild
+    this._overlayEl = (after !== before) ? after : null
+    return unmount
+  }
+
+  /** 오버레이 숨기기 (탭 전환 시) */
+  hideOverlay() {
+    if (this._overlayEl) this._overlayEl.style.display = 'none'
+  }
+
+  /** 오버레이 다시 보이기 (role 탭 복귀 시) */
+  showOverlay() {
+    if (this._overlayEl) this._overlayEl.style.display = ''
   }
 
   // 번호 포맷 헬퍼
@@ -64,7 +84,7 @@ export class NightAction {
     const demonNums  = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
 
     // 블러프는 demon-info에서 선택되므로 미니언 공개 시점엔 표시 안 함
-    this._unmount = mountInfoPanel({
+    this._unmount = this._trackOverlay(() => mountInfoPanel({
       title:    '미니언 공개',
       roleIcon: 'minion.png',
       message:  `미니언: ${minionNums}\n임프: ${demonNums}`,
@@ -79,7 +99,7 @@ export class NightAction {
         action:   '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('minion-info'),
-    })
+    }))
   }
 
   // ── 임프 정보 ──
@@ -104,7 +124,7 @@ export class NightAction {
       drunkAsRoleId,
     })
 
-    this._unmount = mountDemonBluffPanel({
+    this._unmount = this._trackOverlay(() => mountDemonBluffPanel({
       analysis,
       options,
       drunkAsRoleId,
@@ -115,17 +135,17 @@ export class NightAction {
           this._showDemonInfoPanel(demons)
         } else {
           // 직접 선택 → BluffSelectPanel
-          this._unmount = mountBluffSelectPanel({
+          this._unmount = this._trackOverlay(() => mountBluffSelectPanel({
             pool,
             drunkAsRoleId,
             onConfirm: (selectedBluffs) => {
               this.engine.setBluffs(selectedBluffs)
               this._showDemonInfoPanel(demons)
             },
-          })
+          }))
         }
       },
-    })
+    }))
   }
 
   _showDemonInfoPanel(demons) {
@@ -136,7 +156,7 @@ export class NightAction {
     const bluffText = bluffs.map(r => r.name).join(', ')
     const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
 
-    this._unmount = mountInfoPanel({
+    this._unmount = this._trackOverlay(() => mountInfoPanel({
       title:    '임프 정보',
       roleIcon: 'imp.png',
       message:  `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
@@ -151,7 +171,7 @@ export class NightAction {
         action:   '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('demon-info'),
-    })
+    }))
   }
 
   // ── 스파이 (그리모어 열람) ──
@@ -160,18 +180,18 @@ export class NightAction {
     const allPlayers = this.engine.state.players
 
     // ① 호스트가 공개 방식 선택 (모두/반/셔플)
-    this._unmount = mountSpyModeSelector({
+    this._unmount = this._trackOverlay(() => mountSpyModeSelector({
       players: allPlayers,
       onSelected: (mode) => {
         // ② 선택된 방식으로 오발 그리모어 공개 (참가자 화면)
         ThemeManager.pushTemp('player')
-        this._unmount = mountSpyGrimoirePanel({
+        this._unmount = this._trackOverlay(() => mountSpyGrimoirePanel({
           players: allPlayers,
           mode,
           onNext: () => { ThemeManager.popTemp(); this._done('spy') },
-        })
+        }))
       },
-    })
+    }))
   }
 
   // ── 정보 전달 역할 ──
@@ -202,7 +222,7 @@ export class NightAction {
     })
 
     // ② HostDecisionPanel 표시 (호스트 전용)
-    this._unmount = mountHostDecisionPanel({
+    this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
       roleId,
       actorSeatId: actor.id,
       roleName:    role?.name || roleId,
@@ -214,21 +234,22 @@ export class NightAction {
       isPoisoned,
       analysis:    adviseResult.analysis,
       options:     adviseResult.options,
+      players:     this.engine.state.players,
       onDecide: (chosen) => {
         // 직접선택이고 revealData가 없으면 기본 InfoPanel만 표시
         const finalRevealData = chosen.revealData || null
         const finalMessage    = chosen.preview || String(accurate)
 
-        this._unmount = mountInfoPanel({
+        this._unmount = this._trackOverlay(() => mountInfoPanel({
           title:      role?.name || roleId,
           roleIcon:   role?.icon || '?',
           message:    finalMessage,
           players:    [],
           revealData: finalRevealData,
           onConfirm:  () => this._done(roleId),
-        })
+        }))
       },
-    })
+    }))
   }
 
   /** 역할별 정확한 정보값 계산 */
@@ -270,7 +291,32 @@ export class NightAction {
     switch (roleId) {
       case 'empath':     return Math.floor(Math.random() * 3)
       case 'chef':       return Math.floor(Math.random() * 5)
-      case 'undertaker': return null   // 취함이면 정보 없음으로 처리
+      case 'undertaker': return null
+      case 'washerwoman': {
+        const alive = this.engine.state.players.filter(p => p.status === 'alive')
+        if (alive.length < 2) return null
+        const tfIds = ['washerwoman','librarian','investigator','chef','empath','fortuneteller',
+          'undertaker','monk','ravenkeeper','virgin','slayer','soldier','mayor']
+        const randomRoleId = tfIds[Math.floor(Math.random() * tfIds.length)]
+        const shuffled = [...alive].sort(() => Math.random() - 0.5)
+        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
+      }
+      case 'librarian': {
+        const alive = this.engine.state.players.filter(p => p.status === 'alive')
+        if (alive.length < 2) return null
+        const outIds = ['butler','drunk','recluse','saint']
+        const randomRoleId = outIds[Math.floor(Math.random() * outIds.length)]
+        const shuffled = [...alive].sort(() => Math.random() - 0.5)
+        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
+      }
+      case 'investigator': {
+        const alive = this.engine.state.players.filter(p => p.status === 'alive')
+        if (alive.length < 2) return null
+        const minIds = ['poisoner','spy','scarletwoman','baron']
+        const randomRoleId = minIds[Math.floor(Math.random() * minIds.length)]
+        const shuffled = [...alive].sort(() => Math.random() - 0.5)
+        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
+      }
       default:           return null
     }
   }
@@ -291,7 +337,7 @@ export class NightAction {
     }
 
     ThemeManager.pushTemp('player')  // 참가자 지목 화면 → 참가자 테마
-    this._unmount = mountOvalSelectPanel({
+    this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
       title:      role?.name || roleId,
       roleIcon:   role?.icon || '?',
       roleTeam:   role?.team || null,
@@ -327,7 +373,7 @@ export class NightAction {
           this._done(roleId, ids)
         }
       }
-    })
+    }))
   }
 
   _pickRandomTownsfolk() {

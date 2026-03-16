@@ -134,7 +134,7 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: var(--app-max-width);
-  z-index: 50;
+  z-index: 300;
 }
 .tab-bar::before {
   content: '';

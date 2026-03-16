@@ -254,7 +254,7 @@ if (!document.getElementById('spy-grimoire-style')) {
 
 /* ── 모드 선택 (호스트 전용) ── */
 .spy-mode-overlay {
-  position: fixed; inset: 0;
+  position: fixed; inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 215;
   display: flex; align-items: center; justify-content: center;
@@ -297,7 +297,7 @@ if (!document.getElementById('spy-grimoire-style')) {
 
 /* ── 그리모어 공개 화면 (참가자 공개) ── */
 .spy-grim-overlay {
-  position: fixed; inset: 0;
+  position: fixed; inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 210;
   display: flex; align-items: stretch;

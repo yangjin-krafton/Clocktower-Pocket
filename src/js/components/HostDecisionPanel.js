@@ -1,3 +1,5 @@
+import { ROLES_TB, ROLES_BY_ID } from '../data/roles-tb.js'
+
 /**
  * C-09 HostDecisionPanel — 밤 행동 정보 선택 화면 (호스트 전용)
  *
@@ -17,7 +19,7 @@
 
 export function mountHostDecisionPanel(data) {
   const { roleId, actorSeatId, roleName, roleIcon, roleIconEmoji, roleTeam,
-          roleAbility, accurateValue, isPoisoned, analysis, options, onDecide } = data
+          roleAbility, accurateValue, isPoisoned, analysis, options, players, onDecide } = data
 
   const overlay = document.createElement('div')
   overlay.className = 'hdp-overlay'
@@ -169,8 +171,100 @@ export function mountHostDecisionPanel(data) {
       card.appendChild(customRow)
     }
 
+    // 직접선택: player-pick UI (세탁부/사서/조사관/장의사)
+    if (opt.id === 'custom' && opt.customType === 'player-pick') {
+      const teamFilter = roleId === 'washerwoman' ? 'townsfolk'
+        : roleId === 'librarian' ? 'outsider'
+        : roleId === 'investigator' ? 'minion' : null
+      const maxPick = roleId === 'undertaker' ? 1 : 2
+      let pickedRoleId = null
+      let pickedPlayerIds = []
+
+      // 현재 상태 표시
+      const statusEl = document.createElement('div')
+      statusEl.style.cssText = 'font-size:0.62rem;color:var(--tl-light);margin-top:4px;min-height:16px;'
+      statusEl.textContent = ''
+      card.appendChild(statusEl)
+
+      const updateStatus = () => {
+        const rName = pickedRoleId ? (ROLES_BY_ID[pickedRoleId]?.name || '') : '미선택'
+        const pNums = pickedPlayerIds.length > 0 ? pickedPlayerIds.map(id => `${id}번`).join(', ') : '미선택'
+        statusEl.textContent = `역할: ${rName} · 플레이어: ${pNums}`
+
+        // 역할+플레이어 모두 선택 시 → revealData 포함 옵션으로 업그레이드
+        const roleOk = !teamFilter || pickedRoleId
+        const playersOk = pickedPlayerIds.length === maxPick
+        if (roleOk && playersOk) {
+          const rFullName = pickedRoleId ? (ROLES_BY_ID[pickedRoleId]?.name || pickedRoleId) : ''
+          const pNumsStr = pickedPlayerIds.map(id => `${id}번`).join(', ')
+          _selectOption(card, {
+            ...opt,
+            preview: `${rFullName} → ${pNumsStr}`,
+            revealData: {
+              roleIcon: roleIcon, roleName: roleName, roleTeam: roleTeam,
+              message: `이 중 한 명이 ${rFullName}입니다`,
+              players: pickedPlayerIds.map(id => ({ id })),
+              hint: `당신 능력이 발동됐습니다 — 아래 자리 중 한 명이 ${rFullName}입니다.`,
+              action: '자리번호를 기억한 뒤 눈을 감고 손을 내려주세요.',
+            },
+          })
+        }
+      }
+
+      // 역할 선택 행
+      if (teamFilter) {
+        const roleRow = document.createElement('div')
+        roleRow.className = 'hdp__custom-row'
+        roleRow.style.flexWrap = 'wrap'
+        ROLES_TB.filter(r => r.team === teamFilter).forEach(r => {
+          const btn = document.createElement('button')
+          btn.className = 'hdp__custom-num-btn'
+          btn.style.cssText = 'width:auto;padding:4px 8px;font-size:0.62rem;'
+          btn.textContent = r.name
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            roleRow.querySelectorAll('button').forEach(b => b.classList.remove('hdp__custom-num-btn--on'))
+            btn.classList.add('hdp__custom-num-btn--on')
+            pickedRoleId = r.id
+            updateStatus()
+          })
+          roleRow.appendChild(btn)
+        })
+        card.appendChild(roleRow)
+      }
+
+      // 플레이어 선택 행
+      const pRow = document.createElement('div')
+      pRow.className = 'hdp__custom-row'
+      const alivePlayers = (players || []).filter(p => p.status === 'alive')
+      alivePlayers.forEach(p => {
+        const btn = document.createElement('button')
+        btn.className = 'hdp__custom-num-btn'
+        btn.textContent = `${p.id}`
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          if (btn.classList.contains('hdp__custom-num-btn--on')) {
+            btn.classList.remove('hdp__custom-num-btn--on')
+            pickedPlayerIds = pickedPlayerIds.filter(id => id !== p.id)
+          } else {
+            if (pickedPlayerIds.length >= maxPick) return
+            btn.classList.add('hdp__custom-num-btn--on')
+            pickedPlayerIds.push(p.id)
+          }
+          updateStatus()
+        })
+        pRow.appendChild(btn)
+      })
+      card.appendChild(pRow)
+    }
+
     card.addEventListener('click', () => {
-      if (opt.id !== 'custom') _selectOption(card, opt)
+      // custom 카드도 클릭으로 바로 선택 가능 (기본 모드: 호스트가 구두 전달)
+      if (opt.id === 'custom') {
+        _selectOption(card, { ...opt, preview: '호스트가 직접 전달', revealData: null })
+      } else {
+        _selectOption(card, opt)
+      }
     })
 
     panel.appendChild(card)
@@ -230,7 +324,7 @@ if (!document.getElementById('host-decision-panel-style')) {
   style.textContent = `
 .hdp-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 215;
   display: flex;

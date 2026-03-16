@@ -205,6 +205,13 @@ export class HostApp {
       btn.classList.toggle('active', btn.dataset.tab === tabId)
     })
 
+    // 밤 행동 오버레이 숨기기/보이기
+    if (tabId === 'role') {
+      this.nightAction?.showOverlay()
+    } else {
+      this.nightAction?.hideOverlay()
+    }
+
     this._clearScreen()
 
     if (tabId === 'role') {

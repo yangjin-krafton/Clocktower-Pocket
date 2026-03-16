@@ -177,7 +177,7 @@ if (!document.getElementById('demon-bluff-panel-style')) {
   style.textContent = `
 .dbp-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 56px 0;
   background: var(--bg);
   z-index: 215;
   display: flex;

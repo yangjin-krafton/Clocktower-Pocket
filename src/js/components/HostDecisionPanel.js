@@ -189,91 +189,12 @@ export function mountHostDecisionPanel(data) {
       card.appendChild(customRow)
     }
 
-    // 직접선택: player-pick UI (세탁부/사서/조사관/장의사)
+    // 직접선택: player-pick → 자리 배치 화면으로 안내
     if (opt.id === 'custom' && opt.customType === 'player-pick') {
-      const teamFilter = roleId === 'washerwoman' ? 'townsfolk'
-        : roleId === 'librarian' ? 'outsider'
-        : roleId === 'investigator' ? 'minion' : null
-      const maxPick = roleId === 'undertaker' ? 1 : 2
-      let pickedRoleId = null
-      let pickedPlayerIds = []
-
-      // 현재 상태 표시
-      const statusEl = document.createElement('div')
-      statusEl.style.cssText = 'font-size:0.62rem;color:var(--tl-light);margin-top:4px;min-height:16px;'
-      statusEl.textContent = ''
-      card.appendChild(statusEl)
-
-      const updateStatus = () => {
-        const rName = pickedRoleId ? (ROLES_BY_ID[pickedRoleId]?.name || '') : '미선택'
-        const pNums = pickedPlayerIds.length > 0 ? pickedPlayerIds.map(id => `${id}번`).join(', ') : '미선택'
-        statusEl.textContent = `역할: ${rName} · 플레이어: ${pNums}`
-
-        // 역할+플레이어 모두 선택 시 → revealData 포함 옵션으로 업그레이드
-        const roleOk = !teamFilter || pickedRoleId
-        const playersOk = pickedPlayerIds.length === maxPick
-        if (roleOk && playersOk) {
-          const rFullName = pickedRoleId ? (ROLES_BY_ID[pickedRoleId]?.name || pickedRoleId) : ''
-          const pNumsStr = pickedPlayerIds.map(id => `${id}번`).join(', ')
-          _selectOption(card, {
-            ...opt,
-            preview: `${rFullName} → ${pNumsStr}`,
-            revealData: {
-              roleIcon, roleName, roleTeam, roleAbility,
-              message: `이 중 한 명이 ${rFullName}입니다`,
-              players: pickedPlayerIds.map(id => ({ id })),
-              hint: `당신 능력이 발동됐습니다 — 아래 자리 중 한 명이 ${rFullName}입니다.`,
-              action: '자리번호를 기억한 뒤 눈을 감고 손을 내려주세요.',
-            },
-          })
-        }
-      }
-
-      // 역할 선택 행
-      if (teamFilter) {
-        const roleRow = document.createElement('div')
-        roleRow.className = 'hdp__custom-row'
-        roleRow.style.flexWrap = 'wrap'
-        ROLES_TB.filter(r => r.team === teamFilter).forEach(r => {
-          const btn = document.createElement('button')
-          btn.className = 'hdp__custom-num-btn'
-          btn.style.cssText = 'width:auto;padding:4px 8px;font-size:0.62rem;'
-          btn.textContent = r.name
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation()
-            roleRow.querySelectorAll('button').forEach(b => b.classList.remove('hdp__custom-num-btn--on'))
-            btn.classList.add('hdp__custom-num-btn--on')
-            pickedRoleId = r.id
-            updateStatus()
-          })
-          roleRow.appendChild(btn)
-        })
-        card.appendChild(roleRow)
-      }
-
-      // 플레이어 선택 행
-      const pRow = document.createElement('div')
-      pRow.className = 'hdp__custom-row'
-      const alivePlayers = (players || []).filter(p => p.status === 'alive')
-      alivePlayers.forEach(p => {
-        const btn = document.createElement('button')
-        btn.className = 'hdp__custom-num-btn'
-        btn.textContent = `${p.id}`
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation()
-          if (btn.classList.contains('hdp__custom-num-btn--on')) {
-            btn.classList.remove('hdp__custom-num-btn--on')
-            pickedPlayerIds = pickedPlayerIds.filter(id => id !== p.id)
-          } else {
-            if (pickedPlayerIds.length >= maxPick) return
-            btn.classList.add('hdp__custom-num-btn--on')
-            pickedPlayerIds.push(p.id)
-          }
-          updateStatus()
-        })
-        pRow.appendChild(btn)
-      })
-      card.appendChild(pRow)
+      const pickHint = document.createElement('div')
+      pickHint.style.cssText = 'font-size:0.65rem;color:var(--text4);text-align:center;margin-top:4px;'
+      pickHint.textContent = '🪑 자리 배치 화면에서 플레이어를 선택합니다'
+      card.appendChild(pickHint)
     }
 
     card.addEventListener('click', () => {
@@ -301,7 +222,7 @@ export function mountHostDecisionPanel(data) {
   // ── 결정 버튼 ──
   const decideBtn = document.createElement('button')
   decideBtn.className = 'hdp__decide-btn btn btn-gold'
-  decideBtn.textContent = '▶ 결정 → 참가자 깨우기'
+  decideBtn.textContent = '👁 결정 → 참가자에게 공개'
   decideBtn.disabled = true
   decideBtn.addEventListener('click', () => {
     if (!selectedOption) return

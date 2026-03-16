@@ -3,6 +3,7 @@
  * 역할별로 InfoPanel 또는 SelectPanel을 렌더링
  */
 import { mountInfoPanel }          from '../components/InfoPanel.js'
+import { mountRevealPanel }        from '../components/RevealPanel.js'
 import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
 import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
 import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
@@ -12,6 +13,7 @@ import { NightAdvisor }             from './NightAdvisor.js'
 import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
 import { ROLES_TB, ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
+import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 
 export class NightAction {
   constructor({ engine, onStepDone }) {
@@ -268,17 +270,23 @@ export class NightAction {
       options,
       players:     this.engine.state.players,
       onDecide: (chosen) => {
-        const finalRevealData = chosen.revealData || null
-        const finalMessage    = chosen.preview || String(realAccurate)
+        // player-pick 직접 선택: 자리 배치(오벌) 선택
+        if (chosen.id === 'custom' && chosen.customType === 'player-pick') {
+          this._showCustomPlayerPick(roleId, role, () => this._done(roleId))
+          return
+        }
 
-        this._unmount = this._trackOverlay(() => mountInfoPanel({
-          title:      role?.name || roleId,
-          roleIcon:   role?.icon || '?',
-          message:    finalMessage,
-          players:    [],
-          revealData: finalRevealData,
-          onConfirm:  () => this._done(roleId),
-        }))
+        // InfoPanel 건너뛰고 바로 RevealPanel로
+        const finalRevealData = chosen.revealData || null
+        if (finalRevealData) {
+          ThemeManager.pushTemp('player')
+          this._unmount = this._trackOverlay(() => mountRevealPanel({
+            ...finalRevealData,
+            onNext: () => { ThemeManager.popTemp(); this._done(roleId) },
+          }))
+        } else {
+          this._done(roleId)
+        }
       },
     }))
   }
@@ -534,27 +542,24 @@ export class NightAction {
               options: ftOptions,
               onDecide: (chosen) => {
                 const finalRevealData = chosen.revealData || null
-                const finalMessage = chosen.preview || accurateMsg
-                this._unmount = this._trackOverlay(() => mountInfoPanel({
-                  title: '점쟁이 결과',
-                  roleIcon: 'fortuneteller.png',
-                  message: finalMessage,
-                  players: ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
-                  revealData: finalRevealData,
-                  onConfirm: () => this._done(roleId, ids),
-                }))
+                if (finalRevealData) {
+                  ThemeManager.pushTemp('player')
+                  this._unmount = this._trackOverlay(() => mountRevealPanel({
+                    ...finalRevealData,
+                    onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+                  }))
+                } else {
+                  this._done(roleId, ids)
+                }
               },
             }))
           } else {
-            // 정상 + 은둔자/스파이 없음: 바로 결과 표시
-            mountInfoPanel({
-              title:    '점쟁이 결과',
-              roleIcon: 'fortuneteller.png',
-              message:  accurateMsg,
-              players:  ids.map(id => this.engine.getPlayer(id)).filter(Boolean),
-              revealData: buildFTReveal(accurateMsg),
-              onConfirm: () => this._done(roleId, ids),
-            })
+            // 정상 + 은둔자/스파이 없음: 바로 RevealPanel
+            ThemeManager.pushTemp('player')
+            this._unmount = this._trackOverlay(() => mountRevealPanel({
+              ...buildFTReveal(accurateMsg),
+              onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+            }))
           }
         } else if (roleId === 'ravenkeeper' && ids.length === 1) {
           // 까마귀 사육사: 선택한 플레이어의 역할 공개
@@ -619,33 +624,185 @@ export class NightAction {
               ],
               onDecide: (chosen) => {
                 const finalRevealData = chosen.revealData || null
-                const finalMessage = chosen.preview || accurateMsg
-                this._unmount = this._trackOverlay(() => mountInfoPanel({
-                  title: '까마귀 사육사 결과',
-                  roleIcon: 'ravenkeeper.png',
-                  message: finalMessage,
-                  players: [],
-                  revealData: finalRevealData,
-                  onConfirm: () => this._done(roleId, ids),
-                }))
+                if (finalRevealData) {
+                  ThemeManager.pushTemp('player')
+                  this._unmount = this._trackOverlay(() => mountRevealPanel({
+                    ...finalRevealData,
+                    onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+                  }))
+                } else {
+                  this._done(roleId, ids)
+                }
               },
             }))
           } else {
-            // 정상: 바로 결과 표시
-            mountInfoPanel({
-              title: '까마귀 사육사 결과',
-              roleIcon: 'ravenkeeper.png',
-              message: accurateMsg,
-              players: [],
-              revealData: buildRKReveal(accurateMsg),
-              onConfirm: () => this._done(roleId, ids),
-            })
+            // 정상: 바로 RevealPanel
+            ThemeManager.pushTemp('player')
+            this._unmount = this._trackOverlay(() => mountRevealPanel({
+              ...buildRKReveal(accurateMsg),
+              onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+            }))
           }
         } else {
           this._done(roleId, ids)
         }
       }
     }))
+  }
+
+  // ── 직접 선택: 역할 + 자리배치 통합 화면 ──
+  _showCustomPlayerPick(roleId, role, onDone) {
+    const maxPick = roleId === 'undertaker' ? 1 : 2
+    const allPlayers = this.engine.state.players
+
+    const TEAM_BORDER = {
+      townsfolk: 'rgba(46,74,143,0.65)', outsider: 'rgba(91,179,198,0.65)',
+      minion: 'rgba(140,40,50,0.65)', demon: 'rgba(160,30,40,0.9)',
+    }
+
+    let selectedIds = []
+
+    const overlay = document.createElement('div')
+    overlay.className = 'hdp-overlay'
+    overlay.style.overflowY = 'auto'
+
+    const panel = document.createElement('div')
+    panel.style.cssText = 'width:100%;max-width:var(--app-max-width);margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:12px 16px 20px;'
+
+    // ── 헤더 ──
+    const hdr = document.createElement('div')
+    hdr.style.cssText = 'text-align:center;'
+    hdr.innerHTML = `
+      <div style="font-size:0.62rem;color:var(--text4);margin-bottom:2px;">🔒 호스트 전용</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:0.92rem;font-weight:700;color:var(--gold2);">${role?.name || roleId} — 플레이어 선택</div>
+      <div style="font-size:0.65rem;color:var(--text3);margin-top:2px;">자리를 탭해 ${maxPick}명을 선택하세요</div>
+    `
+    panel.appendChild(hdr)
+
+    // ── 상태 표시 ──
+    const statusEl = document.createElement('div')
+    statusEl.style.cssText = 'text-align:center;font-size:0.72rem;color:var(--tl-light);min-height:18px;'
+    panel.appendChild(statusEl)
+
+    const updateStatus = () => {
+      const pNums = selectedIds.length > 0 ? selectedIds.map(id => `${id}번`).join(', ') : '미선택'
+      statusEl.textContent = `선택: ${pNums} (${selectedIds.length}/${maxPick})`
+      confirmBtn.disabled = selectedIds.length !== maxPick
+    }
+
+    // ── 자리 배치 오벌 (호스트 자리배치 탭과 동일 스타일) ──
+    const total = allPlayers.length
+    const { slotPx, iconPx } = calcOvalLayout(total, 360, true)
+
+    const ovalWrap = document.createElement('div')
+    ovalWrap.style.cssText = 'display:flex;justify-content:center;padding:4px 0;'
+    const oval = document.createElement('div')
+    oval.className = 'gl-seat-oval'
+
+    const buildOvalSlots = () => {
+      oval.innerHTML = ''
+      allPlayers.forEach((p, i) => {
+        const pRole = ROLES_BY_ID[p.role]
+        const isDrunkAs = p.role === 'drunk' && p.drunkAs
+        const displayRole = isDrunkAs ? ROLES_BY_ID[p.drunkAs] : pRole
+        const { x, y } = ovalSlotPos(i, total)
+        const isDead = p.status !== 'alive'
+        const isSelected = selectedIds.includes(p.id)
+
+        const slot = document.createElement('div')
+        slot.style.cssText = `
+          position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
+          width:${slotPx}px;height:${slotPx}px;
+          transform:translate(-50%,-50%);border-radius:8px;
+          display:flex;align-items:center;justify-content:center;
+          cursor:${isDead ? 'default' : 'pointer'};
+          border:3px solid ${isSelected ? 'var(--gold2)' : (TEAM_BORDER[pRole?.team] || 'var(--lead2)')};
+          background:${isSelected ? 'rgba(212,168,40,0.12)' : 'var(--surface)'};
+          ${isSelected ? 'box-shadow:0 0 10px rgba(212,168,40,0.4);' : ''}
+          ${isDead ? 'opacity:0.3;filter:grayscale(0.6);' : ''}
+        `
+
+        // 아이콘
+        const iconEl = document.createElement('div')
+        iconEl.style.cssText = `
+          width:${iconPx}px;height:${iconPx}px;border-radius:50%;
+          background:var(--surface2);overflow:hidden;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${Math.round(iconPx*0.58)}px;pointer-events:none;
+        `
+        if (displayRole?.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${displayRole.icon}`
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+          iconEl.appendChild(img)
+        } else { iconEl.textContent = displayRole?.iconEmoji || pRole?.iconEmoji || '?' }
+        slot.appendChild(iconEl)
+
+        // 선택 체크
+        if (isSelected) {
+          const check = document.createElement('div')
+          check.style.cssText = `position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:700;`
+          check.textContent = '✓'
+          slot.appendChild(check)
+        }
+
+        if (!isDead) {
+          slot.addEventListener('click', () => {
+            if (isSelected) {
+              selectedIds = selectedIds.filter(id => id !== p.id)
+            } else {
+              if (selectedIds.length >= maxPick) {
+                if (maxPick === 1) selectedIds = []
+                else return
+              }
+              selectedIds.push(p.id)
+            }
+            buildOvalSlots()
+            updateStatus()
+          })
+        }
+        oval.appendChild(slot)
+
+        // 자리 번호
+        const labelX = 50 + (x - 50) * 0.55
+        const labelY = 50 + (y - 50) * 0.55
+        const label = document.createElement('div')
+        label.style.cssText = `position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;transform:translate(-50%,-50%);font-size:${Math.max(16,Math.round(slotPx*0.45))}px;font-weight:700;color:${isSelected ? 'var(--gold2)' : (isDead ? 'rgba(212,168,40,0.3)' : 'var(--gold2)')};pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);z-index:1;`
+        label.textContent = p.id
+        oval.appendChild(label)
+      })
+    }
+    buildOvalSlots()
+    ovalWrap.appendChild(oval)
+    panel.appendChild(ovalWrap)
+
+    // ── 확인 버튼 ──
+    const confirmBtn = document.createElement('button')
+    confirmBtn.className = 'btn btn-gold'
+    confirmBtn.style.cssText = 'width:100%;padding:14px;font-size:0.9rem;font-weight:700;border-radius:10px;'
+    confirmBtn.textContent = '▶ 확인 → 참가자에게 공개'
+    confirmBtn.disabled = true
+    confirmBtn.addEventListener('click', () => {
+      overlay.remove()
+      ThemeManager.pushTemp('player')
+      this._unmount = this._trackOverlay(() => mountRevealPanel({
+        roleIcon:    role?.icon || '?',
+        roleName:    role?.name || roleId,
+        roleTeam:    role?.team || null,
+        roleAbility: role?.ability || '',
+        message:     '호스트가 정보를 전달합니다.',
+        players:     selectedIds.map(id => ({ id })),
+        hint:        '당신 능력이 발동됐습니다 — 이야기꾼이 알려주는 정보를 확인하세요.',
+        action:      '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
+        onNext:      () => { ThemeManager.popTemp(); onDone() },
+      }))
+    })
+    panel.appendChild(confirmBtn)
+
+    overlay.appendChild(panel)
+    document.body.appendChild(overlay)
+    this._overlayEl = overlay
+    this._unmount = () => overlay.remove()
   }
 
   _pickRandomTownsfolk() {

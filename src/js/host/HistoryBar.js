@@ -56,7 +56,7 @@ export class HistoryBar {
     // NOW 버튼
     this._nowBtn = document.createElement('button')
     this._nowBtn.className = 'hbar__now-btn hbar__now-btn--dim'
-    this._nowBtn.textContent = 'NOW'
+    this._nowBtn.textContent = '현재'
     this._nowBtn.setAttribute('aria-label', '현재 상태로 복귀')
     this._nowBtn.addEventListener('click', () => this._manager.goToLatest())
     this.el.appendChild(this._nowBtn)

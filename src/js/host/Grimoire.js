@@ -151,7 +151,7 @@ export class Grimoire {
       const nextBtn = document.createElement('button')
       nextBtn.className = 'btn btn-primary btn-grid-full'
       nextBtn.textContent = state.currentNightStep
-        ? `▶ 다음 단계 (${ROLES_BY_ID[state.currentNightStep]?.name || state.currentNightStep})`
+        ? `▶ 다음 단계 (${{ 'minion-info': '미니언 공개', 'demon-info': '임프 정보' }[state.currentNightStep] || ROLES_BY_ID[state.currentNightStep]?.name || state.currentNightStep})`
         : '▶ 밤 진행 시작'
       nextBtn.addEventListener('click', () => this.onNextNightStep?.())
       btnGrid.appendChild(nextBtn)

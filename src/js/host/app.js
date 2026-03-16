@@ -568,7 +568,8 @@ export class HostApp {
           this.doneSteps.push(roleId)
 
           // 밤 행동 히스토리 기록
-          const roleName = ROLES_BY_ID[roleId]?.name || roleId
+          const SPECIAL_STEP_NAMES = { 'minion-info': '미니언 공개', 'demon-info': '임프 정보' }
+          const roleName = SPECIAL_STEP_NAMES[roleId] || ROLES_BY_ID[roleId]?.name || roleId
           const targetLabel = (targetIds && targetIds.length > 0)
             ? `→ ${targetIds.map(id => `${id}번`).join(', ')}`
             : ''

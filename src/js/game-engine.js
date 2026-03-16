@@ -175,7 +175,9 @@ export class GameEngine {
     this.state.nightOrder = order
     this.state.currentNightStep = order[0] || null
 
-    this._log('night', `밤 ${this.state.round} 시작. 순서: ${order.join(', ')}`)
+    const STEP_KO = { 'minion-info': '미니언 공개', 'demon-info': '임프 정보' }
+    const orderKo = order.map(id => STEP_KO[id] || ROLES_BY_ID[id]?.name || id)
+    this._log('night', `밤 ${this.state.round} 시작. 순서: ${orderKo.join(', ')}`)
     this.emit('stateChanged', this.state)
   }
 
@@ -413,7 +415,8 @@ export class GameEngine {
     const p = this.getPlayer(playerId)
     if (!p || p.status !== 'alive') return
     p.status = cause === 'executed' ? 'executed' : 'dead'
-    this._log('event', `${p.name} 사망 (원인: ${cause})`)
+    const CAUSE_KO = { executed: '처형', manual: '수동', virgin: '처녀 능력', slayer: '처단자', night: '밤 사망' }
+    this._log('event', `${p.name} 사망 (원인: ${CAUSE_KO[cause] || cause})`)
     this.emit('playerDied', { playerId, cause })
   }
 

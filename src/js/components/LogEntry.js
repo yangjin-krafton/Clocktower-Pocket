@@ -19,7 +19,7 @@ export function renderLogEntry(entry) {
 
   el.innerHTML = `
     <span class="log-entry__phase" style="color:${colorMap[phase] || 'var(--text3)'}">${phaseLabel[phase] || phase}</span>
-    <span class="log-entry__round">${round > 0 ? `R${round}` : ''}</span>
+    <span class="log-entry__round">${round > 0 ? `${round}회` : ''}</span>
     <span class="log-entry__event">${event}</span>
     <span class="log-entry__time">${timestamp || ''}</span>
   `

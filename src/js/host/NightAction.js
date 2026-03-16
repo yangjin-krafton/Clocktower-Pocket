@@ -112,38 +112,17 @@ export class NightAction {
       return
     }
 
-    // 1단계: 어드바이저 분석 → 전략 선택 패널
+    // 바로 직접 선택 — BluffSelectPanel
     const pool = this.engine.getBluffPool()
-    // 주정뱅이가 믿는 역할 ID
     const drunkPlayer = this.engine.state.players.find(p => p.role === 'drunk' && p.drunkAs)
     const drunkAsRoleId = drunkPlayer?.drunkAs || null
 
-    const { analysis, options } = this._bluffAdvisor.advise({
+    this._unmount = this._trackOverlay(() => mountBluffSelectPanel({
       pool,
-      players: this.engine.state.players,
       drunkAsRoleId,
-    })
-
-    this._unmount = this._trackOverlay(() => mountDemonBluffPanel({
-      analysis,
-      options,
-      drunkAsRoleId,
-      onDecide: (roles) => {
-        if (roles) {
-          // 프리셋 선택 → 바로 임프 정보 패널
-          this.engine.setBluffs(roles)
-          this._showDemonInfoPanel(demons)
-        } else {
-          // 직접 선택 → BluffSelectPanel
-          this._unmount = this._trackOverlay(() => mountBluffSelectPanel({
-            pool,
-            drunkAsRoleId,
-            onConfirm: (selectedBluffs) => {
-              this.engine.setBluffs(selectedBluffs)
-              this._showDemonInfoPanel(demons)
-            },
-          }))
-        }
+      onConfirm: (selectedBluffs) => {
+        this.engine.setBluffs(selectedBluffs)
+        this._showDemonInfoPanel(demons)
       },
     }))
   }
@@ -194,7 +173,7 @@ export class NightAction {
     }))
   }
 
-  // ── 정보 전달 역할 ──
+  // ── 정보 전달 역할 (직접 선택만) ──
   _showRoleInfo(roleId, actors) {
     if (!actors || actors.length === 0) { this._done(roleId); return }
     const actor     = actors[0]
@@ -208,20 +187,23 @@ export class NightAction {
 
     this.engine.recordNightAction(roleId, actor.id, [], String(accurate))
 
-    // ① NightAdvisor로 4가지 선택지 생성
-    const adviseResult = this._advisor.advise({
-      roleId,
-      actorId: actor.id,
-      field: {
-        players: this.engine.state.players,
-        round:   this.engine.state.round || 1,
-        phase:   'night',
-        logs:    this.engine.logs || [],
-      },
-      accurate,
-    })
+    // 직접 선택 옵션만 생성
+    const customType = ['empath','chef'].includes(roleId) ? 'number'
+      : ['washerwoman','librarian','investigator','undertaker'].includes(roleId) ? 'player-pick'
+      : 'number'
 
-    // ② HostDecisionPanel 표시 (호스트 전용)
+    const options = [{
+      id:          'custom',
+      icon:        '✏️',
+      label:       '직접 선택',
+      preview:     '호스트가 직접 결정',
+      impact:      '',
+      stateReason: '',
+      recommended: false,
+      revealData:  null,
+      customType,
+    }]
+
     this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
       roleId,
       actorSeatId: actor.id,
@@ -232,11 +214,10 @@ export class NightAction {
       roleAbility: role?.ability || '',
       accurateValue: accurate,
       isPoisoned,
-      analysis:    adviseResult.analysis,
-      options:     adviseResult.options,
+      analysis:    { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
+      options,
       players:     this.engine.state.players,
       onDecide: (chosen) => {
-        // 직접선택이고 revealData가 없으면 기본 InfoPanel만 표시
         const finalRevealData = chosen.revealData || null
         const finalMessage    = chosen.preview || String(accurate)
 

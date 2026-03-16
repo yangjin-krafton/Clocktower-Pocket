@@ -76,35 +76,32 @@ export function mountHostDecisionPanel(data) {
 
   panel.appendChild(ctxCard)
 
-  // ── 게임 상태 카드 ──
-  const stateCard = document.createElement('div')
-  stateCard.className = 'hdp__state-card'
-  stateCard.innerHTML = `
-    <div class="hdp__state-title">📊 현재 게임 상태</div>
-    <div class="hdp__state-row">
-      <span class="hdp__state-key">밸런스</span>
-      <span class="hdp__state-val">선팀 ${analysis.goodCount}명 vs 악팀 ${analysis.evilCount}명</span>
-      <span class="hdp__state-tag hdp__state-tag--${analysis.balanceTag === '선팀 우세' ? 'good' : analysis.balanceTag === '악팀 우세' ? 'evil' : 'neutral'}">${analysis.balanceTag}</span>
-    </div>
-    <div class="hdp__state-row">
-      <span class="hdp__state-key">정보량</span>
-      <span class="hdp__state-val">이 역할 ${analysis.infoCount}회 수령</span>
-    </div>
-    <div class="hdp__state-row">
-      <span class="hdp__state-key">위험도</span>
-      <span class="hdp__state-val">${analysis.riskLabel}</span>
-    </div>
-  `
-  panel.appendChild(stateCard)
-
-  // ── 선택지 목록 ──
-  const question = document.createElement('div')
-  question.className = 'hdp__question'
-  question.textContent = '어떤 정보를 제공하시겠습니까?'
-  panel.appendChild(question)
+  // ── 게임 상태 카드 (분석 데이터가 있을 때만) ──
+  if (analysis.balanceTag) {
+    const stateCard = document.createElement('div')
+    stateCard.className = 'hdp__state-card'
+    stateCard.innerHTML = `
+      <div class="hdp__state-title">📊 현재 게임 상태</div>
+      <div class="hdp__state-row">
+        <span class="hdp__state-key">밸런스</span>
+        <span class="hdp__state-val">선팀 ${analysis.goodCount}명 vs 악팀 ${analysis.evilCount}명</span>
+        <span class="hdp__state-tag hdp__state-tag--${analysis.balanceTag === '선팀 우세' ? 'good' : analysis.balanceTag === '악팀 우세' ? 'evil' : 'neutral'}">${analysis.balanceTag}</span>
+      </div>
+      <div class="hdp__state-row">
+        <span class="hdp__state-key">정보량</span>
+        <span class="hdp__state-val">이 역할 ${analysis.infoCount}회 수령</span>
+      </div>
+      <div class="hdp__state-row">
+        <span class="hdp__state-key">위험도</span>
+        <span class="hdp__state-val">${analysis.riskLabel}</span>
+      </div>
+    `
+    panel.appendChild(stateCard)
+  }
 
   let selectedOption = null
   const optionEls = []
+  const isCustomOnly = options.length === 1 && options[0].id === 'custom'
 
   options.forEach(opt => {
     const card = document.createElement('div')
@@ -112,35 +109,41 @@ export function mountHostDecisionPanel(data) {
       + (opt.recommended ? ' hdp__option--recommended' : '')
       + (opt.id === 'evil' ? ' hdp__option--evil' : '')
 
-    const topRow = document.createElement('div')
-    topRow.className = 'hdp__option-top'
-    topRow.innerHTML = `
-      ${opt.recommended ? '<span class="hdp__rec-badge">★ 추천</span>' : ''}
-      <span class="hdp__option-icon">${opt.icon}</span>
-      <span class="hdp__option-label">${opt.label}</span>
-      ${opt.id === 'evil' ? '<span class="hdp__warn">⚠️</span>' : ''}
-    `
-
-    const previewRow = document.createElement('div')
-    previewRow.className = 'hdp__option-preview'
-    previewRow.textContent = `"${opt.preview}"`
-
-    const impactRow = document.createElement('div')
-    impactRow.className = 'hdp__option-impact'
-    impactRow.textContent = opt.impact
-
-    if (opt.stateReason) {
-      const reasonRow = document.createElement('div')
-      reasonRow.className = 'hdp__option-reason'
-      reasonRow.textContent = opt.stateReason
+    // 직접 선택만 있을 때는 헤더/프리뷰/임팩트 숨김
+    if (!isCustomOnly) {
+      const topRow = document.createElement('div')
+      topRow.className = 'hdp__option-top'
+      topRow.innerHTML = `
+        ${opt.recommended ? '<span class="hdp__rec-badge">★ 추천</span>' : ''}
+        <span class="hdp__option-icon">${opt.icon}</span>
+        <span class="hdp__option-label">${opt.label}</span>
+        ${opt.id === 'evil' ? '<span class="hdp__warn">⚠️</span>' : ''}
+      `
       card.appendChild(topRow)
+
+      const previewRow = document.createElement('div')
+      previewRow.className = 'hdp__option-preview'
+      previewRow.textContent = `"${opt.preview}"`
       card.appendChild(previewRow)
-      card.appendChild(impactRow)
-      card.appendChild(reasonRow)
+
+      if (opt.impact) {
+        const impactRow = document.createElement('div')
+        impactRow.className = 'hdp__option-impact'
+        impactRow.textContent = opt.impact
+        card.appendChild(impactRow)
+      }
+      if (opt.stateReason) {
+        const reasonRow = document.createElement('div')
+        reasonRow.className = 'hdp__option-reason'
+        reasonRow.textContent = opt.stateReason
+        card.appendChild(reasonRow)
+      }
     } else {
-      card.appendChild(topRow)
-      card.appendChild(previewRow)
-      card.appendChild(impactRow)
+      // 직접 선택 모드: 간결한 안내만
+      const hint = document.createElement('div')
+      hint.style.cssText = 'font-size:0.72rem;color:var(--text3);text-align:center;padding:2px 0;'
+      hint.textContent = opt.customType === 'number' ? '숫자를 선택하세요' : '역할과 플레이어를 선택하세요'
+      card.appendChild(hint)
     }
 
     // 직접선택: 번호 입력 UI

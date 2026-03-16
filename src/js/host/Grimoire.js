@@ -38,6 +38,7 @@ export class Grimoire {
     onStartNight, onStartDay, onNextNightStep, onPlayerAction,
     onPlayerCountChange,
     onSeatRoleAssign,
+    onDrunkAsChange,
     onAutoAssign,
   }) {
     this.engine              = engine
@@ -49,6 +50,7 @@ export class Grimoire {
     this.onPlayerAction      = onPlayerAction     || null
     this.onPlayerCountChange = onPlayerCountChange|| null
     this.onSeatRoleAssign    = onSeatRoleAssign   || null
+    this.onDrunkAsChange     = onDrunkAsChange    || null
     this.onAutoAssign        = onAutoAssign       || null
     this.el                       = null
     this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
@@ -267,6 +269,10 @@ export class Grimoire {
       return role && role.team === 'outsider'
     }).length
 
+    // drunkAs 정보 미리 가져오기 (루프 바깥)
+    const lobbyConfig = this.getLobbyConfig()
+    const drunkAsRoleId = lobbyConfig.drunkAsRole
+
     seats.forEach((roleId, i) => {
       const role       = roleId ? ROLES_BY_ID[roleId] : null
       const isSelected = this._selectedSeat === i
@@ -298,27 +304,58 @@ export class Grimoire {
         ${isSelected ? 'box-shadow:0 0 0 2px rgba(212,168,40,0.35),0 0 12px rgba(212,168,40,0.4);background:rgba(212,168,40,0.08);' : ''}
       `
 
-      // 아이콘 (원형 영역)
+      // 아이콘 (원형 영역) — 주정뱅이는 drunkAs 역할 아이콘 + 🍾 배지
+      const isDrunkWithAs = roleId === 'drunk' && drunkAsRoleId
+      const displayRole = isDrunkWithAs ? ROLES_BY_ID[drunkAsRoleId] : role
+
+      const iconWrap = document.createElement('div')
+      iconWrap.style.cssText = `position:relative;width:${iconPx}px;height:${iconPx}px;flex-shrink:0;pointer-events:none;`
+
       const iconEl = document.createElement('div')
       iconEl.style.cssText = `
         width:${iconPx}px;height:${iconPx}px;
         border-radius:50%;background:var(--surface2);
         display:flex;align-items:center;justify-content:center;
         font-size:${Math.round(iconPx * 0.58)}px;
-        overflow:hidden;flex-shrink:0;pointer-events:none;
+        overflow:hidden;flex-shrink:0;
       `
-      if (role?.icon?.endsWith('.png')) {
+      if (displayRole?.icon?.endsWith('.png')) {
         const img = document.createElement('img')
-        img.src = `./asset/icons/${role.icon}`
+        img.src = `./asset/icons/${displayRole.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
         iconEl.appendChild(img)
+      } else if (displayRole) {
+        iconEl.textContent = displayRole.iconEmoji || '?'
       } else if (role) {
-        iconEl.textContent = role.iconEmoji || '?'
+        if (role.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${role.icon}`
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+          iconEl.appendChild(img)
+        } else {
+          iconEl.textContent = role.iconEmoji || '?'
+        }
       } else {
         iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.5)}px">+</span>`
       }
+      iconWrap.appendChild(iconEl)
 
-      slot.appendChild(iconEl)
+      // 주정뱅이 배지 표시
+      if (isDrunkWithAs) {
+        const badge = document.createElement('div')
+        badge.style.cssText = `
+          position:absolute;top:-4px;right:-4px;
+          width:${Math.round(iconPx*0.4)}px;height:${Math.round(iconPx*0.4)}px;
+          border-radius:50%;background:#7c3aed;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${Math.round(iconPx*0.24)}px;line-height:1;
+          border:1px solid var(--surface);z-index:2;
+        `
+        badge.textContent = '🍾'
+        iconWrap.appendChild(badge)
+      }
+
+      slot.appendChild(iconWrap)
 
       slot.addEventListener('click', () => {
         this._selectedSeat = (this._selectedSeat === i) ? null : i
@@ -431,6 +468,15 @@ export class Grimoire {
     } else {
       if (filledCnt === total) { valid = true; msg = shortMsg = `✓ ${total}인 완성` }
     }
+    // 주정뱅이가 있으면 drunkAsRole 필수
+    if (valid && seats.includes('drunk')) {
+      const config = this.getLobbyConfig()
+      if (!config.drunkAsRole) {
+        valid = false
+        msg = '주정뱅이의 믿는 역할을 선택하세요'
+        shortMsg = '🍾 역할 필요'
+      }
+    }
     return { valid, msg, shortMsg, counts, filledCnt }
   }
 
@@ -527,6 +573,76 @@ export class Grimoire {
 
     scrollContainer.appendChild(grid)
     panel.appendChild(scrollContainer)
+
+    // ── 주정뱅이 "믿는 역할" 선택 패널 ──
+    const hasDrunk = seats.includes('drunk')
+    const drunkSeatSelected = si !== null && seats[si] === 'drunk'
+    if (hasDrunk) {
+      const config = this.getLobbyConfig()
+      const drunkAs = config.drunkAsRole
+      const usedRoleIds = new Set(seats.filter(Boolean))
+
+      const drunkPanel = document.createElement('div')
+      drunkPanel.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--lead2);'
+
+      const dpHeader = document.createElement('div')
+      dpHeader.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;'
+      dpHeader.innerHTML = `
+        <span style="font-size:0.82rem;">🍾</span>
+        <span style="font-size:0.72rem;font-weight:600;color:var(--text2);">주정뱅이가 믿는 역할</span>
+        ${drunkAs ? `<span style="font-size:0.65rem;color:var(--tl-light);margin-left:auto;">${ROLES_BY_ID[drunkAs]?.name || ''}</span>` : '<span style="font-size:0.62rem;color:var(--rd-light);margin-left:auto;">선택 필요</span>'}
+      `
+      drunkPanel.appendChild(dpHeader)
+
+      const dpScroll = document.createElement('div')
+      dpScroll.className = 'gl-role-scroll'
+      const dpGrid = document.createElement('div')
+      dpGrid.style.cssText = 'display:flex;gap:6px;padding:0 4px;width:fit-content;'
+
+      const townsfolk = ROLES_TB.filter(r => r.team === 'townsfolk')
+      townsfolk.forEach(role => {
+        const isSelected = drunkAs === role.id
+        const isInGame = usedRoleIds.has(role.id) && role.id !== 'drunk'
+
+        const btn = document.createElement('button')
+        btn.className = `dict__token dict__token--townsfolk`
+          + (isSelected ? ' dict__token--on' : '')
+          + (isInGame && !isSelected ? ' dict__token--used' : '')
+        btn.style.cssText = 'min-width:64px;'
+
+        const iconDiv = document.createElement('div')
+        iconDiv.className = 'dict__token-icon'
+        if (role.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/icons/${role.icon}`
+          img.alt = role.name
+          iconDiv.appendChild(img)
+        } else {
+          iconDiv.textContent = role.iconEmoji || '?'
+        }
+
+        const nameDiv = document.createElement('div')
+        nameDiv.className = 'dict__token-name'
+        nameDiv.textContent = role.name
+        if (isInGame && !isSelected) {
+          const tag = document.createElement('div')
+          tag.style.cssText = 'font-size:0.48rem;color:var(--text4);margin-top:1px;'
+          tag.textContent = '게임 중'
+          nameDiv.appendChild(tag)
+        }
+
+        btn.appendChild(iconDiv)
+        btn.appendChild(nameDiv)
+        btn.addEventListener('click', () => {
+          this.onDrunkAsChange?.(isSelected ? null : role.id)
+        })
+        dpGrid.appendChild(btn)
+      })
+
+      dpScroll.appendChild(dpGrid)
+      drunkPanel.appendChild(dpScroll)
+      panel.appendChild(drunkPanel)
+    }
 
     this.el.appendChild(panel)
   }

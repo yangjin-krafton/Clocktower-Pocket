@@ -70,6 +70,7 @@ export class GameEngine {
         status: 'alive',
         isPoisoned: false,
         isDrunk: false,
+        drunkAs: null,
         deadVoteUsed: false,
         registeredAs: null,
       }
@@ -85,9 +86,12 @@ export class GameEngine {
       }
     }
 
-    // 주정뱅이: isDrunk = true 처리
+    // 주정뱅이: isDrunk = true 처리 + drunkAs 설정
     this.state.players.forEach(p => {
-      if (p.role === 'drunk') p.isDrunk = true
+      if (p.role === 'drunk') {
+        p.isDrunk = true
+        if (opts.drunkAs) p.drunkAs = opts.drunkAs
+      }
     })
 
     this.state.phase = 'night'
@@ -125,6 +129,12 @@ export class GameEngine {
         .filter(p => p.status === 'alive')
         .map(p => p.role)
     )
+    // 주정뱅이가 믿는 역할도 밤 순서에 포함
+    this.state.players.forEach(p => {
+      if (p.role === 'drunk' && p.drunkAs && p.status === 'alive') {
+        activeRoleIds.add(p.drunkAs)
+      }
+    })
 
     return order.filter(roleId => {
       if (roleId === 'minion-info' || roleId === 'demon-info') {
@@ -593,7 +603,12 @@ export class GameEngine {
     if (step === 'demon-info') {
       return this.state.players.filter(p => p.role === 'imp')
     }
-    return this.state.players.filter(p => p.role === step && p.status === 'alive')
+    const actors = this.state.players.filter(p => p.role === step && p.status === 'alive')
+    // 주정뱅이가 이 역할을 믿고 있으면 함께 포함
+    const drunkActors = this.state.players.filter(p =>
+      p.role === 'drunk' && p.drunkAs === step && p.status === 'alive'
+    )
+    return [...actors, ...drunkActors]
   }
 
   /** 블러프 후보 풀 (게임에 없는 townsfolk/outsider) */

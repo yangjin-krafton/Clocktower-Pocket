@@ -32,6 +32,7 @@ export class HostApp {
 
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)  // 자리별 역할 ID
+    this.drunkAsRole        = null   // 주정뱅이가 믿는 마을 주민 역할 ID
     this._gameStarting      = false
     this._grimoire          = null
     this.currentTab         = 'role'
@@ -55,6 +56,7 @@ export class HostApp {
     engine.reset()                                           // 이전 게임 상태 초기화
     this.pendingPlayerCount = DEFAULT_PLAYER_COUNT
     this.seatRoles          = new Array(DEFAULT_PLAYER_COUNT).fill(null)
+    this.drunkAsRole        = null
     this._gameStarting      = false
     this._lastRoomCode      = null
     this._history.reset()
@@ -84,6 +86,7 @@ export class HostApp {
     // 호스트 상태 복원
     const hs = data.hostState || {}
     this.seatRoles          = hs.seatRoles || new Array(DEFAULT_PLAYER_COUNT).fill(null)
+    this.drunkAsRole        = hs.drunkAsRole || null
     this.pendingPlayerCount = hs.pendingPlayerCount || this.seatRoles.length
     this._lastRoomCode      = hs.roomCode || null
     this.doneSteps          = hs.doneSteps || []
@@ -266,6 +269,7 @@ export class HostApp {
         playerCount: this.pendingPlayerCount,
         seatRoles:   this.seatRoles,
         roomCode:    this._lastRoomCode,
+        drunkAsRole: this.drunkAsRole,
       }),
       onStartGame:         () => this._handleManualStart(),
       onStartNight:        () => this._handleStartNight(),
@@ -289,10 +293,27 @@ export class HostApp {
           this.seatRoles = this.seatRoles.map((r, i) => (r === roleId && i !== seatIdx) ? null : r)
         }
         this.seatRoles[seatIdx] = roleId || null
+        // 주정뱅이가 빠지면 drunkAsRole 초기화
+        if (!this.seatRoles.includes('drunk')) {
+          this.drunkAsRole = null
+        }
+        this._grimoire?.refresh()
+      },
+      onDrunkAsChange: (roleId) => {
+        this.drunkAsRole = roleId
         this._grimoire?.refresh()
       },
       onAutoAssign: () => {
         this.seatRoles = this._autoRoles(this.pendingPlayerCount)
+        // 주정뱅이가 있으면 drunkAs 자동 선택 (게임에 없는 마을 주민 중 랜덤)
+        if (this.seatRoles.includes('drunk')) {
+          const usedIds = new Set(this.seatRoles.filter(Boolean))
+          const availTf = ROLES_TB.filter(r => r.team === 'townsfolk' && !usedIds.has(r.id))
+          const pool = availTf.length > 0 ? availTf : ROLES_TB.filter(r => r.team === 'townsfolk')
+          this.drunkAsRole = pool[Math.floor(Math.random() * pool.length)].id
+        } else {
+          this.drunkAsRole = null
+        }
         this._grimoire?.refresh()
       },
     })
@@ -326,8 +347,13 @@ export class HostApp {
       ? goodPlayerIds[Math.floor(Math.random() * goodPlayerIds.length)]
       : 0
 
-    // 방 코드 생성
-    const code = encodeRoomCode(this.pendingPlayerCount, assignedRoles, redHerringId)
+    // 방 코드 생성 — 주정뱅이 자리는 믿는 역할로 인코딩 (참가자에게 보이는 역할)
+    const codeRoles = [...assignedRoles]
+    const drunkIdx = codeRoles.indexOf('drunk')
+    if (drunkIdx >= 0 && this.drunkAsRole) {
+      codeRoles[drunkIdx] = this.drunkAsRole
+    }
+    const code = encodeRoomCode(this.pendingPlayerCount, codeRoles, redHerringId)
     this._lastRoomCode = code
 
     // 코드 팝업 표시 → 닫으면 게임 시작
@@ -336,7 +362,7 @@ export class HostApp {
       const names = Array.from({ length: this.pendingPlayerCount }, (_, i) => `플레이어${i + 1}`)
       engine.reset()
       this._history.reset()
-      engine.initGame(names, assignedRoles, { preAssigned: true, redHerringId })
+      engine.initGame(names, assignedRoles, { preAssigned: true, redHerringId, drunkAs: this.drunkAsRole })
       engine.startNight()
 
       // HistoryBar DOM 삽입 (app-content 바로 앞)
@@ -435,6 +461,18 @@ export class HostApp {
       row.appendChild(seatBadge)
       row.appendChild(iconSpan)
       row.appendChild(nameSpan)
+
+      // 주정뱅이: 믿는 역할 표시
+      if (roleId === 'drunk' && this.drunkAsRole) {
+        const drunkAsInfo = ROLES_BY_ID[this.drunkAsRole]
+        if (drunkAsInfo) {
+          const asSpan = document.createElement('span')
+          asSpan.style.cssText = 'font-size:0.65rem;color:var(--text4);margin-left:auto;'
+          asSpan.textContent = `→ ${drunkAsInfo.name}로 인지`
+          row.appendChild(asSpan)
+        }
+      }
+
       list.appendChild(row)
     })
     box.appendChild(list)
@@ -586,6 +624,7 @@ export class HostApp {
         this._historyBar.hide()
         this._gameStarting = false
         this.seatRoles     = new Array(this.pendingPlayerCount).fill(null)
+        this.drunkAsRole   = null
         this._lastRoomCode = null
         this._switchTab('role')
       },
@@ -789,6 +828,7 @@ export class HostApp {
       engineData:  engine.serialize(),
       hostState: {
         seatRoles:          [...this.seatRoles],
+        drunkAsRole:        this.drunkAsRole,
         pendingPlayerCount: this.pendingPlayerCount,
         roomCode:           this._lastRoomCode,
         doneSteps:          [...this.doneSteps],

@@ -5,7 +5,7 @@
  *   pool       {Object[]}  선택 가능한 역할 배열 (ROLES_TB 형식)
  *   onConfirm  {Function}  onConfirm(selectedRoles[]) — 3개 선택 후 호출
  */
-export function mountBluffSelectPanel({ pool = [], onConfirm }) {
+export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, onConfirm }) {
   let selected = []
 
   const overlay = document.createElement('div')
@@ -51,6 +51,7 @@ export function mountBluffSelectPanel({ pool = [], onConfirm }) {
 
       const card = document.createElement('div')
       card.className = `bluff-sel__card ${teamClass}${isSelected ? ' bluff-sel__card--selected' : ''}`
+      const isDrunkAs = drunkAsRoleId && role.id === drunkAsRoleId
       card.innerHTML = `
         <div class="bluff-sel__card-token">
           <img class="bluff-sel__token-bg" src="./asset/token.png" alt="">
@@ -58,6 +59,7 @@ export function mountBluffSelectPanel({ pool = [], onConfirm }) {
           ${isSelected ? '<div class="bluff-sel__check">✓</div>' : ''}
         </div>
         <div class="bluff-sel__card-name">${role.name}</div>
+        ${isDrunkAs ? '<div class="bluff-sel__drunk-tag">🍾 주정뱅이</div>' : ''}
       `
       card.addEventListener('click', () => {
         if (isSelected) {
@@ -244,6 +246,18 @@ if (!document.getElementById('bluff-select-panel-style')) {
 .bluff-sel__card--town    .bluff-sel__card-name { color: var(--bl-light); }
 .bluff-sel__card--outside .bluff-sel__card-name { color: var(--tl-light); }
 .bluff-sel__card--selected .bluff-sel__card-name { color: var(--gold2) !important; }
+
+/* 주정뱅이 표시 태그 */
+.bluff-sel__drunk-tag {
+  font-size: 0.52rem;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-top: 1px;
+}
 
 /* 확인 버튼 */
 .bluff-sel__confirm {

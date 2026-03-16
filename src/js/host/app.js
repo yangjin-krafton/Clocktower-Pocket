@@ -940,6 +940,10 @@ export class HostApp {
       const { x, y } = ovalSlotPos(i, total)
       const isDead = player.status !== 'alive'
 
+      // 주정뱅이: drunkAs 역할 아이콘으로 표시
+      const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
+      const displayRole = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : role
+
       const slot = document.createElement('div')
       slot.style.cssText = `
         position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
@@ -952,6 +956,9 @@ export class HostApp {
         ${isDead ? 'opacity:0.38;filter:grayscale(0.65);' : ''}
       `
 
+      const iconWrap = document.createElement('div')
+      iconWrap.style.cssText = `position:relative;width:${iconPx}px;height:${iconPx}px;`
+
       const iconEl = document.createElement('div')
       iconEl.style.cssText = `
         width:${iconPx}px;height:${iconPx}px;border-radius:50%;
@@ -959,13 +966,29 @@ export class HostApp {
         display:flex;align-items:center;justify-content:center;
         font-size:${Math.round(iconPx * 0.58)}px;
       `
-      if (role?.icon?.endsWith('.png')) {
+      if (displayRole?.icon?.endsWith('.png')) {
         const img = document.createElement('img')
-        img.src = `./asset/icons/${role.icon}`
+        img.src = `./asset/icons/${displayRole.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
         iconEl.appendChild(img)
-      } else { iconEl.textContent = role?.iconEmoji || '?' }
-      slot.appendChild(iconEl)
+      } else { iconEl.textContent = displayRole?.iconEmoji || role?.iconEmoji || '?' }
+      iconWrap.appendChild(iconEl)
+
+      // 주정뱅이 🍾 배지
+      if (isDrunkWithAs) {
+        const badge = document.createElement('div')
+        badge.style.cssText = `
+          position:absolute;top:-3px;right:-3px;
+          width:${Math.round(iconPx*0.38)}px;height:${Math.round(iconPx*0.38)}px;
+          border-radius:50%;background:#7c3aed;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${Math.round(iconPx*0.22)}px;line-height:1;
+          border:1px solid var(--surface);z-index:2;
+        `
+        badge.textContent = '🍾'
+        iconWrap.appendChild(badge)
+      }
+      slot.appendChild(iconWrap)
 
       slot.addEventListener('click', () => {
         document.getElementById('host-seat-popup')?.remove()
@@ -976,16 +999,21 @@ export class HostApp {
         box.className = 'popup-box'
         box.style.padding = '16px'
         const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
+        const drunkAsRole = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : null
         box.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <div style="font-size:2rem;">${role?.iconEmoji || '?'}</div>
+            <div style="font-size:2rem;">${isDrunkWithAs ? (drunkAsRole?.iconEmoji || '?') : (role?.iconEmoji || '?')}</div>
             <div>
               <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.id}번 자리</div>
-              <div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>
+              ${isDrunkWithAs
+                ? `<div style="font-size:0.72rem;color:var(--tl-light)">${drunkAsRole?.name || ''} <span style="color:var(--text4)">(본인 인지)</span></div>
+                   <div style="font-size:0.65rem;color:#a78bfa;margin-top:1px;">🍾 실제: 주정뱅이 · 아웃사이더</div>`
+                : `<div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>`
+              }
               <div style="font-size:0.68rem;margin-top:2px;color:${isDead ? 'var(--rd-light)' : 'var(--tl-light)'}">${isDead ? '💀 사망' : '✅ 생존'}${player.isPoisoned ? ' · ☠ 중독' : ''}${player.isDrunk ? ' · 🍾 취함' : ''}</div>
             </div>
           </div>
-          <div style="font-size:0.68rem;color:var(--text4);line-height:1.5;">${role?.ability || ''}</div>
+          <div style="font-size:0.68rem;color:var(--text4);line-height:1.5;">${isDrunkWithAs ? (drunkAsRole?.ability || '') : (role?.ability || '')}</div>
         `
         const closeBtn = document.createElement('button')
         closeBtn.className = 'btn btn-full'

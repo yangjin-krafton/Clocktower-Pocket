@@ -17,15 +17,17 @@ export class DemonBluffAdvisor {
    *   players  {Object[]}  engine.state.players 전체
    * @returns {{ analysis, options }}
    */
-  advise({ pool, players }) {
-    const analysis = this._analyzeState(players, pool)
-    const options  = this._buildOptions(pool, analysis)
+  advise({ pool, players, drunkAsRoleId = null }) {
+    const analysis = this._analyzeState(players, pool, drunkAsRoleId)
+    // 제안용 풀: 마을 주민만 (아웃사이더 제외)
+    const townsfolkPool = pool.filter(r => r.team === 'townsfolk')
+    const options  = this._buildOptions(townsfolkPool.length >= 3 ? townsfolkPool : pool, analysis)
     return { analysis, options }
   }
 
   // ─── 게임 상태 분석 ────────────────────────────────────────────
 
-  _analyzeState(players, pool) {
+  _analyzeState(players, pool, drunkAsRoleId = null) {
     const alive      = players.filter(p => p.status === 'alive')
     const goodCount  = alive.filter(p => ['townsfolk','outsider'].includes(p.team)).length
     const evilCount  = alive.filter(p => ['demon','minion'].includes(p.team)).length
@@ -51,6 +53,7 @@ export class DemonBluffAdvisor {
       threatCount,
       infoPoolSize:    infoPool.length,
       passivePoolSize: passivePool.length,
+      drunkAsRoleId,
       recommended: this._getRecommended(balance, threatCount),
     }
   }

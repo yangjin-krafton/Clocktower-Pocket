@@ -1,3 +1,5 @@
+import { ROLES_BY_ID } from '../data/roles-tb.js'
+
 /**
  * DemonBluffPanel — 임프 블러프 세트 결정 화면 (호스트 전용)
  *
@@ -11,7 +13,7 @@
  *                           roles: 선택된 role 배열 (3개)
  *                           null:  직접 선택 모드
  */
-export function mountDemonBluffPanel({ analysis, options, onDecide }) {
+export function mountDemonBluffPanel({ analysis, options, drunkAsRoleId = null, onDecide }) {
   const overlay = document.createElement('div')
   overlay.className = 'dbp-overlay'
 
@@ -59,6 +61,10 @@ export function mountDemonBluffPanel({ analysis, options, onDecide }) {
       <span class="dbp__state-key">정보역할</span>
       <span class="dbp__state-val">게임 내 정보형 ${analysis.threatCount}개 활성</span>
     </div>
+    ${drunkAsRoleId ? `<div class="dbp__state-row">
+      <span class="dbp__state-key">🍾 주정뱅이</span>
+      <span class="dbp__state-val" style="color:#a78bfa">${ROLES_BY_ID[drunkAsRoleId]?.name || drunkAsRoleId}로 인지 중</span>
+    </div>` : ''}
   `
   panel.appendChild(stateCard)
 
@@ -93,16 +99,19 @@ export function mountDemonBluffPanel({ analysis, options, onDecide }) {
       const tokensRow = document.createElement('div')
       tokensRow.className = 'dbp__tokens-row'
       opt.roles.forEach(role => {
+        const isDrunkAs = drunkAsRoleId && role.id === drunkAsRoleId
         const wrap = document.createElement('div')
         wrap.className = 'dbp__token-wrap'
-        wrap.title = role.name
+        wrap.title = role.name + (isDrunkAs ? ' (주정뱅이 인지)' : '')
         wrap.innerHTML = `
           <img class="dbp__token-bg"   src="./asset/token.png" alt="">
           <img class="dbp__token-icon" src="./asset/icons/${role.icon}" alt="${role.name}" loading="lazy">
+          ${isDrunkAs ? '<div class="dbp__drunk-badge">🍾</div>' : ''}
         `
         const nameEl = document.createElement('div')
         nameEl.className = 'dbp__token-name'
         nameEl.textContent = role.name
+        if (isDrunkAs) nameEl.style.color = '#a78bfa'
 
         const item = document.createElement('div')
         item.className = 'dbp__token-item'
@@ -310,6 +319,17 @@ if (!document.getElementById('demon-bluff-panel-style')) {
   height: 100%;
 }
 .dbp__token-icon { object-fit: contain; }
+.dbp__drunk-badge {
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #7c3aed;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; line-height: 1;
+  border: 1px solid var(--surface);
+  z-index: 2;
+}
 .dbp__token-name {
   font-size: 0.6rem;
   color: var(--text3);

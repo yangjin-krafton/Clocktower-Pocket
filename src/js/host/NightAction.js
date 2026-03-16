@@ -94,14 +94,20 @@ export class NightAction {
 
     // 1단계: 어드바이저 분석 → 전략 선택 패널
     const pool = this.engine.getBluffPool()
+    // 주정뱅이가 믿는 역할 ID
+    const drunkPlayer = this.engine.state.players.find(p => p.role === 'drunk' && p.drunkAs)
+    const drunkAsRoleId = drunkPlayer?.drunkAs || null
+
     const { analysis, options } = this._bluffAdvisor.advise({
       pool,
       players: this.engine.state.players,
+      drunkAsRoleId,
     })
 
     this._unmount = mountDemonBluffPanel({
       analysis,
       options,
+      drunkAsRoleId,
       onDecide: (roles) => {
         if (roles) {
           // 프리셋 선택 → 바로 임프 정보 패널
@@ -111,6 +117,7 @@ export class NightAction {
           // 직접 선택 → BluffSelectPanel
           this._unmount = mountBluffSelectPanel({
             pool,
+            drunkAsRoleId,
             onConfirm: (selectedBluffs) => {
               this.engine.setBluffs(selectedBluffs)
               this._showDemonInfoPanel(demons)

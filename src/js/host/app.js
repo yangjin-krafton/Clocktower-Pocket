@@ -916,8 +916,8 @@ export class HostApp {
     const state = engine.state
     if (!state || state.phase === 'lobby') {
       this.container.innerHTML = `
-        <div style="text-align:center;padding:60px 20px;color:var(--text3)">
-          <div style="font-size:2rem;margin-bottom:12px">🪑</div>
+        <div class="empty-state">
+          <div class="empty-state__icon">🪑</div>
           <div>게임 시작 후 이용 가능합니다</div>
         </div>`
       return

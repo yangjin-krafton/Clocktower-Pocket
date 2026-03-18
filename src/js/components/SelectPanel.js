@@ -51,7 +51,7 @@ export function renderSelectPanel(data) {
   titleWrap.className = 'select-panel__title-wrap'
 
   const titleDiv = document.createElement('div')
-  titleDiv.className = 'select-panel__title'
+  titleDiv.className = 'select-panel__title panel-role-title'
   titleDiv.textContent = title
   // 진영별 색상 적용
   const teamClass = ROLE_TEAM_MAP[title]
@@ -135,7 +135,7 @@ export function renderSelectPanel(data) {
 
   // 확인 버튼
   const confirmBtn = document.createElement('button')
-  confirmBtn.className = 'select-panel__confirm btn btn-primary'
+  confirmBtn.className = 'btn btn-primary panel-confirm-btn'
   confirmBtn.textContent = '✅ 확인'
   confirmBtn.disabled = true
   confirmBtn.addEventListener('click', () => onConfirm && onConfirm([...selectedIds]))
@@ -156,7 +156,7 @@ export function renderSelectPanel(data) {
  */
 export function mountSelectPanel(data) {
   const overlay = document.createElement('div')
-  overlay.className = 'select-panel-overlay'
+  overlay.className = 'select-panel-overlay panel-overlay'
 
   const panel = renderSelectPanel({
     ...data,
@@ -175,12 +175,8 @@ if (!document.getElementById('select-panel-style')) {
   const style = document.createElement('style')
   style.id = 'select-panel-style'
   style.textContent = `
+/* .panel-overlay (theme.css): position fixed, inset, bg, z-index, display flex */
 .select-panel-overlay {
-  position: fixed;
-  inset: 0 0 56px 0;
-  background: var(--bg);
-  z-index: 200;
-  display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -216,16 +212,13 @@ if (!document.getElementById('select-panel-style')) {
   object-fit: contain;
 }
 .select-panel__title-wrap { flex: 1; }
+/* .panel-role-title (theme.css): 진영별 색상 공통 처리 */
 .select-panel__title {
   font-family: 'Noto Serif KR', serif;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--gold2);
 }
-.select-panel__title.role-name-town { color: var(--bl-light); }
-.select-panel__title.role-name-outside { color: var(--tl-light); }
-.select-panel__title.role-name-minion { color: var(--rd-light); }
-.select-panel__title.role-name-demon { color: var(--rd-light); text-shadow: 0 0 12px rgba(110,27,31,0.6); }
+.select-panel__title.role-name-demon { text-shadow: 0 0 12px rgba(110,27,31,0.6); }
 .select-panel__hint { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
 .select-panel__counter {
   font-size: 0.78rem;
@@ -284,18 +277,7 @@ if (!document.getElementById('select-panel-style')) {
   text-align: center;
 }
 .select-panel__chip-seat { font-size: 0.58rem; color: var(--text4); }
-.select-panel__confirm {
-  flex-shrink: 0;
-  padding: 14px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border-radius: 10px;
-  min-height: 52px;
-}
-.select-panel__confirm:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
+/* .panel-confirm-btn (theme.css): 확인 버튼 공통 스타일 */
   `
   document.head.appendChild(style)
 }

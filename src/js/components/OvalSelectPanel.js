@@ -17,13 +17,6 @@
 
 import { calcSlotMetrics, ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
 
-const TEAM_TITLE_COLOR = {
-  town:    'var(--bl-light)',
-  outside: 'var(--tl-light)',
-  minion:  'var(--rd-light)',
-  demon:   'var(--rd-light)',
-}
-
 export function mountOvalSelectPanel(data) {
   const {
     title, roleIcon = '🎯', roleTeam, ability,
@@ -34,7 +27,7 @@ export function mountOvalSelectPanel(data) {
   let selectedIds = []
 
   const overlay = document.createElement('div')
-  overlay.className = 'oval-sel-overlay'
+  overlay.className = 'oval-sel-overlay panel-overlay'
 
   const panel = document.createElement('div')
   panel.className = 'oval-sel-panel'
@@ -59,11 +52,9 @@ export function mountOvalSelectPanel(data) {
   titleWrap.className = 'oval-sel__title-wrap'
 
   const titleEl = document.createElement('div')
-  titleEl.className = 'oval-sel__title'
+  titleEl.className = 'oval-sel__title panel-role-title'
   titleEl.textContent = title
-  if (roleTeam && TEAM_TITLE_COLOR[roleTeam]) {
-    titleEl.style.color = TEAM_TITLE_COLOR[roleTeam]
-  }
+  if (roleTeam) titleEl.classList.add(`role-name-${roleTeam}`)
 
   const hintEl = document.createElement('div')
   hintEl.className = 'oval-sel__hint'
@@ -175,7 +166,7 @@ export function mountOvalSelectPanel(data) {
 
   // ── 확인 버튼 ──
   const confirmBtn = document.createElement('button')
-  confirmBtn.className = 'oval-sel__confirm btn btn-primary'
+  confirmBtn.className = 'btn btn-primary panel-confirm-btn'
   confirmBtn.textContent = '✅ 확인'
   confirmBtn.disabled = true
   confirmBtn.addEventListener('click', () => {
@@ -194,14 +185,8 @@ if (!document.getElementById('oval-select-panel-style')) {
   const style = document.createElement('style')
   style.id = 'oval-select-panel-style'
   style.textContent = `
-.oval-sel-overlay {
-  position: fixed;
-  inset: 0 0 56px 0;
-  background: var(--bg);
-  z-index: 200;
-  display: flex;
-  align-items: stretch;
-}
+/* .panel-overlay (theme.css): position fixed, inset, bg, z-index, display flex */
+.oval-sel-overlay { align-items: stretch; }
 .oval-sel-panel {
   width: 100%;
   max-width: var(--app-max-width);
@@ -232,11 +217,11 @@ if (!document.getElementById('oval-select-panel-style')) {
   object-fit: contain;
 }
 .oval-sel__title-wrap { flex: 1; }
+/* .panel-role-title (theme.css): 진영별 색상 공통 처리 */
 .oval-sel__title {
   font-family: 'Noto Serif KR', serif;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--gold2);
 }
 .oval-sel__ability {
   font-size: 0.72rem;
@@ -346,16 +331,7 @@ if (!document.getElementById('oval-select-panel-style')) {
 .oval-sel__cnt-check { font-size: 0.72rem; color: var(--gold2); font-weight: 600; }
 .oval-sel__cnt-num   { font-size: 0.62rem; color: var(--tl-base); }
 
-/* 확인 버튼 */
-.oval-sel__confirm {
-  flex-shrink: 0;
-  padding: 14px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border-radius: 10px;
-  min-height: 52px;
-}
-.oval-sel__confirm:disabled { opacity: 0.4; cursor: default; }
+/* .panel-confirm-btn (theme.css): 확인 버튼 공통 스타일 */
   `
   document.head.appendChild(style)
 }

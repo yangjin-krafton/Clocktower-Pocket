@@ -70,8 +70,8 @@ window.goHome = () => {
 
 function showLoading() {
   content.innerHTML = `
-    <div style="text-align:center;padding:60px 20px;color:var(--text3)">
-      <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+    <div class="empty-state">
+      <div class="empty-state__icon">⏳</div>
       <div>초기화 중...</div>
     </div>
   `
@@ -144,7 +144,7 @@ function renderSavedGames(container) {
   if (!hasAny) return
 
   const section = document.createElement('div')
-  section.style.cssText = 'width:100%;margin-top:20px;'
+  section.className = 'save-section'
 
   // 구분선
   const divider = document.createElement('div')
@@ -153,12 +153,12 @@ function renderSavedGames(container) {
 
   // 제목
   const title = document.createElement('div')
-  title.style.cssText = 'font-family:"Noto Serif KR",serif;font-size:0.82rem;font-weight:700;color:var(--text3);margin-bottom:10px;text-align:center;'
+  title.className = 'save-section__title'
   title.textContent = '저장된 게임'
   section.appendChild(title)
 
   const list = document.createElement('div')
-  list.style.cssText = 'display:flex;flex-direction:column;gap:8px;'
+  list.className = 'save-list'
 
   // 참가자 세션 카드
   if (playerSession) {
@@ -218,47 +218,35 @@ function renderSavedGames(container) {
 
 function createSaveCard({ icon, label, sub, onResume, onDelete }) {
   const card = document.createElement('div')
-  card.style.cssText = `
-    background:var(--surface);border:1px solid var(--lead2);
-    border-radius:var(--radius-md);padding:12px 14px;
-    display:flex;align-items:center;gap:10px;
-  `
+  card.className = 'save-card'
 
   // 아이콘
   const iconEl = document.createElement('span')
-  iconEl.style.cssText = 'font-size:1.4rem;flex-shrink:0;'
+  iconEl.className = 'save-card__icon'
   iconEl.textContent = icon
   card.appendChild(iconEl)
 
   // 텍스트
   const textCol = document.createElement('div')
-  textCol.style.cssText = 'flex:1;min-width:0;'
+  textCol.className = 'save-card__text'
   textCol.innerHTML = `
-    <div style="font-size:0.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
-    <div style="font-size:0.62rem;color:var(--text4);margin-top:2px;">${sub}</div>
+    <div class="save-card__label">${label}</div>
+    <div class="save-card__sub">${sub}</div>
   `
   card.appendChild(textCol)
 
   // 버튼
   const btnCol = document.createElement('div')
-  btnCol.style.cssText = 'display:flex;gap:6px;flex-shrink:0;'
+  btnCol.className = 'save-card__btns'
 
   const resumeBtn = document.createElement('button')
-  resumeBtn.style.cssText = `
-    padding:6px 12px;border-radius:6px;border:1px solid rgba(91,179,198,0.4);
-    background:rgba(91,179,198,0.08);color:var(--tl-light);
-    font-family:'Noto Sans KR',sans-serif;font-size:0.62rem;font-weight:600;cursor:pointer;
-  `
+  resumeBtn.className = 'save-card__resume'
   resumeBtn.textContent = '이어하기'
   resumeBtn.addEventListener('click', onResume)
   btnCol.appendChild(resumeBtn)
 
   const delBtn = document.createElement('button')
-  delBtn.style.cssText = `
-    padding:6px 8px;border-radius:6px;border:1px solid var(--lead2);
-    background:transparent;color:var(--text4);
-    font-size:0.62rem;cursor:pointer;
-  `
+  delBtn.className = 'save-card__del'
   delBtn.textContent = '삭제'
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation()

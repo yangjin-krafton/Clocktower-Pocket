@@ -27,7 +27,7 @@ export function mountRevealPanel(data) {
   const { roleIcon, roleName, roleTeam, roleAbility, message, players = [], hint, action, onNext } = data
 
   const overlay = document.createElement('div')
-  overlay.className = 'reveal-overlay'
+  overlay.className = 'reveal-overlay panel-overlay'
 
   const panel = document.createElement('div')
   panel.className = 'reveal-panel'
@@ -128,12 +128,9 @@ if (!document.getElementById('reveal-panel-style')) {
   const style = document.createElement('style')
   style.id = 'reveal-panel-style'
   style.textContent = `
+/* .panel-overlay (theme.css): position fixed, inset, bg, display flex */
 .reveal-overlay {
-  position: fixed;
-  inset: 0 0 56px 0;
-  background: var(--bg);
   z-index: 210;
-  display: flex;
   align-items: stretch;
 }
 .reveal-panel {

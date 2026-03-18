@@ -48,7 +48,7 @@ export function renderInfoPanel(data) {
 
   // 제목
   const titleEl = document.createElement('div')
-  titleEl.className = 'info-panel__title'
+  titleEl.className = 'info-panel__title panel-role-title'
   titleEl.textContent = title
   // 진영별 색상 적용
   const teamClass = ROLE_TEAM_MAP[title]
@@ -98,7 +98,7 @@ export function renderInfoPanel(data) {
  */
 export function mountInfoPanel(data) {
   const overlay = document.createElement('div')
-  overlay.className = 'info-panel-overlay'
+  overlay.className = 'info-panel-overlay panel-overlay'
 
   // revealData 있으면 "👁 참가자에게 공개 →" 버튼으로 교체
   const onConfirmOverride = data.revealData
@@ -139,12 +139,8 @@ if (!document.getElementById('info-panel-style')) {
   const style = document.createElement('style')
   style.id = 'info-panel-style'
   style.textContent = `
+/* .panel-overlay (theme.css): position fixed, inset, bg, z-index, display flex */
 .info-panel-overlay {
-  position: fixed;
-  inset: 0 0 56px 0;
-  background: var(--bg);
-  z-index: 200;
-  display: flex;
   align-items: center;
   justify-content: center;
 }
@@ -187,19 +183,19 @@ if (!document.getElementById('info-panel-style')) {
   object-fit: contain;
   filter: drop-shadow(0 0 12px rgba(212,168,40,0.4));
 }
+/* .panel-role-title (theme.css): 진영별 색상 공통 처리 */
 .info-panel__title {
   font-family: 'Noto Serif KR', serif;
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--gold2);
   text-align: center;
   line-height: 1.2;
   text-shadow: 0 0 20px rgba(212,168,40,0.4);
 }
-.info-panel__title.role-name-town { color: var(--bl-light); text-shadow: 0 0 20px rgba(46,74,143,0.5); }
-.info-panel__title.role-name-outside { color: var(--tl-light); text-shadow: 0 0 20px rgba(91,179,198,0.5); }
-.info-panel__title.role-name-minion { color: var(--rd-light); text-shadow: 0 0 20px rgba(110,27,31,0.6); }
-.info-panel__title.role-name-demon { color: var(--rd-light); text-shadow: 0 0 24px rgba(110,27,31,0.8); }
+.info-panel__title.role-name-town    { text-shadow: 0 0 20px rgba(46,74,143,0.5); }
+.info-panel__title.role-name-outside { text-shadow: 0 0 20px rgba(91,179,198,0.5); }
+.info-panel__title.role-name-minion  { text-shadow: 0 0 20px rgba(110,27,31,0.6); }
+.info-panel__title.role-name-demon   { text-shadow: 0 0 24px rgba(110,27,31,0.8); }
 .info-panel__message {
   font-size: 1.15rem;
   color: var(--text);

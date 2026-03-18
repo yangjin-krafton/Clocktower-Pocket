@@ -468,6 +468,99 @@ body {
   );
 }
 
+/* ═══════════════════════════════════════════════════════
+   공유 컴포넌트 유틸리티
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 전체화면 패널 오버레이 공통 기반 (SelectPanel, OvalSelectPanel, InfoPanel, RevealPanel) ── */
+.panel-overlay {
+  position: fixed;
+  inset: 0 0 56px 0;
+  background: var(--bg);
+  z-index: 200;
+  display: flex;
+}
+
+/* ── 패널 확인 버튼 공통 (SelectPanel, OvalSelectPanel) ── */
+.panel-confirm-btn {
+  flex-shrink: 0;
+  padding: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 10px;
+  min-height: 52px;
+}
+.panel-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── 진영 역할명 색상 공통 ── */
+.panel-role-title                   { color: var(--gold2); }
+.panel-role-title.role-name-town    { color: var(--bl-light); }
+.panel-role-title.role-name-outside { color: var(--tl-light); }
+.panel-role-title.role-name-minion  { color: var(--rd-light); }
+.panel-role-title.role-name-demon   { color: var(--rd-light); }
+
+/* ── 빈 상태 / 로딩 플레이스홀더 ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state__icon { font-size: 2rem; margin-bottom: 12px; }
+
+/* ── 저장된 게임 섹션 ── */
+.save-section { width: 100%; margin-top: 20px; }
+.save-section__title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text3);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.save-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── 저장된 게임 카드 ── */
+.save-card {
+  background: var(--surface);
+  border: 1px solid var(--lead2);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.save-card__icon { font-size: 1.4rem; flex-shrink: 0; }
+.save-card__text { flex: 1; min-width: 0; }
+.save-card__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.save-card__sub { font-size: 0.62rem; color: var(--text4); margin-top: 2px; }
+.save-card__btns { display: flex; gap: 6px; flex-shrink: 0; }
+.save-card__resume {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(91,179,198,0.4);
+  background: rgba(91,179,198,0.08);
+  color: var(--tl-light);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.save-card__del {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--lead2);
+  background: transparent;
+  color: var(--text4);
+  font-size: 0.62rem;
+  cursor: pointer;
+}
+
 /* ── 반응형: 600px 이상 (태블릿 / 넓은 폰) ── */
 /* body padding/align 변경 금지 — tab-bar는 position:fixed 뷰포트 기준이므로
    body에 padding을 주면 앱과 탭바 사이 gap이 생김 */

@@ -114,13 +114,11 @@ export function createSeatSlot(x, y, slotPx, {
  * @param {object|null} role           - 표시할 역할 객체 (displayRole)
  * @param {number}      iconPx
  * @param {object}      opts
- * @param {boolean}     [opts.drunkBadge]    - 🍾 배지 표시
- * @param {boolean}     [opts.warnBadge]     - ❗ 배지 표시 (drunkAs 미선택)
+ * @param {boolean}     [opts.drunkBadge]    - 🍾 pill 배지 표시 (drunkAs 배정된 주정뱅이)
  * @param {string}      [opts.fallbackEmoji] - 역할 없을 때 대체 문자 (기본 '+')
  */
 export function createRoleIconEl(role, iconPx, {
   drunkBadge    = false,
-  warnBadge     = false,
   fallbackEmoji = '+',
 } = {}) {
   const iconWrap = document.createElement('div')
@@ -147,30 +145,23 @@ export function createRoleIconEl(role, iconPx, {
   iconWrap.appendChild(iconEl)
 
   if (drunkBadge) {
+    const h    = Math.round(iconPx * 0.32)
+    const fsPx = Math.round(h * 0.65)
+    const px   = Math.round(h * 0.28)
     const badge = document.createElement('div')
     badge.style.cssText = `
       position:absolute;top:-4px;right:-4px;
-      width:${Math.round(iconPx * 0.4)}px;height:${Math.round(iconPx * 0.4)}px;
-      border-radius:50%;background:#7c3aed;
+      height:${h}px;padding:0 ${px}px;min-width:${h}px;
+      border-radius:${Math.round(h / 2)}px;
+      background:#7c3aed;
       display:flex;align-items:center;justify-content:center;
-      font-size:${Math.round(iconPx * 0.24)}px;line-height:1;
+      font-size:${fsPx}px;line-height:1;font-weight:700;
+      color:#fff;white-space:nowrap;
       border:1px solid var(--surface);z-index:2;
+      box-shadow:0 0 5px rgba(124,58,237,0.55);
     `
     badge.textContent = '🍾'
     iconWrap.appendChild(badge)
-  } else if (warnBadge) {
-    const wb = document.createElement('div')
-    wb.style.cssText = `
-      position:absolute;top:-4px;right:-4px;
-      width:${Math.round(iconPx * 0.4)}px;height:${Math.round(iconPx * 0.4)}px;
-      border-radius:50%;background:var(--rd-light);
-      display:flex;align-items:center;justify-content:center;
-      font-size:${Math.round(iconPx * 0.22)}px;line-height:1;
-      border:1px solid var(--surface);z-index:2;
-      animation:drunk-pulse 1.5s infinite;
-    `
-    wb.textContent = '❗'
-    iconWrap.appendChild(wb)
   }
 
   return iconWrap

@@ -50,10 +50,7 @@ export const MARK_DEFS = {
 
   // ── 상태 이상 (좌하·우하) ────────────────────────────────
   poison:      { pos: 'BL', icon: '☠',  bg: '#16a34a', glow: 'rgba(22,163,74,0.6)'   },
-  drunk:       { pos: 'BR', icon: '🍾', bg: '#7c3aed'                                  },
-
-  // ── 준비 단계 경고 (하단 중앙) ───────────────────────────
-  drunk_warn:  { pos: 'BC', icon: '❗', bg: '#b91c1c', glow: 'rgba(185,28,28,0.5)', fw: '700' },
+  // drunk / drunk_warn 은 pill 전용 — 아래 createPillBadge 사용
 }
 
 // ── 배지 크기 ────────────────────────────────────────────────
@@ -61,24 +58,24 @@ function badgeSz(slotPx) {
   return Math.max(14, Math.round(slotPx * 0.24))
 }
 
-// ── 카운트 필 배지 (X/Y 형태) ────────────────────────────────
+// ── 공용 Pill 배지 팩토리 ────────────────────────────────────
 /**
- * "3/4" 같은 카운트를 pill 형태로 표시합니다. (남작 아웃사이더 전용)
  * @param {HTMLElement} slot
  * @param {number}      slotPx
- * @param {string}      pos         - POS 키
- * @param {number}      current
- * @param {number}      required
+ * @param {object}      opts
+ * @param {string}      opts.pos       - POS 키
+ * @param {string}      opts.text      - 표시할 텍스트
+ * @param {string}      opts.bg        - 배경색
+ * @param {string}      opts.cls       - slot-mark--XXX 클래스명
+ * @param {string}      [opts.glow]    - 글로우 색
+ * @param {boolean}     [opts.pulse]   - 펄스 애니메이션 여부
  */
-function addCountMark(slot, slotPx, pos, current, required) {
-  const isOk   = current >= required
-  const h      = badgeSz(slotPx)
-  const fsPx   = Math.max(8, Math.round(h * 0.6))
-  const bg     = isOk ? '#0e7490' : '#b45309'
-  const glow   = isOk ? 'rgba(14,116,144,0.55)' : 'rgba(180,83,9,0.55)'
+function createPillBadge(slot, slotPx, { pos, text, bg, cls, glow = '', pulse = false }) {
+  const h    = badgeSz(slotPx)
+  const fsPx = Math.max(8, Math.round(h * 0.62))
 
   const el = document.createElement('div')
-  el.className = 'slot-mark slot-mark--baron'
+  el.className = `slot-mark slot-mark--${cls}`
   el.style.cssText = `
     position:absolute;${POS[pos]};
     height:${h}px;padding:0 ${Math.round(h * 0.3)}px;min-width:${h}px;
@@ -87,13 +84,54 @@ function addCountMark(slot, slotPx, pos, current, required) {
     display:flex;align-items:center;justify-content:center;
     font-size:${fsPx}px;line-height:1;font-weight:700;
     color:#fff;white-space:nowrap;
-    border:1px solid var(--surface);z-index:3;
-    pointer-events:none;
-    box-shadow:0 0 5px ${glow};
+    border:1px solid var(--surface);z-index:3;pointer-events:none;
+    ${glow  ? `box-shadow:0 0 6px ${glow};`                        : ''}
+    ${pulse ? 'animation:drunk-pulse 1.5s ease-in-out infinite;'   : ''}
   `
-  el.textContent = `${current}/${required}`
+  el.textContent = text
   slot.appendChild(el)
   return el
+}
+
+// ── 카운트 필 (남작 X/Y) ─────────────────────────────────────
+function addCountMark(slot, slotPx, pos, current, required) {
+  const isOk = current >= required
+  return createPillBadge(slot, slotPx, {
+    pos,
+    text:  `${current}/${required}`,
+    bg:    isOk ? '#0e7490' : '#b45309',
+    glow:  isOk ? 'rgba(14,116,144,0.55)' : 'rgba(180,83,9,0.55)',
+    cls:   'baron',
+  })
+}
+
+// ── 취함 상태 필 (게임 중 isDrunk) ───────────────────────────
+/**
+ * 게임 중 isDrunk 상태 — 슬롯 우하단 pill "취함"
+ */
+function addDrunkStatePill(slot, slotPx) {
+  return createPillBadge(slot, slotPx, {
+    pos:  'BR',
+    text: '취함',
+    bg:   '#7c3aed',
+    glow: 'rgba(124,58,237,0.55)',
+    cls:  'drunk',
+  })
+}
+
+// ── 취함 경고 필 (준비: drunkAs 미선택) ──────────────────────
+/**
+ * 주정뱅이 역할이지만 drunkAs 미선택 — 슬롯 하단 중앙 pill "🍾?", 펄스
+ */
+function addDrunkWarnPill(slot, slotPx) {
+  return createPillBadge(slot, slotPx, {
+    pos:   'BC',
+    text:  '🍾?',
+    bg:    '#d97706',
+    glow:  'rgba(217,119,6,0.55)',
+    cls:   'drunk_warn',
+    pulse: true,
+  })
 }
 
 // ── 단일 마크 추가 ───────────────────────────────────────────
@@ -164,7 +202,7 @@ export function applySlotStateMarks(slot, slotPx, {
   isSelectedCheck = false,
 } = {}) {
   if (isPoisoned)      addSlotMark(slot, slotPx, 'poison')
-  if (isDrunk)         addSlotMark(slot, slotPx, 'drunk')
+  if (isDrunk)         addDrunkStatePill(slot, slotPx)
   if (isProtected)     addSlotMark(slot, slotPx, 'protected')
   if (isDeadNight)     addSlotMark(slot, slotPx, 'dead_night')
   if (isDeadExec)      addSlotMark(slot, slotPx, 'dead_exec')
@@ -189,7 +227,7 @@ export function applySetupSlotMarks(slot, slotPx, {
   requiredOutsiders = 0,
   currentOutsiders  = 0,
 } = {}) {
-  if (isDrunkWarn) addSlotMark(slot, slotPx, 'drunk_warn')
+  if (isDrunkWarn) addDrunkWarnPill(slot, slotPx)
   if (isBaron && hasBaron) {
     addCountMark(slot, slotPx, 'ML', currentOutsiders, requiredOutsiders)
   }

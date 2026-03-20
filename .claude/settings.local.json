@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Remove-Item \"src/js/components/SlotParticles.js\")",
       "WebFetch(domain:wiki.bloodontheclocktower.com)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(start http://localhost:3344)"
     ]
   }
 }

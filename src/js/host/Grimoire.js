@@ -15,7 +15,7 @@ import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode, copyRoomCode } from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel, createRoleNameLabel } from '../utils/SeatWheel.js'
-import { addBaronOutsiderGuide } from '../utils/SlotMark.js'
+import { applySetupSlotMarks } from '../utils/SlotMark.js'
 
 // 패시브 능력을 가진 역할 (게임 시작 시 자동 발동)
 const PASSIVE_ABILITY_ROLES = ['baron', 'drunk', 'recluse', 'saint']
@@ -298,24 +298,25 @@ export class Grimoire {
       const displayRole = isDrunkWithAs ? ROLES_BY_ID[drunkAsRoleId] : role
       slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, {
         drunkBadge: isDrunkWithAs,
-        warnBadge:  roleId === 'drunk' && !drunkAsRoleId,
       }))
 
       // 역할 이름 레이블
       if (role) slot.appendChild(createRoleNameLabel(role, slotPx))
+
+      // 준비 단계 슬롯 마크 (drunk_warn, baron 가이드)
+      applySetupSlotMarks(slot, slotPx, {
+        isDrunkWarn:       roleId === 'drunk' && !drunkAsRoleId,
+        isBaron:           roleId === 'baron',
+        hasBaron,
+        requiredOutsiders,
+        currentOutsiders,
+      })
 
       slot.addEventListener('click', () => {
         this._selectedSeat = (this._selectedSeat === i) ? null : i
         this._render()
       })
       oval.appendChild(slot)
-
-      // Baron 슬롯에 아웃사이더 가이드 추가
-      if (roleId === 'baron' && hasBaron) {
-        requestAnimationFrame(() => {
-          addBaronOutsiderGuide(slot, requiredOutsiders, currentOutsiders)
-        })
-      }
 
       oval.appendChild(createSeatNumLabel(x, y, slotPx, i + 1, { dimmed: !roleId }))
     })

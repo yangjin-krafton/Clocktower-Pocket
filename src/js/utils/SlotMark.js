@@ -8,6 +8,11 @@
  *   [ML]  ○  [MR]
  *   [BL] [BC] [BR]
  *
+ * 포지션 배정:
+ *   TL — 보호 (수도승)       TC — 밤 사망       TR — 낮 처형 / 나이트 선택
+ *   ML — 남작 (ok/err)      MR — (예약)
+ *   BL — 중독               BC — 주정뱅이 경고   BR — 취함 상태
+ *
  * 사용처: Grimoire.js, host/app.js, NightAction.js
  */
 
@@ -25,33 +30,70 @@ const POS = {
 
 // ── 마크 정의 레지스트리 ─────────────────────────────────────
 /**
- * 각 항목:
- *   pos   — 포지션 키 (POS 맵 참조)
- *   icon  — 배지 내 표시할 문자/이모지
- *   bg    — 배지 배경색
- *   color — 텍스트 색 (기본 #fff)
- *   glow  — box-shadow 글로우 색 (선택)
- *   fw    — font-weight (선택)
+ * pos   — 포지션 키 (POS 맵 참조)
+ * icon  — 배지 내 이모지/문자
+ * bg    — 배지 배경색
+ * color — 텍스트 색 (기본 #fff)
+ * glow  — box-shadow 글로우 색 (선택)
+ * fw    — font-weight (선택)
  */
 export const MARK_DEFS = {
-  // ── 상태 이상 (좌하·우하) ──
-  poison:      { pos: 'BL', icon: '☠',  bg: '#16a34a', glow: 'rgba(22,163,74,0.6)'  },
-  drunk:       { pos: 'BR', icon: '🍾', bg: '#7c3aed'                                 },
+  // ── 보호 (좌상) ──────────────────────────────────────────
+  protected:   { pos: 'TL', icon: '🛡', bg: '#0e7490', glow: 'rgba(14,116,144,0.5)'  },
 
-  // ── 보호 효과 (좌상) ──
-  protected:   { pos: 'TL', icon: '🛡', bg: '#0e7490', glow: 'rgba(14,116,144,0.5)' },
+  // ── 사망 종류 (상단 중·우) ───────────────────────────────
+  dead_night:  { pos: 'TC', icon: '💀', bg: '#374151'                                  },
+  dead_exec:   { pos: 'TR', icon: '⚔',  bg: '#b91c1c', glow: 'rgba(185,28,28,0.5)'   },
 
-  // ── 사망 종류 (상단 중·우) ──
-  dead_night:  { pos: 'TC', icon: '💀', bg: '#374151'                                 },
-  dead_exec:   { pos: 'TR', icon: '⚔',  bg: '#b91c1c', glow: 'rgba(185,28,28,0.5)'  },
+  // ── UI 선택 (우상 — NightAction) ─────────────────────────
+  check:       { pos: 'TR', icon: '✓',  bg: 'var(--gold2)', color: '#000', fw: '700'  },
 
-  // ── UI 인터랙션 (우상 — NightAction 선택) ──
-  check:       { pos: 'TR', icon: '✓',  bg: 'var(--gold2)', color: '#000', fw: '700' },
+  // ── 상태 이상 (좌하·우하) ────────────────────────────────
+  poison:      { pos: 'BL', icon: '☠',  bg: '#16a34a', glow: 'rgba(22,163,74,0.6)'   },
+  drunk:       { pos: 'BR', icon: '🍾', bg: '#7c3aed'                                  },
+
+  // ── 준비 단계 경고 (하단 중앙) ───────────────────────────
+  drunk_warn:  { pos: 'BC', icon: '❗', bg: '#b91c1c', glow: 'rgba(185,28,28,0.5)', fw: '700' },
 }
 
-// ── 배지 크기 계산 ───────────────────────────────────────────
+// ── 배지 크기 ────────────────────────────────────────────────
 function badgeSz(slotPx) {
   return Math.max(14, Math.round(slotPx * 0.24))
+}
+
+// ── 카운트 필 배지 (X/Y 형태) ────────────────────────────────
+/**
+ * "3/4" 같은 카운트를 pill 형태로 표시합니다. (남작 아웃사이더 전용)
+ * @param {HTMLElement} slot
+ * @param {number}      slotPx
+ * @param {string}      pos         - POS 키
+ * @param {number}      current
+ * @param {number}      required
+ */
+function addCountMark(slot, slotPx, pos, current, required) {
+  const isOk   = current >= required
+  const h      = badgeSz(slotPx)
+  const fsPx   = Math.max(8, Math.round(h * 0.6))
+  const bg     = isOk ? '#0e7490' : '#b45309'
+  const glow   = isOk ? 'rgba(14,116,144,0.55)' : 'rgba(180,83,9,0.55)'
+
+  const el = document.createElement('div')
+  el.className = 'slot-mark slot-mark--baron'
+  el.style.cssText = `
+    position:absolute;${POS[pos]};
+    height:${h}px;padding:0 ${Math.round(h * 0.3)}px;min-width:${h}px;
+    border-radius:${Math.round(h / 2)}px;
+    background:${bg};
+    display:flex;align-items:center;justify-content:center;
+    font-size:${fsPx}px;line-height:1;font-weight:700;
+    color:#fff;white-space:nowrap;
+    border:1px solid var(--surface);z-index:3;
+    pointer-events:none;
+    box-shadow:0 0 5px ${glow};
+  `
+  el.textContent = `${current}/${required}`
+  slot.appendChild(el)
+  return el
 }
 
 // ── 단일 마크 추가 ───────────────────────────────────────────
@@ -60,23 +102,22 @@ function badgeSz(slotPx) {
  *
  * @param {HTMLElement} slot
  * @param {number}      slotPx
- * @param {string}      markType - MARK_DEFS 키 (또는 customDef 사용 시 임의 키)
- * @param {object}      [customDef] - MARK_DEFS에 없는 커스텀 마크 정의
+ * @param {string}      markType  - MARK_DEFS 키
+ * @param {object}      [customDef] - MARK_DEFS에 없는 커스텀 마크
  * @returns {HTMLElement|null}
  */
 export function addSlotMark(slot, slotPx, markType, customDef) {
   const def = customDef ?? MARK_DEFS[markType]
   if (!def) return null
 
-  const sz = badgeSz(slotPx)
-  const el = document.createElement('div')
-  el.className = `slot-mark slot-mark--${markType}`
-
-  const posCSS  = POS[def.pos] ?? POS.TR
-  const glowCSS = def.glow ? `box-shadow:0 0 6px ${def.glow};` : ''
+  const sz       = badgeSz(slotPx)
+  const posCSS   = POS[def.pos] ?? POS.TR
+  const glowCSS  = def.glow ? `box-shadow:0 0 6px ${def.glow};` : ''
   const colorCSS = `color:${def.color ?? '#fff'};`
   const fwCSS    = def.fw ? `font-weight:${def.fw};` : ''
 
+  const el = document.createElement('div')
+  el.className = `slot-mark slot-mark--${markType}`
   el.style.cssText = `
     position:absolute;${posCSS};
     width:${sz}px;height:${sz}px;
@@ -94,8 +135,6 @@ export function addSlotMark(slot, slotPx, markType, customDef) {
 
 // ── 기존 마크 제거 ───────────────────────────────────────────
 /**
- * 슬롯에서 특정 마크(또는 전체 마크)를 제거합니다.
- *
  * @param {HTMLElement} slot
  * @param {string}      [markType] - 생략 시 모든 .slot-mark 제거
  */
@@ -104,19 +143,17 @@ export function removeSlotMark(slot, markType) {
   slot.querySelectorAll(sel).forEach(el => el.remove())
 }
 
-// ── 상태 일괄 적용 ───────────────────────────────────────────
+// ── 게임 상태 마크 일괄 적용 ─────────────────────────────────
 /**
- * 게임 상태 객체를 받아 해당하는 마크를 한 번에 적용합니다.
- *
  * @param {HTMLElement} slot
  * @param {number}      slotPx
  * @param {object}      states
- * @param {boolean}     [states.isPoisoned]      - ☠ 중독  (BL)
- * @param {boolean}     [states.isDrunk]         - 🍾 취함  (BR)
+ * @param {boolean}     [states.isPoisoned]      - ☠ 중독         (BL)
+ * @param {boolean}     [states.isDrunk]         - 🍾 취함 상태    (BR)
  * @param {boolean}     [states.isProtected]     - 🛡 수도승 보호  (TL)
- * @param {boolean}     [states.isDeadNight]     - 💀 밤 사망  (TC)
- * @param {boolean}     [states.isDeadExec]      - ⚔ 낮 처형  (TR)
- * @param {boolean}     [states.isSelectedCheck] - ✓ 나이트 선택  (TR)
+ * @param {boolean}     [states.isDeadNight]     - 💀 밤 사망      (TC)
+ * @param {boolean}     [states.isDeadExec]      - ⚔ 낮 처형      (TR)
+ * @param {boolean}     [states.isSelectedCheck] - ✓ 나이트 선택   (TR)
  */
 export function applySlotStateMarks(slot, slotPx, {
   isPoisoned      = false,
@@ -134,5 +171,26 @@ export function applySlotStateMarks(slot, slotPx, {
   if (isSelectedCheck) addSlotMark(slot, slotPx, 'check')
 }
 
-// ── 남작 아웃사이더 가이드 (re-export) ────────────────────────
-export { addBaronOutsiderGuide } from '../components/BaronOutsiderGuide.js'
+// ── 준비 단계 마크 일괄 적용 ─────────────────────────────────
+/**
+ * @param {HTMLElement} slot
+ * @param {number}      slotPx
+ * @param {object}      opts
+ * @param {boolean}     [opts.isDrunkWarn]       - ❗ 주정뱅이 drunkAs 미선택  (BC)
+ * @param {boolean}     [opts.isBaron]           - 남작 슬롯 여부
+ * @param {boolean}     [opts.hasBaron]          - 편성에 남작 존재 여부
+ * @param {number}      [opts.requiredOutsiders] - 필요 아웃사이더 수
+ * @param {number}      [opts.currentOutsiders]  - 현재 아웃사이더 수
+ */
+export function applySetupSlotMarks(slot, slotPx, {
+  isDrunkWarn       = false,
+  isBaron           = false,
+  hasBaron          = false,
+  requiredOutsiders = 0,
+  currentOutsiders  = 0,
+} = {}) {
+  if (isDrunkWarn) addSlotMark(slot, slotPx, 'drunk_warn')
+  if (isBaron && hasBaron) {
+    addCountMark(slot, slotPx, 'ML', currentOutsiders, requiredOutsiders)
+  }
+}

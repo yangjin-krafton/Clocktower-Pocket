@@ -100,7 +100,6 @@ export class NightAction {
         message:    `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
         players:    [...minions, ...demonPlayers].map(p => ({ id: p.id })),
         allPlayers: this.engine.state.players,
-        hint:       '당신의 동료들이 공개됩니다 — 함께하는 미니언 자리번호와 임프 자리번호를 확인하세요. 낮에는 서로 모르는 척 행동해야 합니다.',
         action:     '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('minion-info'),
@@ -152,7 +151,6 @@ export class NightAction {
         message:    `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
         players:    minions.map(p => ({ id: p.id })),
         allPlayers: this.engine.state.players,
-        hint:       '당신은 악 팀 임프입니다 — 미니언 자리번호와, 들키지 않고 사칭할 수 있는 선 역할 3개를 알려줍니다. 블러프 역할 중 하나인 척 행동하면 선 팀이 당신을 찾기 어렵습니다.',
         action:     '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('demon-info'),
@@ -199,7 +197,7 @@ export class NightAction {
     const options = []
 
     if (isPoisoned) {
-      // 중독/취함: 거짓 정보 옵션 추가
+      // 중독/취함: 거짓 정보 옵션 (추천)
       const falseVal = this._calcFalseValue(roleId, realAccurate)
       options.push({
         id:          'false-info',
@@ -211,17 +209,19 @@ export class NightAction {
         recommended: true,
         revealData:  this._buildSimpleRevealData(roleId, role, falseVal),
       })
-      options.push({
-        id:          'true-info',
-        icon:        '🔵',
-        label:       '정확한 정보',
-        preview:     this._formatPreviewSimple(roleId, realAccurate),
-        impact:      '정확한 정보를 그대로 전달합니다.',
-        stateReason: '',
-        recommended: false,
-        revealData:  this._buildSimpleRevealData(roleId, role, realAccurate),
-      })
     }
+
+    // 정확한 정보 — 항상 표시, 정상 상태일 때 추천
+    options.push({
+      id:          'true-info',
+      icon:        '🔵',
+      label:       '정확한 정보',
+      preview:     this._formatPreviewSimple(roleId, realAccurate),
+      impact:      '정확한 정보를 그대로 전달합니다.',
+      stateReason: '',
+      recommended: !isPoisoned,
+      revealData:  this._buildSimpleRevealData(roleId, role, realAccurate),
+    })
 
     // 사서: "아웃사이더 없음" 옵션 (중독 여부 무관)
     if (roleId === 'librarian') {
@@ -242,7 +242,6 @@ export class NightAction {
           roleAbility: role?.ability || '',
           message:     '이 게임에 아웃사이더가 없습니다.',
           players:     [],
-          hint:        '당신 능력이 발동됐습니다 — 이 게임에는 아웃사이더가 포함되어 있지 않습니다.',
           action:      '확인한 뒤 눈을 감고 손을 내려주세요.',
         },
       })
@@ -280,12 +279,17 @@ export class NightAction {
           return
         }
 
-        // InfoPanel 건너뛰고 바로 RevealEditPanel → RevealPanel로
+        // RevealEditPanel 편집 → 공개
         const finalRevealData = chosen.revealData || null
         if (finalRevealData) {
+          // 숫자 직접 입력(customType:'number') 시 역할별 메시지 포맷 적용
+          const message = chosen.customValue !== undefined
+            ? this._formatPreviewSimple(roleId, chosen.customValue)
+            : finalRevealData.message
           ThemeManager.pushTemp('player')
           this._unmount = this._trackOverlay(() => mountRevealEditPanel({
             ...finalRevealData,
+            message,
             allPlayers: this.engine.state.players,
             onNext: () => { ThemeManager.popTemp(); this._done(roleId) },
           }))
@@ -427,7 +431,6 @@ export class NightAction {
       roleAbility: role?.ability || '',
       message,
       players,
-      hint: '당신의 능력이 발동됐습니다.',
       action: '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
     }
   }
@@ -474,14 +477,13 @@ export class NightAction {
           const needHostChoice = isPoisonedFT || hasRecluse || hasSpy
 
           const buildFTReveal = (msg) => ({
-            roleIcon: 'fortuneteller.png',
-            roleName: '점쟁이 결과',
-            roleTeam: 'town',
+            roleIcon:    'fortuneteller.png',
+            roleName:    '점쟁이 결과',
+            roleTeam:    'town',
             roleAbility: role?.ability || '',
-            message:  msg,
-            players:  ids.map(id => ({ id })),
-            hint:     '당신 능력이 발동됐습니다 — 방금 지목한 두 자리 중 임프가 있는지 알려줍니다.',
-            action:   '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
+            message:     msg,
+            players:     ids.map(id => ({ id })),
+            action:      '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
           })
 
           if (needHostChoice) {
@@ -579,14 +581,13 @@ export class NightAction {
           const accurateMsg = `${target?.id}번 → ${displayRole?.name || displayRoleId || '?'}`
 
           const buildRKReveal = (msg) => ({
-            roleIcon: 'ravenkeeper.png',
-            roleName: '까마귀 사육사 결과',
-            roleTeam: 'town',
+            roleIcon:    'ravenkeeper.png',
+            roleName:    '까마귀 사육사 결과',
+            roleTeam:    'town',
             roleAbility: role?.ability || '',
-            message: msg,
-            players: [{ id: ids[0] }],
-            hint: '당신 능력이 발동됐습니다 — 지목한 플레이어의 역할을 알 수 있습니다.',
-            action: '역할을 기억한 뒤 눈을 감고 손을 내려주세요.',
+            message:     msg,
+            players:     [{ id: ids[0] }],
+            action:      '역할을 기억한 뒤 눈을 감고 손을 내려주세요.',
           })
 
           if (isPoisonedRK) {
@@ -789,7 +790,6 @@ export class NightAction {
         message:     '호스트가 정보를 전달합니다.',
         players:     selectedIds.map(id => ({ id })),
         allPlayers:  allPlayers,
-        hint:        '당신 능력이 발동됐습니다 — 이야기꾼이 알려주는 정보를 확인하세요.',
         action:      '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
         onNext:      () => { ThemeManager.popTemp(); onDone() },
       }))

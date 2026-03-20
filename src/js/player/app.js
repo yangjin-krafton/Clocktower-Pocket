@@ -11,7 +11,8 @@ import { CharacterDict }              from './CharacterDict.js'
 import { RulesScreen }                from '../components/RulesScreen.js'
 import { ROLES_BY_ID }                from '../data/roles-tb.js'
 import { ThemeManager }               from '../ThemeManager.js'
-import { ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+import { ovalSlotPos, ovalSelfRotOffset, calcSlotMetrics } from '../utils/ovalLayout.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel } from '../utils/SeatWheel.js'
 import { GameSaveManager }            from '../GameSaveManager.js'
 
 const STORAGE_KEY = 'ctp_player_session'
@@ -534,10 +535,7 @@ export class PlayerApp {
     const ovalH   = Math.floor(ovalW * 1.5)
     const contentH = availH
 
-    const _RX_px    = ovalW * 0.43
-    const _minChord = 2 * Math.sin(Math.PI / playerCount) * _RX_px
-    const slotPx    = Math.max(36, Math.min(Math.floor(_minChord * 0.82), Math.floor(ovalW * 0.28)))
-    const iconPx    = Math.round(slotPx * 0.62)
+    const { slotPx, iconPx } = calcSlotMetrics(playerCount, ovalW)
     const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
     const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
     const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
@@ -552,17 +550,11 @@ export class PlayerApp {
       poison: { emoji: '🦠', border: 'rgba(100,200,80,0.7)'  },
       drunk:  { emoji: '🍺', border: 'rgba(180,120,60,0.7)'  },
     }
-    const MY_TEAM_BORDER = {
-      townsfolk: 'rgba(46,74,143,0.65)', outsider: 'rgba(91,179,198,0.65)',
-      minion: 'rgba(140,40,50,0.65)',    demon: 'rgba(160,30,40,0.9)',
-    }
-
     const el = document.createElement('div')
     el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
 
-    const oval = document.createElement('div')
+    const oval = createSeatOval(`width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`)
     oval.id = 'player-seats-oval'
-    oval.style.cssText = `position:relative;width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`
 
     const buildSlot = (i) => {
       const seatNum    = i + 1
@@ -571,44 +563,29 @@ export class PlayerApp {
       const mark       = sus[seatNum] || null
       const { x, y }   = ovalSlotPos(i, playerCount, rotOffset)
       const borderColor = isOwn
-        ? (MY_TEAM_BORDER[myRole?.team] || 'var(--lead2)')
+        ? (TEAM_BORDER[myRole?.team] || 'var(--lead2)')
         : (mark && MARKS[mark] ? MARKS[mark].border : 'var(--lead2)')
 
-      const slot = document.createElement('div')
+      const slot = createSeatSlot(x, y, slotPx, {
+        borderColor,
+        borderWidth: 2,
+        borderStyle: (isOwn || (mark && MARKS[mark])) ? 'solid' : 'dashed',
+        cursor:      isOwn ? 'default' : undefined,
+        background:  isOwn ? undefined : 'var(--surface2)',
+      })
       slot.id = `pseat-${seatNum}`
-      slot.style.cssText = `
-        position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
-        width:${slotPx}px;height:${slotPx}px;
-        transform:translate(-50%,-50%);
-        border-radius:8px;display:flex;flex-direction:column;
-        align-items:center;justify-content:center;
-        cursor:${isOwn ? 'default' : 'pointer'};
-        border:2px solid ${borderColor};
-        border-style:${isOwn || (mark && MARKS[mark]) ? 'solid' : 'dashed'};
-        background:${isOwn ? 'var(--surface)' : 'var(--surface2)'};
-      `
 
-      const iconEl = document.createElement('div')
-      iconEl.style.cssText = `
-        width:${iconPx}px;height:${iconPx}px;border-radius:50%;
-        background:var(--surface2);overflow:hidden;
-        display:flex;align-items:center;justify-content:center;
-        font-size:${Math.round(iconPx * 0.58)}px;
-      `
+      // 아이콘: 내 자리=역할 아이콘, 의심 표시=이모지, 미지=?
       if (isOwn) {
-        if (myRole?.icon?.endsWith('.png')) {
-          const img = document.createElement('img')
-          img.src = `./asset/icons/${myRole.icon}`
-          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-          iconEl.appendChild(img)
-        } else { iconEl.textContent = myRole?.iconEmoji || '?' }
+        slot.appendChild(createRoleIconEl(myRole, iconPx))
       } else if (mark && MARKS[mark]) {
+        const iconEl = document.createElement('div')
+        iconEl.style.cssText = `width:${iconPx}px;height:${iconPx}px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:${Math.round(iconPx * 0.58)}px;`
         iconEl.textContent = MARKS[mark].emoji
-        iconEl.style.background = 'transparent'
+        slot.appendChild(iconEl)
       } else {
-        iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.4)}px">?</span>`
+        slot.appendChild(createRoleIconEl(null, iconPx, { fallbackEmoji: '?' }))
       }
-      slot.appendChild(iconEl)
 
       if (isOwn) {
         slot.addEventListener('click', () => this._showMyRoleModal())
@@ -619,29 +596,9 @@ export class PlayerApp {
     }
 
     for (let i = 0; i < playerCount; i++) {
-      const slot = buildSlot(i)
-      oval.appendChild(slot)
-
-      // 자리 번호 레이블 (슬롯과 중심 사이)
-      const seatNum = i + 1
-      const isOwn = seatNum === mySeat
       const { x, y } = ovalSlotPos(i, playerCount, rotOffset)
-      const labelX = 50 + (x - 50) * 0.55
-      const labelY = 50 + (y - 50) * 0.55
-      const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
-
-      const label = document.createElement('div')
-      label.style.cssText = `
-        position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;
-        transform:translate(-50%,-50%);
-        font-size:${labelFontPx}px;font-weight:700;
-        color:${isOwn ? 'var(--gold2)' : 'var(--gold2)'};
-        pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);
-        z-index:1;
-      `
-      label.textContent = seatNum
-
-      oval.appendChild(label)
+      oval.appendChild(buildSlot(i))
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, i + 1))
     }
     el.appendChild(oval)
 

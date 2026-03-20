@@ -202,17 +202,7 @@
   animation: ability-active-pulse 2.5s ease-in-out infinite;
 }
 
-/* 패시브 능력 활성화 상태 - 기본 스타일 */
-.passive-ability-active {
-  position: relative;
-  overflow: visible;
-}
-
-/* 첫날 밤 능력 활성화 - 기본 스타일 */
-.first-night-active {
-  position: relative;
-  overflow: visible;
-}
+/* .ability-active-slot / .gl-seat-slot.ability-active-slot → css/seat-slot.css */
 
 /* ═══════════════════════════════════════════════════════════
    특수 효과 (Special Effects)

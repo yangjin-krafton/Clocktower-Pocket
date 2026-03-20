@@ -19,6 +19,9 @@ import { encodeRoomCode, formatCode, copyRoomCode } from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel } from '../utils/SeatWheel.js'
+import { applySlotStateMarks } from '../utils/SlotMark.js'
+
 
 const DEFAULT_PLAYER_COUNT = 7
 
@@ -940,8 +943,7 @@ export class HostApp {
     const el = document.createElement('div')
     el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
 
-    const oval = document.createElement('div')
-    oval.style.cssText = `position:relative;width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`
+    const oval = createSeatOval(`width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`)
 
     players.forEach((player, i) => {
       const role   = ROLES_BY_ID[player.role]
@@ -952,51 +954,19 @@ export class HostApp {
       const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
       const displayRole = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : role
 
-      const slot = document.createElement('div')
-      slot.style.cssText = `
-        position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
-        width:${slotPx}px;height:${slotPx}px;
-        transform:translate(-50%,-50%);
-        border-radius:8px;display:flex;flex-direction:column;
-        align-items:center;justify-content:center;
-        cursor:pointer;border:2px solid ${TEAM_BORDER[role?.team] || 'var(--lead2)'};
-        background:var(--surface);
-        ${isDead ? 'opacity:0.38;filter:grayscale(0.65);' : ''}
-      `
-
-      const iconWrap = document.createElement('div')
-      iconWrap.style.cssText = `position:relative;width:${iconPx}px;height:${iconPx}px;`
-
-      const iconEl = document.createElement('div')
-      iconEl.style.cssText = `
-        width:${iconPx}px;height:${iconPx}px;border-radius:50%;
-        background:var(--surface2);overflow:hidden;
-        display:flex;align-items:center;justify-content:center;
-        font-size:${Math.round(iconPx * 0.58)}px;
-      `
-      if (displayRole?.icon?.endsWith('.png')) {
-        const img = document.createElement('img')
-        img.src = `./asset/icons/${displayRole.icon}`
-        img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-        iconEl.appendChild(img)
-      } else { iconEl.textContent = displayRole?.iconEmoji || role?.iconEmoji || '?' }
-      iconWrap.appendChild(iconEl)
-
-      // 주정뱅이 🍾 배지
-      if (isDrunkWithAs) {
-        const badge = document.createElement('div')
-        badge.style.cssText = `
-          position:absolute;top:-3px;right:-3px;
-          width:${Math.round(iconPx*0.38)}px;height:${Math.round(iconPx*0.38)}px;
-          border-radius:50%;background:#7c3aed;
-          display:flex;align-items:center;justify-content:center;
-          font-size:${Math.round(iconPx*0.22)}px;line-height:1;
-          border:1px solid var(--surface);z-index:2;
-        `
-        badge.textContent = '🍾'
-        iconWrap.appendChild(badge)
-      }
-      slot.appendChild(iconWrap)
+      const slot = createSeatSlot(x, y, slotPx, {
+        borderColor: TEAM_BORDER[role?.team] || 'var(--lead2)',
+        borderWidth: 2,
+        isDead,
+      })
+      slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
+      applySlotStateMarks(slot, slotPx, {
+        isPoisoned:  player.isPoisoned,
+        isDrunk:     player.isDrunk && !isDrunkWithAs,
+        isProtected: player.id === engine.monkProtect,
+        isDeadExec:  player.status === 'executed',
+        isDeadNight: player.status === 'dead',
+      })
 
       slot.addEventListener('click', () => {
         document.getElementById('host-seat-popup')?.remove()
@@ -1036,23 +1006,7 @@ export class HostApp {
 
       oval.appendChild(slot)
 
-      // 자리 번호 레이블 (슬롯과 중심 사이)
-      const labelX = 50 + (x - 50) * 0.55
-      const labelY = 50 + (y - 50) * 0.55
-      const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
-
-      const label = document.createElement('div')
-      label.style.cssText = `
-        position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;
-        transform:translate(-50%,-50%);
-        font-size:${labelFontPx}px;font-weight:700;
-        color:${isDead ? 'rgba(212,168,40,0.3)' : 'var(--gold2)'};
-        pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);
-        z-index:1;
-      `
-      label.textContent = player.id
-
-      oval.appendChild(label)
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, player.id, { dimmed: isDead }))
     })
 
     el.appendChild(oval)

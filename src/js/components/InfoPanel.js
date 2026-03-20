@@ -11,7 +11,7 @@
  * @returns {HTMLElement}
  */
 import { renderPlayerChip } from './PlayerChip.js'
-import { mountRevealPanel }  from './RevealPanel.js'
+import { mountRevealEditPanel } from './RevealEditPanel.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
 
@@ -105,7 +105,7 @@ export function mountInfoPanel(data) {
     ? () => {
         overlay.remove()
         ThemeManager.pushTemp('player')  // 참가자에게 보여주는 화면 → 참가자 테마
-        mountRevealPanel({
+        mountRevealEditPanel({
           ...data.revealData,
           onNext: () => {
             ThemeManager.popTemp()  // 호스트 테마 복원

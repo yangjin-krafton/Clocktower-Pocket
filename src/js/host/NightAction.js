@@ -3,7 +3,7 @@
  * 역할별로 InfoPanel 또는 SelectPanel을 렌더링
  */
 import { mountInfoPanel }          from '../components/InfoPanel.js'
-import { mountRevealPanel }        from '../components/RevealPanel.js'
+import { mountRevealEditPanel }    from '../components/RevealEditPanel.js'
 import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
 import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
 import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
@@ -14,6 +14,8 @@ import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
 import { ROLES_TB, ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel } from '../utils/SeatWheel.js'
+import { addSlotMark, applySlotStateMarks } from '../utils/SlotMark.js'
 
 export class NightAction {
   constructor({ engine, onStepDone }) {
@@ -92,13 +94,14 @@ export class NightAction {
       message:  `미니언: ${minionNums}\n임프: ${demonNums}`,
       players:  [...minions, ...demonPlayers],
       revealData: {
-        roleIcon: 'minion.png',
-        roleName: '미니언 공개',
-        roleTeam: 'minion',
-        message:  `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
-        players:  [...minions, ...demonPlayers].map(p => ({ id: p.id })),
-        hint:     '당신의 동료들이 공개됩니다 — 함께하는 미니언 자리번호와 임프 자리번호를 확인하세요. 낮에는 서로 모르는 척 행동해야 합니다.',
-        action:   '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
+        roleIcon:   'minion.png',
+        roleName:   '미니언 공개',
+        roleTeam:   'minion',
+        message:    `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
+        players:    [...minions, ...demonPlayers].map(p => ({ id: p.id })),
+        allPlayers: this.engine.state.players,
+        hint:       '당신의 동료들이 공개됩니다 — 함께하는 미니언 자리번호와 임프 자리번호를 확인하세요. 낮에는 서로 모르는 척 행동해야 합니다.',
+        action:     '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('minion-info'),
     }))
@@ -143,13 +146,14 @@ export class NightAction {
       message:  `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
       players:  minions,
       revealData: {
-        roleIcon: 'imp.png',
-        roleName: '임프 정보',
-        roleTeam: 'demon',
-        message:  `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
-        players:  minions.map(p => ({ id: p.id })),
-        hint:     '당신은 악 팀 임프입니다 — 미니언 자리번호와, 들키지 않고 사칭할 수 있는 선 역할 3개를 알려줍니다. 블러프 역할 중 하나인 척 행동하면 선 팀이 당신을 찾기 어렵습니다.',
-        action:   '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
+        roleIcon:   'imp.png',
+        roleName:   '임프 정보',
+        roleTeam:   'demon',
+        message:    `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
+        players:    minions.map(p => ({ id: p.id })),
+        allPlayers: this.engine.state.players,
+        hint:       '당신은 악 팀 임프입니다 — 미니언 자리번호와, 들키지 않고 사칭할 수 있는 선 역할 3개를 알려줍니다. 블러프 역할 중 하나인 척 행동하면 선 팀이 당신을 찾기 어렵습니다.',
+        action:     '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
       },
       onConfirm: () => this._done('demon-info'),
     }))
@@ -276,12 +280,13 @@ export class NightAction {
           return
         }
 
-        // InfoPanel 건너뛰고 바로 RevealPanel로
+        // InfoPanel 건너뛰고 바로 RevealEditPanel → RevealPanel로
         const finalRevealData = chosen.revealData || null
         if (finalRevealData) {
           ThemeManager.pushTemp('player')
-          this._unmount = this._trackOverlay(() => mountRevealPanel({
+          this._unmount = this._trackOverlay(() => mountRevealEditPanel({
             ...finalRevealData,
+            allPlayers: this.engine.state.players,
             onNext: () => { ThemeManager.popTemp(); this._done(roleId) },
           }))
         } else {
@@ -544,8 +549,9 @@ export class NightAction {
                 const finalRevealData = chosen.revealData || null
                 if (finalRevealData) {
                   ThemeManager.pushTemp('player')
-                  this._unmount = this._trackOverlay(() => mountRevealPanel({
+                  this._unmount = this._trackOverlay(() => mountRevealEditPanel({
                     ...finalRevealData,
+                    allPlayers: this.engine.state.players,
                     onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
                   }))
                 } else {
@@ -554,10 +560,11 @@ export class NightAction {
               },
             }))
           } else {
-            // 정상 + 은둔자/스파이 없음: 바로 RevealPanel
+            // 정상 + 은둔자/스파이 없음: RevealEditPanel → RevealPanel
             ThemeManager.pushTemp('player')
-            this._unmount = this._trackOverlay(() => mountRevealPanel({
+            this._unmount = this._trackOverlay(() => mountRevealEditPanel({
               ...buildFTReveal(accurateMsg),
+              allPlayers: this.engine.state.players,
               onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
             }))
           }
@@ -626,8 +633,9 @@ export class NightAction {
                 const finalRevealData = chosen.revealData || null
                 if (finalRevealData) {
                   ThemeManager.pushTemp('player')
-                  this._unmount = this._trackOverlay(() => mountRevealPanel({
+                  this._unmount = this._trackOverlay(() => mountRevealEditPanel({
                     ...finalRevealData,
+                    allPlayers: this.engine.state.players,
                     onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
                   }))
                 } else {
@@ -636,14 +644,34 @@ export class NightAction {
               },
             }))
           } else {
-            // 정상: 바로 RevealPanel
+            // 정상: RevealEditPanel → RevealPanel
             ThemeManager.pushTemp('player')
-            this._unmount = this._trackOverlay(() => mountRevealPanel({
+            this._unmount = this._trackOverlay(() => mountRevealEditPanel({
               ...buildRKReveal(accurateMsg),
+              allPlayers: this.engine.state.players,
               onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
             }))
           }
+        } else if (roleId === 'monk' || roleId === 'butler') {
+          // 수도사 / 집사: 선택 결과를 참가자에게 공개
+          const msgMap = {
+            monk:   '오늘 밤 이 자리를 보호합니다',
+            butler: '오늘 밤 이 자리가 당신의 주인입니다',
+          }
+          ThemeManager.pushTemp('player')
+          this._unmount = this._trackOverlay(() => mountRevealEditPanel({
+            roleIcon:    role?.icon || '?',
+            roleName:    role?.name || roleId,
+            roleTeam:    role?.team || null,
+            roleAbility: role?.ability || '',
+            message:     msgMap[roleId],
+            players:     ids.map(id => ({ id })),
+            allPlayers:  this.engine.state.players,
+            action:      '확인했으면 눈을 감고 손을 내려주세요.',
+            onNext:      () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+          }))
         } else {
+          // poisoner / imp: 공개 없음
           this._done(roleId, ids)
         }
       }
@@ -654,11 +682,6 @@ export class NightAction {
   _showCustomPlayerPick(roleId, role, onDone) {
     const maxPick = roleId === 'undertaker' ? 1 : 2
     const allPlayers = this.engine.state.players
-
-    const TEAM_BORDER = {
-      townsfolk: 'rgba(46,74,143,0.65)', outsider: 'rgba(91,179,198,0.65)',
-      minion: 'rgba(140,40,50,0.65)', demon: 'rgba(160,30,40,0.9)',
-    }
 
     let selectedIds = []
 
@@ -696,8 +719,7 @@ export class NightAction {
 
     const ovalWrap = document.createElement('div')
     ovalWrap.style.cssText = 'display:flex;justify-content:center;padding:4px 0;'
-    const oval = document.createElement('div')
-    oval.className = 'gl-seat-oval'
+    const oval = createSeatOval()
 
     const buildOvalSlots = () => {
       oval.innerHTML = ''
@@ -709,42 +731,23 @@ export class NightAction {
         const isDead = p.status !== 'alive'
         const isSelected = selectedIds.includes(p.id)
 
-        const slot = document.createElement('div')
-        slot.style.cssText = `
-          position:absolute;left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;
-          width:${slotPx}px;height:${slotPx}px;
-          transform:translate(-50%,-50%);border-radius:8px;
-          display:flex;align-items:center;justify-content:center;
-          cursor:${isDead ? 'default' : 'pointer'};
-          border:3px solid ${isSelected ? 'var(--gold2)' : (TEAM_BORDER[pRole?.team] || 'var(--lead2)')};
-          background:${isSelected ? 'rgba(212,168,40,0.12)' : 'var(--surface)'};
-          ${isSelected ? 'box-shadow:0 0 10px rgba(212,168,40,0.4);' : ''}
-          ${isDead ? 'opacity:0.3;filter:grayscale(0.6);' : ''}
-        `
+        const slot = createSeatSlot(x, y, slotPx, {
+          borderColor: isSelected ? 'var(--gold2)' : (TEAM_BORDER[pRole?.team] || 'var(--lead2)'),
+          borderWidth: 3,
+          isDead,
+          cursor:      isDead ? 'default' : undefined,
+          background:  isSelected ? 'rgba(212,168,40,0.12)' : undefined,
+          boxShadow:   isSelected ? '0 0 10px rgba(212,168,40,0.4)' : undefined,
+        })
 
-        // 아이콘
-        const iconEl = document.createElement('div')
-        iconEl.style.cssText = `
-          width:${iconPx}px;height:${iconPx}px;border-radius:50%;
-          background:var(--surface2);overflow:hidden;
-          display:flex;align-items:center;justify-content:center;
-          font-size:${Math.round(iconPx*0.58)}px;pointer-events:none;
-        `
-        if (displayRole?.icon?.endsWith('.png')) {
-          const img = document.createElement('img')
-          img.src = `./asset/icons/${displayRole.icon}`
-          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-          iconEl.appendChild(img)
-        } else { iconEl.textContent = displayRole?.iconEmoji || pRole?.iconEmoji || '?' }
-        slot.appendChild(iconEl)
+        slot.appendChild(createRoleIconEl(displayRole ?? pRole, iconPx))
 
-        // 선택 체크
-        if (isSelected) {
-          const check = document.createElement('div')
-          check.style.cssText = `position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:700;`
-          check.textContent = '✓'
-          slot.appendChild(check)
-        }
+        applySlotStateMarks(slot, slotPx, {
+          isPoisoned:  p.isPoisoned,
+          isDrunk:     p.isDrunk && !isDrunkAs,
+          isProtected: p.id === this.engine.monkProtect,
+        })
+        if (isSelected) addSlotMark(slot, slotPx, 'check')
 
         if (!isDead) {
           slot.addEventListener('click', () => {
@@ -762,14 +765,7 @@ export class NightAction {
           })
         }
         oval.appendChild(slot)
-
-        // 자리 번호
-        const labelX = 50 + (x - 50) * 0.55
-        const labelY = 50 + (y - 50) * 0.55
-        const label = document.createElement('div')
-        label.style.cssText = `position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;transform:translate(-50%,-50%);font-size:${Math.max(16,Math.round(slotPx*0.45))}px;font-weight:700;color:${isSelected ? 'var(--gold2)' : (isDead ? 'rgba(212,168,40,0.3)' : 'var(--gold2)')};pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);z-index:1;`
-        label.textContent = p.id
-        oval.appendChild(label)
+        oval.appendChild(createSeatNumLabel(x, y, slotPx, p.id, { dimmed: isDead }))
       })
     }
     buildOvalSlots()
@@ -785,13 +781,14 @@ export class NightAction {
     confirmBtn.addEventListener('click', () => {
       overlay.remove()
       ThemeManager.pushTemp('player')
-      this._unmount = this._trackOverlay(() => mountRevealPanel({
+      this._unmount = this._trackOverlay(() => mountRevealEditPanel({
         roleIcon:    role?.icon || '?',
         roleName:    role?.name || roleId,
         roleTeam:    role?.team || null,
         roleAbility: role?.ability || '',
         message:     '호스트가 정보를 전달합니다.',
         players:     selectedIds.map(id => ({ id })),
+        allPlayers:  allPlayers,
         hint:        '당신 능력이 발동됐습니다 — 이야기꾼이 알려주는 정보를 확인하세요.',
         action:      '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
         onNext:      () => { ThemeManager.popTemp(); onDone() },

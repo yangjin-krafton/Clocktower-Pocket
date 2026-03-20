@@ -14,7 +14,8 @@ import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode, copyRoomCode } from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
-import { addBaronOutsiderGuide } from '../components/BaronOutsiderGuide.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel, createRoleNameLabel } from '../utils/SeatWheel.js'
+import { addBaronOutsiderGuide } from '../utils/SlotMark.js'
 
 // 패시브 능력을 가진 역할 (게임 시작 시 자동 발동)
 const PASSIVE_ABILITY_ROLES = ['baron', 'drunk', 'recluse', 'saint']
@@ -247,18 +248,10 @@ export class Grimoire {
     const wrap = document.createElement('div')
     wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;padding:4px 0 2px;width:100%;'
 
-    const oval = document.createElement('div')
-    oval.className = 'gl-seat-oval'
+    const oval = createSeatOval()
 
     // 뷰포트 높이 기준으로 타원 크기 계산 (슬롯 크기 계산용)
     const { ovalW, slotPx, iconPx } = calcOvalLayout(total, 360, true)
-
-    const TEAM_BORDER = {
-      townsfolk: 'rgba(46,74,143,0.65)',
-      outsider:  'rgba(91,179,198,0.65)',
-      minion:    'rgba(140,40,50,0.65)',
-      demon:     'rgba(160,30,40,0.9)',
-    }
 
     // Baron이 있는지 확인하고 아웃사이더 수 계산
     const hasBaron = seats.includes('baron')
@@ -288,88 +281,28 @@ export class Grimoire {
         ? 'var(--gold2)'
         : (role ? (TEAM_BORDER[role.team] || 'var(--lead2)') : 'var(--lead2)')
 
-      const slot = document.createElement('div')
-      slot.className = 'gl-seat-slot'
-        + (isSelected ? ' gl-seat-slot--selected' : '')
-        + (isAssigned ? ' gl-seat-slot--assigned' : ' gl-seat-slot--empty')
-        + (hasPassiveAbility ? ' passive-ability-active' : '')
-        + (hasFirstNightAbility && !hasPassiveAbility ? ' first-night-active' : '')
-        + (team && (hasPassiveAbility || hasFirstNightAbility) ? ` ability-team-${team}` : '')
-      slot.style.cssText = `
-        left:${x.toFixed(2)}%;
-        top:${y.toFixed(2)}%;
-        width:${slotPx}px;
-        height:${slotPx}px;
-        border-color:${borderColor};
-        ${isSelected ? 'box-shadow:0 0 0 2px rgba(212,168,40,0.35),0 0 12px rgba(212,168,40,0.4);background:rgba(212,168,40,0.08);' : ''}
-      `
+      const abilityClasses = []
+      if (hasPassiveAbility || hasFirstNightAbility) abilityClasses.push('ability-active-slot')
+      if (team && (hasPassiveAbility || hasFirstNightAbility)) abilityClasses.push(`ability-team-${team}`)
 
-      // 아이콘 (원형 영역) — 주정뱅이는 drunkAs 역할 아이콘 + 🍾 배지
+      const slot = createSeatSlot(x, y, slotPx, {
+        borderColor,
+        isSelected,
+        isAssigned,
+        selectedHighlight: isSelected,
+        extraClasses: abilityClasses,
+      })
+
+      // 아이콘 — 주정뱅이는 drunkAs 역할 아이콘 + 배지
       const isDrunkWithAs = roleId === 'drunk' && drunkAsRoleId
       const displayRole = isDrunkWithAs ? ROLES_BY_ID[drunkAsRoleId] : role
+      slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, {
+        drunkBadge: isDrunkWithAs,
+        warnBadge:  roleId === 'drunk' && !drunkAsRoleId,
+      }))
 
-      const iconWrap = document.createElement('div')
-      iconWrap.style.cssText = `position:relative;width:${iconPx}px;height:${iconPx}px;flex-shrink:0;pointer-events:none;`
-
-      const iconEl = document.createElement('div')
-      iconEl.style.cssText = `
-        width:${iconPx}px;height:${iconPx}px;
-        border-radius:50%;background:var(--surface2);
-        display:flex;align-items:center;justify-content:center;
-        font-size:${Math.round(iconPx * 0.58)}px;
-        overflow:hidden;flex-shrink:0;
-      `
-      if (displayRole?.icon?.endsWith('.png')) {
-        const img = document.createElement('img')
-        img.src = `./asset/icons/${displayRole.icon}`
-        img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-        iconEl.appendChild(img)
-      } else if (displayRole) {
-        iconEl.textContent = displayRole.iconEmoji || '?'
-      } else if (role) {
-        if (role.icon?.endsWith('.png')) {
-          const img = document.createElement('img')
-          img.src = `./asset/icons/${role.icon}`
-          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-          iconEl.appendChild(img)
-        } else {
-          iconEl.textContent = role.iconEmoji || '?'
-        }
-      } else {
-        iconEl.innerHTML = `<span style="color:var(--text4);font-size:${Math.round(iconPx*0.5)}px">+</span>`
-      }
-      iconWrap.appendChild(iconEl)
-
-      // 주정뱅이 배지 표시
-      if (isDrunkWithAs) {
-        const badge = document.createElement('div')
-        badge.style.cssText = `
-          position:absolute;top:-4px;right:-4px;
-          width:${Math.round(iconPx*0.4)}px;height:${Math.round(iconPx*0.4)}px;
-          border-radius:50%;background:#7c3aed;
-          display:flex;align-items:center;justify-content:center;
-          font-size:${Math.round(iconPx*0.24)}px;line-height:1;
-          border:1px solid var(--surface);z-index:2;
-        `
-        badge.textContent = '🍾'
-        iconWrap.appendChild(badge)
-      } else if (roleId === 'drunk' && !drunkAsRoleId) {
-        // drunkAs 미선택 → 경고 배지
-        const warnBadge = document.createElement('div')
-        warnBadge.style.cssText = `
-          position:absolute;top:-4px;right:-4px;
-          width:${Math.round(iconPx*0.4)}px;height:${Math.round(iconPx*0.4)}px;
-          border-radius:50%;background:var(--rd-light);
-          display:flex;align-items:center;justify-content:center;
-          font-size:${Math.round(iconPx*0.22)}px;line-height:1;
-          border:1px solid var(--surface);z-index:2;
-          animation:drunk-pulse 1.5s infinite;
-        `
-        warnBadge.textContent = '❗'
-        iconWrap.appendChild(warnBadge)
-      }
-
-      slot.appendChild(iconWrap)
+      // 역할 이름 레이블
+      if (role) slot.appendChild(createRoleNameLabel(role, slotPx))
 
       slot.addEventListener('click', () => {
         this._selectedSeat = (this._selectedSeat === i) ? null : i
@@ -384,23 +317,7 @@ export class Grimoire {
         })
       }
 
-      // 자리 번호 레이블 (슬롯과 중심 사이)
-      const labelX = 50 + (x - 50) * 0.55
-      const labelY = 50 + (y - 50) * 0.55
-      const labelFontPx = Math.max(20, Math.round(slotPx * 0.55))
-
-      const label = document.createElement('div')
-      label.style.cssText = `
-        position:absolute;left:${labelX.toFixed(2)}%;top:${labelY.toFixed(2)}%;
-        transform:translate(-50%,-50%);
-        font-size:${labelFontPx}px;font-weight:700;
-        color:${roleId ? 'var(--gold2)' : 'rgba(212,168,40,0.3)'};
-        pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);
-        z-index:1;
-      `
-      label.textContent = i + 1
-
-      oval.appendChild(label)
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, i + 1, { dimmed: !roleId }))
     })
 
     // ── 타원 중앙 조작 UI ────────────────────────────────────
@@ -891,84 +808,7 @@ if (!document.getElementById('grimoire-lobby-style')) {
   filter: grayscale(0.6);
 }
 
-/* ── 타원형 링 컨테이너 (세로형 portrait) ── */
-/* width를 뷰포트 높이 기반으로 제한 → height(=width×1.5)가 화면을 넘지 않도록 */
-.gl-seat-oval {
-  position: relative;
-  width: min(100%, calc((100svh - 360px) * 2 / 3));
-  aspect-ratio: 2 / 3;
-  overflow: visible;
-  margin: 0 auto;
-}
-
-/* ── 자리 슬롯 (링 내 절대 위치) ── */
-.gl-seat-slot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: 6px solid var(--lead2);
-  background: var(--surface);
-  transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s;
-  overflow: visible;
-  -webkit-tap-highlight-color: transparent;
-}
-.gl-seat-slot--empty {
-  border-style: dashed;
-  background: var(--surface2);
-}
-.gl-seat-slot--assigned {
-  border-style: solid;
-  /* 기본 글로우 효과 - 역할이 배정되었을 때 */
-  box-shadow:
-    0 0 8px rgba(212, 168, 40, 0.2),
-    0 0 16px rgba(212, 168, 40, 0.1);
-}
-/* 호버 시 글로우 강화 */
-.gl-seat-slot--assigned:hover {
-  box-shadow:
-    0 0 12px rgba(212, 168, 40, 0.35),
-    0 0 24px rgba(212, 168, 40, 0.18);
-}
-.gl-seat-slot--selected {
-  transform: translate(-50%, -50%) scale(1.18) !important;
-  /* 선택 시 강한 글로우 + 아웃라인 */
-  box-shadow:
-    0 0 0 2px rgba(212, 168, 40, 0.4),
-    0 0 16px rgba(212, 168, 40, 0.5),
-    0 0 32px rgba(212, 168, 40, 0.25);
-  background: rgba(212, 168, 40, 0.08);
-}
-.gl-seat-slot:active {
-  transform: translate(-50%, -50%) scale(0.88) !important;
-}
-
-/* ── 자리 번호 배지 — 슬롯 상단 중앙, 크고 선명하게 ── */
-.gl-seat-num {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 18px;
-  height: 17px;
-  padding: 0 4px;
-  border-radius: 9px;
-  background: rgba(10, 9, 22, 0.72);
-  border: 1px solid rgba(212,168,40,0.5);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--gold2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  pointer-events: none;
-  z-index: 2;
-  letter-spacing: 0.01em;
-}
+/* .gl-seat-oval / .gl-seat-slot / .gl-seat-num → css/seat-slot.css */
 
 .gl-role-panel {
   margin-top: 4px;

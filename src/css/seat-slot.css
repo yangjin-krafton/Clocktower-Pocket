@@ -1,0 +1,95 @@
+/* ═══════════════════════════════════════════════════════════
+   seat-slot.css — 자리 슬롯 공통 스타일
+   Grimoire 로비, 게임 자리 UI 등 어디서나 재사용
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 타원형 링 컨테이너 ── */
+.gl-seat-oval {
+  position: relative;
+  width: min(100%, calc((100svh - 360px) * 2 / 3));
+  aspect-ratio: 2 / 3;
+  overflow: visible;
+  margin: 0 auto;
+}
+
+/* ── 자리 슬롯 기본 ── */
+.gl-seat-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 6px solid var(--lead2);
+  background: var(--surface);
+  transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 슬롯 상태 변형 ── */
+.gl-seat-slot--empty {
+  border-style: dashed;
+  background: var(--surface2);
+}
+.gl-seat-slot--assigned {
+  border-style: solid;
+  box-shadow:
+    0 0 8px rgba(212, 168, 40, 0.2),
+    0 0 16px rgba(212, 168, 40, 0.1);
+}
+.gl-seat-slot--assigned:hover {
+  box-shadow:
+    0 0 12px rgba(212, 168, 40, 0.35),
+    0 0 24px rgba(212, 168, 40, 0.18);
+}
+.gl-seat-slot--selected {
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 40, 0.4),
+    0 0 16px rgba(212, 168, 40, 0.5),
+    0 0 32px rgba(212, 168, 40, 0.25);
+  background: rgba(212, 168, 40, 0.08);
+}
+.gl-seat-slot:active {
+  transform: translate(-50%, -50%) scale(0.88) !important;
+}
+
+/* ── 자리 번호 배지 ── */
+.gl-seat-num {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 18px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: rgba(10, 9, 22, 0.72);
+  border: 1px solid rgba(212, 168, 40, 0.5);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--gold2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+  letter-spacing: 0.01em;
+}
+
+/* ── 능력 활성화 슬롯 (passive / first-night 공통) ── */
+.ability-active-slot {
+  position: relative;
+  overflow: visible;
+}
+.gl-seat-slot.ability-active-slot {
+  border-width: 2px;
+}
+
+/* ── 팀별 테두리 색상 ── */
+.gl-seat-slot.ability-team-townsfolk { border-color: rgba(46, 74, 143, 0.65); }
+.gl-seat-slot.ability-team-outsider  { border-color: rgba(91, 179, 198, 0.65); }
+.gl-seat-slot.ability-team-minion    { border-color: rgba(140, 40, 50, 0.65); }
+.gl-seat-slot.ability-team-demon     { border-color: rgba(160, 30, 40, 0.9); }

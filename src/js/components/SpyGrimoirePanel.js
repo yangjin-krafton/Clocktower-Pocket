@@ -13,11 +13,11 @@
  *   mountSpyGrimoirePanel({ players, engine, onNext })
  */
 import { ROLES_BY_ID } from '../data/roles-tb.js'
-import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
+import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 import {
   TEAM_BORDER,
   createSeatOval, createSeatSlot,
-  createRoleIconEl, createRoleNameLabel, createSeatNumLabel,
+  createRoleIconEl, createRoleNameLabel,
 } from '../utils/SeatWheel.js'
 import { applySlotStateMarks } from '../utils/SlotMark.js'
 
@@ -34,7 +34,7 @@ function shuffle(arr) {
 // ────────────────────────────────────────────────────────
 // 통합 스파이 그리모어 패널 (호스트 미리보기 + 설정)
 // ────────────────────────────────────────────────────────
-export function mountSpyGrimoirePanel({ players, engine, onReveal, onNext }) {
+export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, onNext }) {
   const total = players.length
 
   // ── 상태 ──
@@ -55,6 +55,14 @@ export function mountSpyGrimoirePanel({ players, engine, onReveal, onNext }) {
   topLabel.className = 'spy-grim__label'
   topLabel.textContent = '🔒 호스트 전용 · 미리보기'
   panel.appendChild(topLabel)
+
+  // 중독 / 취함 경고 배너
+  if (hostWarning) {
+    const warn = document.createElement('div')
+    warn.className = 'oval-sel__host-warn'
+    warn.textContent = hostWarning
+    panel.appendChild(warn)
+  }
 
   // 오발 래퍼
   const wrap = document.createElement('div')
@@ -202,7 +210,12 @@ export function mountSpyGrimoirePanel({ players, engine, onReveal, onNext }) {
       }
 
       oval.appendChild(slotEl)
-      if (showNums && slot.revealed) oval.appendChild(createSeatNumLabel(x, y, slotPx, slot.id))
+    })
+
+    // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시 / 미공개 슬롯 흐리게)
+    drawOvalPieNumbers(oval, total, {
+      outerR: 116, showNumbers: false,
+      slices: slots.map(slot => slot.revealed ? {} : { opacity: 0.2 }),
     })
   }
 

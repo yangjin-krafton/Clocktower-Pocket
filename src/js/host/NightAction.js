@@ -7,7 +7,6 @@ import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
 import { loadNightMessages, getTemplate, fillTemplate } from '../data/NightMessages.js'
 import { mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
 import { mountBluffSelectPanel }    from '../components/BluffSelectPanel.js'
-import { mountDemonBluffPanel }     from '../components/DemonBluffPanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
 import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
@@ -77,6 +76,15 @@ export class NightAction {
   // 번호 포맷 헬퍼
   _toNum(p) { return `${p.id}번` }
 
+  // 중독 / 취함 경고 (호스트 전용 패널용)
+  _hostWarning(actor) {
+    const p = actor?.isPoisoned, d = actor?.isDrunk
+    if (p && d) return '☠ 중독 + 🍾 취함 — 능력 무효화'
+    if (p)      return '☠ 중독됨 — 능력이 무효화됩니다'
+    if (d)      return '🍾 취함 — 능력이 무효화됩니다'
+    return null
+  }
+
   // ── 미니언 공개 ──
   _showMinionInfo(minions) {
     if (!minions || minions.length === 0) { this._done('minion-info'); return }
@@ -105,7 +113,7 @@ export class NightAction {
 
     // 이미 블러프가 선택돼 있으면 선택 단계 스킵 (재진입 방어)
     if (this.engine.getBluffs().length === 3) {
-      this._showDemonInfoPanel(demons)
+      this._showDemonInfoPanel()
       return
     }
 
@@ -119,12 +127,12 @@ export class NightAction {
       drunkAsRoleId,
       onConfirm: (selectedBluffs) => {
         this.engine.setBluffs(selectedBluffs)
-        this._showDemonInfoPanel(demons)
+        this._showDemonInfoPanel()
       },
     }))
   }
 
-  _showDemonInfoPanel(demons) {
+  _showDemonInfoPanel() {
     const minions = this.engine.state.players.filter(p =>
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
@@ -154,11 +162,13 @@ export class NightAction {
     if (!spies || spies.length === 0) { this._done('spy'); return }
     const allPlayers = this.engine.state.players
 
+    const spyActor = spies[0]
     this._unmount = this._trackOverlay(() => mountSpyGrimoirePanel({
-      players:  allPlayers,
-      engine:   this.engine,
-      onReveal: () => ThemeManager.pushTemp('player'),
-      onNext:   () => { ThemeManager.popTemp(); this._done('spy') },
+      players:     allPlayers,
+      engine:      this.engine,
+      hostWarning: this._hostWarning(spyActor),
+      onReveal:    () => ThemeManager.pushTemp('player'),
+      onNext:      () => { ThemeManager.popTemp(); this._done('spy') },
     }))
   }
 
@@ -174,7 +184,10 @@ export class NightAction {
     }
 
     const role = ROLES_BY_ID[roleId]
-    const realAccurate = this._calcAccurateValue(roleId, actor)
+    const affected    = actor.isPoisoned || actor.isDrunk
+    const realAccurate = affected
+      ? this._calcFalseValue(roleId)
+      : this._calcAccurateValue(roleId, actor)
     this.engine.recordNightAction(roleId, actor.id, [], String(realAccurate))
 
     ThemeManager.pushTemp('player')
@@ -201,8 +214,13 @@ export class NightAction {
       players:     alivePlayers,
       selfSeatId:  actor.id,
       maxSelect:   2,
+      hostWarning: this._hostWarning(actor),
+      engine:      this.engine,
       onConfirm: (ids) => {
-        const value = this._calcValueFromSelectedSeats(roleId, ids)
+        const affected = actor.isPoisoned || actor.isDrunk
+        const value = affected
+          ? this._calcFalseValue(roleId, ids)
+          : this._calcValueFromSelectedSeats(roleId, ids)
         this.engine.recordNightAction(roleId, actor.id, ids, String(value))
 
         // NightRevealNote 직전에 플레이어 테마 전환
@@ -347,6 +365,8 @@ export class NightAction {
       players:     selectablePlayers,
       selfSeatId:  actor.id,
       maxSelect:   role?.maxSelect || 1,
+      hostWarning: this._hostWarning(actor),
+      engine:      this.engine,
       onConfirm: (ids) => {
         this.engine.recordNightAction(roleId, actor.id, ids)
 
@@ -373,7 +393,10 @@ export class NightAction {
     switch (roleId) {
       case 'fortuneteller': {
         if (ids.length !== 2) return null
-        const result = this.engine.calcFortuneTellerInfo(actor.id, ids)
+        const affected = actor.isPoisoned || actor.isDrunk
+        const result = affected
+          ? Math.random() < 0.5
+          : this.engine.calcFortuneTellerInfo(actor.id, ids)
         const key = result ? 'fortuneteller-yes' : 'fortuneteller-no'
         const tmpl = getTemplate(key)
         if (tmpl) return tmpl
@@ -395,8 +418,13 @@ export class NightAction {
       }
       case 'ravenkeeper': {
         if (!ids[0]) return null
+        const affected = actor.isPoisoned || actor.isDrunk
         const target = this.engine.getPlayer(ids[0])
-        const displayRoleId = (target?.role === 'drunk' && target?.drunkAs) ? target.drunkAs : target?.role
+        const trueRoleId = (target?.role === 'drunk' && target?.drunkAs) ? target.drunkAs : target?.role
+        const allRoleIds = Object.keys(ROLES_BY_ID)
+        const displayRoleId = affected
+          ? allRoleIds[Math.floor(Math.random() * allRoleIds.length)]
+          : trueRoleId
         const displayRole = ROLES_BY_ID[displayRoleId]
         const tmpl = getTemplate('ravenkeeper')
         return tmpl
@@ -404,6 +432,25 @@ export class NightAction {
           : `${ids[0]}번의 역할은 ${displayRole?.name || displayRoleId || '?'}입니다.\n\n확인했으면 눈을 감으세요.`
       }
       default: return null  // poisoner, imp 등 — 공개 불필요
+    }
+  }
+
+  /** 중독/취함 상태 오정보 값 생성 */
+  _calcFalseValue(roleId, selectedIds = []) {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)]
+    const sel  = selectedIds.map(id => this.engine.getPlayer(id)).filter(Boolean)
+    switch (roleId) {
+      case 'empath':     return Math.floor(Math.random() * 3)
+      case 'chef':       return Math.floor(Math.random() * 4)
+      case 'undertaker': return { roleId: pick(Object.keys(ROLES_BY_ID)) }
+      case 'washerwoman':
+        return { roleId: pick(['washerwoman','librarian','investigator','chef','empath',
+          'fortuneteller','undertaker','monk','ravenkeeper','virgin','slayer','soldier','mayor']), players: sel }
+      case 'librarian':
+        return { roleId: pick(['butler','drunk','recluse','saint']), players: sel }
+      case 'investigator':
+        return { roleId: pick(['poisoner','spy','scarletwoman','baron']), players: sel }
+      default: return null
     }
   }
 

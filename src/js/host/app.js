@@ -19,8 +19,7 @@ import { encodeRoomCode, formatCode, copyRoomCode } from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
-import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel, createRoleNameLabel } from '../utils/SeatWheel.js'
-import { applySlotStateMarks } from '../utils/SlotMark.js'
+import { createSeatOval, createSeatNumLabel, buildOvalSlots } from '../utils/SeatWheel.js'
 
 
 const DEFAULT_PLAYER_COUNT = 7
@@ -214,6 +213,10 @@ export class HostApp {
     } else {
       this.nightAction?.hideOverlay()
     }
+
+    // hbar: 그리모아 탭에서만 표시
+    if (tabId === 'role') this._historyBar.show()
+    else this._historyBar.hide()
 
     this._clearScreen()
 
@@ -933,53 +936,26 @@ export class HostApp {
     const { ovalW, ovalH, rawH, slotPx, iconPx } = calcOvalLayout(total, 106)
     const contentH = rawH - 80   // el min-height 용 (subheader 제외)
 
-    const TEAM_BORDER = {
-      townsfolk: 'rgba(46,74,143,0.65)',
-      outsider:  'rgba(91,179,198,0.65)',
-      minion:    'rgba(140,40,50,0.65)',
-      demon:     'rgba(160,30,40,0.9)',
-    }
-
     const el = document.createElement('div')
     el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
 
     const oval = createSeatOval(`width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`)
 
-    players.forEach((player, i) => {
-      const role   = ROLES_BY_ID[player.role]
-      const { x, y } = ovalSlotPos(i, total)
-      const isDead = player.status !== 'alive'
-
-      // 주정뱅이: drunkAs 역할 아이콘으로 표시
-      const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
-      const displayRole = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : role
-
-      const slot = createSeatSlot(x, y, slotPx, {
-        borderColor: TEAM_BORDER[role?.team] || 'var(--lead2)',
-        borderWidth: 2,
-        isDead,
-      })
-      slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
-      if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
-      applySlotStateMarks(slot, slotPx, {
-        isPoisoned:     player.isPoisoned,
-        isDrunk:        player.isDrunk && !isDrunkWithAs,
-        isProtected:    player.id === engine.monkProtect,
-        isDeadExec:     player.status === 'executed',
-        isDeadNight:    player.status === 'dead',
-        butlerMasterId: engine.butlerMasters[player.id] ?? null,
-      })
-
-      slot.addEventListener('click', () => {
+    buildOvalSlots(oval, players, slotPx, iconPx, {
+      engine,
+      onSlotClick: (player) => {
         document.getElementById('host-seat-popup')?.remove()
+        const role          = ROLES_BY_ID[player.role]
+        const isDead        = player.status !== 'alive'
+        const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
+        const drunkAsRole   = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : null
+        const teamLabel     = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
         const ov = document.createElement('div')
         ov.className = 'popup-overlay'
         ov.id = 'host-seat-popup'
         const box = document.createElement('div')
         box.className = 'popup-box'
         box.style.padding = '16px'
-        const teamLabel = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
-        const drunkAsRole = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : null
         box.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <div style="font-size:2rem;">${isDrunkWithAs ? (drunkAsRole?.iconEmoji || '?') : (role?.iconEmoji || '?')}</div>
@@ -1004,11 +980,13 @@ export class HostApp {
         ov.appendChild(box)
         ov.addEventListener('click', e => { if (e.target === ov) ov.remove() })
         document.body.appendChild(ov)
-      })
+      },
+    })
 
-      oval.appendChild(slot)
-
-      oval.appendChild(createSeatNumLabel(x, y, slotPx, player.id, { dimmed: isDead }))
+    // 자리 번호 레이블
+    players.forEach((player, i) => {
+      const { x, y } = ovalSlotPos(i, total)
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, player.id, { dimmed: player.status !== 'alive' }))
     })
 
     el.appendChild(oval)

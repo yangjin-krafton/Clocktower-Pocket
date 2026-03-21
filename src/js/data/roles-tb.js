@@ -12,7 +12,7 @@ export const ROLES_TB = [
   },
   {
     id: 'librarian', name: '사서', team: 'townsfolk',
-    ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 아웃사이더임을 안다. (아웃사이더가 없으면 그렇다고 안다)',
+    ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 아웃사이더임을 안다.',
     firstNight: true, otherNights: false, icon: 'librarian.png', iconEmoji: '📚',
     nightType: 'info'
   },

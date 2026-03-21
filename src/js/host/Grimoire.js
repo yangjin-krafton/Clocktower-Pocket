@@ -13,8 +13,8 @@ import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
 import { formatCode, copyRoomCode } from '../room-code.js'
-import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
-import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel, createRoleNameLabel } from '../utils/SeatWheel.js'
+import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createRoleNameLabel } from '../utils/SeatWheel.js'
 import { applySetupSlotMarks } from '../utils/SlotMark.js'
 
 // 패시브 능력을 가진 역할 (게임 시작 시 자동 발동)
@@ -332,8 +332,12 @@ export class Grimoire {
         this._render()
       })
       oval.appendChild(slot)
+    })
 
-      oval.appendChild(createSeatNumLabel(x, y, slotPx, i + 1, { dimmed: !roleId }))
+    // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시 / 미배정 자리 흐리게)
+    drawOvalPieNumbers(oval, total, {
+      outerR: 116, showNumbers: false,
+      slices: seats.map(roleId => roleId ? {} : { opacity: 0.25 }),
     })
 
     // ── 타원 중앙 조작 UI ────────────────────────────────────

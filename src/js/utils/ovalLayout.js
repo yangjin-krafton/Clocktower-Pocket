@@ -109,7 +109,7 @@ export function ovalSelfRotOffset(selfSeatId, total) {
  * @returns {SVGSVGElement}  생성된 SVG 요소
  */
 export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
-  const { rotOffset = -Math.PI / 2, innerR = 8, outerR = 30, slices = [] } = opts
+  const { rotOffset = -Math.PI / 2, innerR = 8, outerR = 30, slices = [], showNumbers = true } = opts
 
   // 파이 기하
   const cx        = 50
@@ -130,6 +130,37 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
   svg.setAttribute('width',              '100%')
   svg.setAttribute('height',             '100%')
   svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;overflow:visible;'
+
+  // ── 골드 / 퍼플 교차 방사형 그라디언트 정의 ──
+  const uid  = Math.random().toString(36).slice(2, 7)
+  const GRADS = [
+    { id: `pg-gold-${uid}`,   peak: 'rgba(212,168,40,0.22)',  edge: 'rgba(212,168,40,0.05)' },
+    { id: `pg-purple-${uid}`, peak: 'rgba(130,80,200,0.20)',  edge: 'rgba(130,80,200,0.05)' },
+  ]
+
+  const defs = document.createElementNS(NS, 'defs')
+  GRADS.forEach(({ id, peak, edge }) => {
+    const grad = document.createElementNS(NS, 'radialGradient')
+    grad.setAttribute('id',             id)
+    grad.setAttribute('cx',             String(cx))
+    grad.setAttribute('cy',             String(cy))
+    grad.setAttribute('r',              String(outerR))
+    grad.setAttribute('gradientUnits',  'userSpaceOnUse')
+
+    // 안쪽(innerR) → 투명, 슬롯 위치(~35%) → 피크, 외곽(100%) → 소멸
+    ;[
+      [(innerR / outerR).toFixed(3), 'rgba(0,0,0,0)'],
+      ['0.35',                        peak            ],
+      ['1.0',                         edge            ],
+    ].forEach(([offset, color]) => {
+      const s = document.createElementNS(NS, 'stop')
+      s.setAttribute('offset',     offset)
+      s.setAttribute('stop-color', color)
+      grad.appendChild(s)
+    })
+    defs.appendChild(grad)
+  })
+  svg.appendChild(defs)
 
   for (let i = 0; i < total; i++) {
     const mid = (2 * Math.PI * i) / total + rotOffset
@@ -153,38 +184,33 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
       'Z',
     ].join(' '))
 
-    // 생동감 있는 색상: 홀/짝 슬라이스마다 약간 다른 톤 적용
-    const baseOpacity = sd.opacity != null ? sd.opacity : 1
-    const fillColor = sd.fill || (i % 2 === 0
-      ? 'rgba(212, 168, 40, 0.12)'   // 짝수: 밝은 금색
-      : 'rgba(212, 168, 40, 0.08)')  // 홀수: 약간 어두운 금색
-
-    path.setAttribute('fill',         fillColor)
-    path.setAttribute('stroke',       sd.stroke || 'rgba(212, 168, 40, 0.25)')
-    path.setAttribute('stroke-width', '0.5')
-    if (sd.opacity != null) path.setAttribute('opacity', sd.opacity)
+    // 짝수 → 골드 그라디언트 / 홀수 → 퍼플 그라디언트
+    path.setAttribute('fill',   sd.fill || `url(#${GRADS[i % 2].id})`)
+    path.setAttribute('stroke', 'none')
     svg.appendChild(path)
 
-    // 자리번호 텍스트
-    // scale(1, 0.667) 로 2:3 종장(縱長) 왜곡을 보정 — 텍스트가 정방형으로 보임
-    const tx = cx + textR * Math.cos(mid)
-    const ty = cy + textR * Math.sin(mid)
-    const g  = document.createElementNS(NS, 'g')
-    g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) scale(1,0.667)`)
+    if (showNumbers) {
+      // 자리번호 텍스트
+      // scale(1, 0.667) 로 2:3 종장(縱長) 왜곡을 보정 — 텍스트가 정방형으로 보임
+      const tx = cx + textR * Math.cos(mid)
+      const ty = cy + textR * Math.sin(mid)
+      const g  = document.createElementNS(NS, 'g')
+      g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) scale(1,0.667)`)
 
-    const text = document.createElementNS(NS, 'text')
-    text.setAttribute('x',                '0')
-    text.setAttribute('y',                '0')
-    text.setAttribute('text-anchor',      'middle')
-    text.setAttribute('dominant-baseline','middle')
-    text.setAttribute('font-size',        fontSz.toFixed(2))
-    text.setAttribute('font-weight',      '700')
-    text.setAttribute('fill',             sd.textFill || 'var(--text3)')
-    if (sd.opacity != null) text.setAttribute('opacity', sd.opacity)
-    text.textContent = i + 1
+      const text = document.createElementNS(NS, 'text')
+      text.setAttribute('x',                '0')
+      text.setAttribute('y',                '0')
+      text.setAttribute('text-anchor',      'middle')
+      text.setAttribute('dominant-baseline','middle')
+      text.setAttribute('font-size',        fontSz.toFixed(2))
+      text.setAttribute('font-weight',      '700')
+      text.setAttribute('fill',             sd.textFill || 'var(--text3)')
+      if (sd.opacity != null) text.setAttribute('opacity', sd.opacity)
+      text.textContent = i + 1
 
-    g.appendChild(text)
-    svg.appendChild(g)
+      g.appendChild(text)
+      svg.appendChild(g)
+    }
   }
 
   // 슬롯보다 아래(z-order 낮음)에 삽입

@@ -7,6 +7,10 @@
  * 사용처: Grimoire.js, host/app.js, NightAction.js, player/app.js
  */
 
+import { ROLES_BY_ID }                      from '../data/roles-tb.js'
+import { ovalSlotPos, drawOvalPieNumbers }   from './ovalLayout.js'
+import { applySlotStateMarks }               from './SlotMark.js'
+
 // ── 팀별 테두리 색 ──────────────────────────────────────────
 export const TEAM_BORDER = {
   townsfolk: 'rgba(46,74,143,0.65)',
@@ -216,4 +220,73 @@ export function createRoleNameLabel(role, slotPx) {
   `
   nameEl.textContent = role.name
   return nameEl
+}
+
+// ── 오발 슬롯 공통 렌더링 ────────────────────────────────────
+/**
+ * Grimoire(host/app.js)와 OvalSelectPanel이 공유하는 슬롯 빌더.
+ * 역할 아이콘·이름·상태 마크를 공통 처리하고,
+ * 선택 기능은 onSlotClick 콜백으로 위임한다.
+ *
+ * @param {HTMLElement} oval
+ * @param {Object[]}    players
+ * @param {number}      slotPx
+ * @param {number}      iconPx
+ * @param {object}      opts
+ * @param {object|null}   [opts.engine]        - 게임 엔진 (상태 마크용)
+ * @param {number}        [opts.rotOffset=0]   - ovalSelfRotOffset 결과
+ * @param {number|null}   [opts.selfSeatId]    - 나 배지 표시 기준
+ * @param {number[]}      [opts.selectedIds]   - 선택된 id 목록
+ * @param {Function|null} [opts.onSlotClick]   - (player) => void
+ */
+export function buildOvalSlots(oval, players, slotPx, iconPx, {
+  engine = null, rotOffset = -Math.PI / 2, selfSeatId = null,
+  selectedIds = [], onSlotClick = null,
+} = {}) {
+  const total = players.length
+  players.forEach((p, i) => {
+    const { x, y }     = ovalSlotPos(i, total, rotOffset)
+    const role          = ROLES_BY_ID[p.role]
+    const isDead        = p.status !== 'alive'
+    const isSelf        = p.id === selfSeatId
+    const isSelected    = selectedIds.includes(p.id)
+    const isDrunkWithAs = p.role === 'drunk' && !!p.drunkAs
+    const displayRole   = isDrunkWithAs ? ROLES_BY_ID[p.drunkAs] : role
+
+    const borderColor = isSelected
+      ? 'var(--gold)'
+      : isSelf
+        ? 'var(--gold2)'
+        : (TEAM_BORDER[role?.team] || 'var(--lead2)')
+
+    const slot = createSeatSlot(x, y, slotPx, {
+      borderColor,
+      isDead,
+      isSelected,
+      selectedHighlight: isSelected,
+      cursor: onSlotClick && !isSelf ? 'pointer' : 'default',
+    })
+
+    slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
+    if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
+
+    applySlotStateMarks(slot, slotPx, {
+      isPoisoned:      p.isPoisoned,
+      isDrunk:         p.isDrunk && !isDrunkWithAs,
+      isProtected:     engine ? p.id === engine.monkProtect : false,
+      isDeadNight:     p.status === 'dead',
+      isDeadExec:      p.status === 'executed',
+      isSelectedCheck: isSelected,
+      butlerMasterId:  engine?.butlerMasters?.[p.id] ?? null,
+    })
+
+    if (onSlotClick && !isSelf) {
+      slot.addEventListener('click', () => onSlotClick(p))
+    }
+
+    oval.appendChild(slot)
+  })
+
+  // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시)
+  drawOvalPieNumbers(oval, total, { rotOffset, outerR: 116, showNumbers: false })
 }

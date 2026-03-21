@@ -4,6 +4,7 @@
  * display 모드: 자동 포맷 렌더링 (숫자 강조 · 행동 안내 분리)
  * edit   모드: 탭 → textarea 편집, 포커스 아웃 → 다시 렌더링
  */
+import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 const TEAM_COLORS = {
   town:    { color: 'var(--bl-light)', glow: 'rgba(46,74,143,0.15)' },
@@ -238,14 +239,60 @@ function _renderInto(container, text, teamColor) {
   }
 }
 
-/** HTML 이스케이프 후 숫자번 강조 */
+/**
+ * 자동 컬러 파싱 규칙 — 추가하려면 이 배열에만 넣으면 됨
+ * cls 는 string | (matchedText) => string 모두 허용
+ * 순서 중요: 더 구체적인 패턴을 앞에 배치
+ */
+const _MARKUP_RULES = [
+  // 자리번호: 3번, 5번  (번째 제외)
+  { re: /(\d+번)(?!째)/g,              cls: 'reveal-note__num'   },
+  // 카운트: 2명, 3쌍, 0개 — 숫자 크게 + 단위 작게 + 칩 배경
+  { re: /\d+\s*[명쌍개]/g, render(m) {
+      const n = m.match(/\d+/)[0]
+      const u = m.match(/[명쌍개]/)[0]
+      return `<b class="reveal-note__count"><span class="reveal-note__count-n">${n}</span><span class="reveal-note__count-u">${u}</span></b>`
+    },
+  },
+  // 긍정 답변
+  { re: /(예)(?=[,.\s\n]|$)/gm,       cls: 'reveal-note__yes'   },
+  // 부정 답변
+  { re: /(아니오)/g,                   cls: 'reveal-note__no'    },
+]
+
+// 역할 이름 → 진영 CSS 클래스 매핑 (모듈 로드 시 한 번만 빌드)
+;(() => {
+  const nameToClass = {}
+  const names = []
+  for (const role of Object.values(ROLES_BY_ID)) {
+    if (!role.name || !role.team) continue
+    nameToClass[role.name] = `reveal-note__role--${role.team}`
+    names.push(role.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  }
+  if (!names.length) return
+  // 긴 이름 우선 매칭 (부분 포함 방지)
+  names.sort((a, b) => b.length - a.length)
+  _MARKUP_RULES.push({
+    re:  new RegExp(`(${names.join('|')})`, 'g'),
+    cls: (name) => nameToClass[name] || 'reveal-note__role--default',
+  })
+})()
+
+/** HTML 이스케이프 후 규칙 배열 기반 자동 파싱 */
 function _markup(text) {
-  const esc = text
+  let s = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  // 숫자번 → 금색 bold
-  return esc.replace(/(\d+번)/g, '<b class="reveal-note__num">$1</b>')
+  for (const rule of _MARKUP_RULES) {
+    if (rule.render) {
+      s = s.replace(rule.re, (m) => rule.render(m))
+    } else {
+      s = s.replace(rule.re, (_, g) =>
+        `<b class="${typeof rule.cls === 'function' ? rule.cls(g) : rule.cls}">${g}</b>`)
+    }
+  }
+  return s
 }
 
 // ── CSS ──────────────────────────────────────────────────────────
@@ -339,12 +386,52 @@ if (!document.getElementById('reveal-note-style')) {
   overflow-wrap: break-word;
 }
 
-/* 숫자번 강조 */
+/* 자동 파싱 강조 */
 .reveal-note__num {
   color: var(--gold2);
   font-weight: 700;
   font-style: normal;
 }
+.reveal-note__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  background: rgba(91, 179, 198, 0.12);
+  border: 1px solid rgba(91, 179, 198, 0.32);
+  border-radius: 5px;
+  padding: 0 5px 1px;
+  font-style: normal;
+  vertical-align: baseline;
+}
+.reveal-note__count-n {
+  font-size: 1.2em;
+  font-weight: 900;
+  color: var(--tl-light);
+  line-height: 1;
+}
+.reveal-note__count-u {
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--tl-light);
+  opacity: 0.75;
+  line-height: 1;
+}
+.reveal-note__yes {
+  color: #4ade80;
+  font-weight: 700;
+  font-style: normal;
+}
+.reveal-note__no {
+  color: #f87171;
+  font-weight: 700;
+  font-style: normal;
+}
+/* 역할 이름 — 진영별 */
+.reveal-note__role--townsfolk { color: var(--bl-light);  font-weight: 700; font-style: normal; }
+.reveal-note__role--outsider  { color: var(--tl-light);  font-weight: 700; font-style: normal; }
+.reveal-note__role--minion    { color: var(--rd-light);  font-weight: 700; font-style: normal; }
+.reveal-note__role--demon     { color: #e05555;          font-weight: 700; font-style: normal; }
+.reveal-note__role--default   { color: var(--gold2);     font-weight: 700; font-style: normal; }
 
 /* 구분선 */
 .reveal-note__divider {

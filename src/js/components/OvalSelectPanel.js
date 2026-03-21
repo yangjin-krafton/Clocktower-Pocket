@@ -15,13 +15,14 @@
  *   onConfirm   {Function}  onConfirm(selectedIds[])
  */
 
-import { calcSlotMetrics, ovalSlotPos, ovalSelfRotOffset } from '../utils/ovalLayout.js'
+import { calcSlotMetrics, ovalSlotPos } from '../utils/ovalLayout.js'
+import { createSeatOval, createSeatNumLabel, buildOvalSlots } from '../utils/SeatWheel.js'
 
 export function mountOvalSelectPanel(data) {
   const {
     title, roleIcon = '🎯', roleTeam, ability,
     players = [], selfSeatId,
-    maxSelect = 1, onConfirm,
+    maxSelect = 1, onConfirm, hostWarning, engine,
   } = data
 
   let selectedIds = []
@@ -72,21 +73,26 @@ export function mountOvalSelectPanel(data) {
   hdr.appendChild(titleWrap)
   panel.appendChild(hdr)
 
-  // ── 오발 래퍼 ──
+  // ── 호스트 경고 배너 ──
+  if (hostWarning) {
+    const warn = document.createElement('div')
+    warn.className = 'oval-sel__host-warn'
+    warn.textContent = hostWarning
+    panel.appendChild(warn)
+  }
+
+  // ── gl-seat-oval + wrap ──
   const wrap = document.createElement('div')
   wrap.className = 'oval-sel__wrap'
+  const oval = createSeatOval('width:100%;max-height:100%;aspect-ratio:2/3;margin:0 auto;')
 
-  const oval = document.createElement('div')
-  oval.className = 'oval-sel__oval'
-
-  // 오발 좌표 계산 — selfSeatId 를 6시(하단 중앙)에 배치
-  const total     = players.length
-  const rotOffset = ovalSelfRotOffset(selfSeatId, total)
+  const total = players.length
 
   // 컨테이너 너비 기반 슬롯 크기 (CSS oval 너비 = appContent.width - 32px padding)
   const appContent = document.getElementById('app-content')
   const containerW = appContent ? (appContent.getBoundingClientRect().width - 32) : 300
   const { slotPx } = calcSlotMetrics(total, containerW, 40)   // minSlot=40
+  const iconPx = Math.round(slotPx * 0.6)
 
   // 중앙 카운터
   const center = document.createElement('div')
@@ -101,58 +107,34 @@ export function mountOvalSelectPanel(data) {
   }
 
   function buildSlots() {
-    // 기존 슬롯 및 번호 레이블 제거 (center 제외)
     Array.from(oval.children).forEach(c => { if (c !== center) c.remove() })
 
-    players.forEach((p, i) => {
-      const { x, y } = ovalSlotPos(i, total, rotOffset)
-
-      const isSelf     = p.id === selfSeatId
-      const isDead     = p.status !== 'alive'
-      const isSelected = selectedIds.includes(p.id)
-      const canSelect  = !isSelf && !isDead
-
-      const slot = document.createElement('div')
-      slot.className = 'oval-sel__slot'
-        + (isSelf     ? ' oval-sel__slot--self'     : '')
-        + (isSelected ? ' oval-sel__slot--selected' : '')
-        + (isDead     ? ' oval-sel__slot--dead'     : '')
-
-      slot.style.cssText = `
-        left:${x.toFixed(2)}%;
-        top:${y.toFixed(2)}%;
-        width:${slotPx}px;
-        height:${slotPx}px;
-      `
-
-      const topLabel   = isSelf ? '나' : (isSelected ? '✓' : '')
-      const numFontPx  = Math.max(16, Math.round(slotPx * 0.42))
-      const topFontPx  = Math.max(8,  Math.round(slotPx * 0.14))
-      const unitFontPx = Math.max(8,  Math.round(slotPx * 0.16))
-      slot.innerHTML = `
-        <span class="oval-sel__slot-top" style="font-size:${topFontPx}px">${topLabel}</span>
-        <span class="oval-sel__slot-num" style="font-size:${numFontPx}px">${p.id}</span>
-        <span class="oval-sel__slot-unit" style="font-size:${unitFontPx}px">번</span>
-      `
-
-      if (canSelect) {
-        slot.addEventListener('click', () => {
-          if (isSelected) {
-            selectedIds = selectedIds.filter(id => id !== p.id)
-          } else {
-            if (selectedIds.length >= maxSelect) {
-              if (maxSelect === 1) selectedIds = []
-              else return
-            }
-            selectedIds.push(p.id)
+    buildOvalSlots(oval, players, slotPx, iconPx, {
+      engine,
+      selfSeatId,
+      selectedIds,
+      onSlotClick: (p) => {
+        if (p.status !== 'alive') return
+        const isSelected = selectedIds.includes(p.id)
+        if (isSelected) {
+          selectedIds = selectedIds.filter(id => id !== p.id)
+        } else {
+          if (selectedIds.length >= maxSelect) {
+            if (maxSelect === 1) selectedIds = []
+            else return
           }
-          buildSlots()
-          updateCenter()
-          confirmBtn.disabled = selectedIds.length === 0
-        })
-      }
+          selectedIds.push(p.id)
+        }
+        buildSlots()
+        updateCenter()
+        confirmBtn.disabled = selectedIds.length === 0
+      },
+    })
 
-      oval.appendChild(slot)
+    // 자리 번호 레이블 (host/app.js 와 동일)
+    players.forEach((p, i) => {
+      const { x, y } = ovalSlotPos(i, total)
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, p.id, { dimmed: p.status !== 'alive' }))
     })
 
     oval.appendChild(center)
@@ -254,80 +236,6 @@ if (!document.getElementById('oval-select-panel-style')) {
   justify-content: center;
   min-height: 0;
   overflow: hidden;
-}
-.oval-sel__oval {
-  position: relative;
-  /* max-height: 100% → flex 부모 높이에 맞게 제한 */
-  /* aspect-ratio가 max-height 제약 시 width를 자동 축소 */
-  width: 100%;
-  max-height: 100%;
-  aspect-ratio: 2 / 3;
-  margin: 0 auto;
-  filter: drop-shadow(0 0 20px rgba(212, 168, 40, 0.15));
-}
-
-/* 슬롯 공통 */
-.oval-sel__slot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  cursor: pointer;
-  border: 2px solid var(--lead2);
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(212, 168, 40, 0.06) 100%);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(212, 168, 40, 0.1);
-  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-.oval-sel__slot:active { transform: translate(-50%, -50%) scale(0.88) !important; }
-
-/* 선택됨 */
-.oval-sel__slot--selected {
-  border-color: var(--gold) !important;
-  background: linear-gradient(135deg, rgba(212,168,40,0.15) 0%, rgba(212,168,40,0.25) 100%) !important;
-  box-shadow:
-    0 0 0 2px rgba(212,168,40,0.4),
-    0 0 16px rgba(212,168,40,0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-/* 본인 */
-.oval-sel__slot--self {
-  border-color: var(--gold2) !important;
-  background: linear-gradient(135deg, rgba(212,168,40,0.08) 0%, rgba(212,168,40,0.12) 100%) !important;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(212, 168, 40, 0.2);
-  cursor: default;
-}
-/* 사망 */
-.oval-sel__slot--dead {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.oval-sel__slot-top {
-  font-size: 0.58rem;
-  color: var(--gold);
-  line-height: 1;
-  min-height: 0.7rem;
-}
-.oval-sel__slot-num {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--gold2);
-  line-height: 1;
-}
-.oval-sel__slot-unit {
-  font-size: 0.6rem;
-  color: var(--text4);
-  line-height: 1;
 }
 
 /* 중앙 카운터 */

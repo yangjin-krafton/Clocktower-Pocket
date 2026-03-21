@@ -335,10 +335,7 @@ export class Grimoire {
     })
 
     // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시 / 미배정 자리 흐리게)
-    drawOvalPieNumbers(oval, total, {
-      outerR: 116, showNumbers: false,
-      slices: seats.map(roleId => roleId ? {} : { opacity: 0.25 }),
-    })
+    drawOvalPieNumbers(oval, total, { outerR: 116, showNumbers: false })
 
     // ── 타원 중앙 조작 UI ────────────────────────────────────
     const { valid, shortMsg, counts, filledCnt } = this._validateSeats(total, seats)

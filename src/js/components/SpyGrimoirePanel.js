@@ -213,10 +213,7 @@ export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, 
     })
 
     // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시 / 미공개 슬롯 흐리게)
-    drawOvalPieNumbers(oval, total, {
-      outerR: 116, showNumbers: false,
-      slices: slots.map(slot => slot.revealed ? {} : { opacity: 0.2 }),
-    })
+    drawOvalPieNumbers(oval, total, { outerR: 116, showNumbers: false })
   }
 
   // ── 컨트롤 버튼 활성 상태 동기화 ──

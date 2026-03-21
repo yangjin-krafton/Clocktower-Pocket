@@ -134,8 +134,8 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
   // ── 골드 / 퍼플 교차 방사형 그라디언트 정의 ──
   const uid  = Math.random().toString(36).slice(2, 7)
   const GRADS = [
-    { id: `pg-gold-${uid}`,   peak: 'rgba(212,168,40,0.22)',  edge: 'rgba(212,168,40,0.05)' },
-    { id: `pg-purple-${uid}`, peak: 'rgba(130,80,200,0.20)',  edge: 'rgba(130,80,200,0.05)' },
+    { id: `pg-gold-${uid}`,   peak: 'rgba(88, 74, 29, 0.22)',  edge: 'rgba(104, 84, 23, 0.05)' },
+    { id: `pg-purple-${uid}`, peak: 'rgba(36, 43, 63, 0.2)',  edge: 'rgba(44, 52, 66, 0.05)' },
   ]
 
   const defs = document.createElementNS(NS, 'defs')

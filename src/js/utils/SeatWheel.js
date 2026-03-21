@@ -243,7 +243,8 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
   engine = null, rotOffset = -Math.PI / 2, selfSeatId = null,
   selectedIds = [], onSlotClick = null,
 } = {}) {
-  const total = players.length
+  const total       = players.length
+  const monkPoisoned = !!(engine?.state?.players?.find(mp => mp.role === 'monk')?.isPoisoned)
   players.forEach((p, i) => {
     const { x, y }     = ovalSlotPos(i, total, rotOffset)
     const role          = ROLES_BY_ID[p.role]
@@ -273,7 +274,7 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
     applySlotStateMarks(slot, slotPx, {
       isPoisoned:      p.isPoisoned,
       isDrunk:         p.isDrunk && !isDrunkWithAs,
-      isProtected:     engine ? p.id === engine.monkProtect : false,
+      isProtected:     engine ? p.id === engine.monkProtect && !monkPoisoned : false,
       isDeadNight:     p.status === 'dead',
       isDeadExec:      p.status === 'executed',
       isSelectedCheck: isSelected,

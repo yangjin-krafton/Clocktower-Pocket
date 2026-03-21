@@ -15,7 +15,7 @@ import { Victory }                              from './Victory.js'
 import { HistoryManager }                       from './HistoryManager.js'
 import { HistoryBar }                           from './HistoryBar.js'
 import { ROLES_TB, ROLES_BY_ID, PLAYER_COUNTS } from '../data/roles-tb.js'
-import { encodeRoomCode, formatCode, copyRoomCode } from '../room-code.js'
+import { encodeRoomCode, formatCode, copyRoomCode, copyRoomLink } from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
@@ -408,81 +408,137 @@ export class HostApp {
 
     const box = document.createElement('div')
     box.className = 'popup-box'
-    box.style.cssText = 'max-height:88vh;overflow-y:auto;padding:20px 16px;'
+    box.style.cssText = 'max-height:90vh;overflow-y:auto;padding:24px 18px 20px;'
 
-    // 제목
-    const title = document.createElement('div')
-    title.style.cssText = 'font-family:"Noto Serif KR",serif;font-size:1rem;font-weight:700;color:var(--gold2);margin-bottom:16px;text-align:center;'
-    title.textContent = '🏰 방 코드가 생성되었습니다'
-    box.appendChild(title)
-
-    // 방 코드 표시
-    const codeDisplay = document.createElement('div')
-    codeDisplay.style.cssText = `
-      background:var(--surface2);border:2px solid var(--gold2);border-radius:10px;
-      padding:14px 10px;text-align:center;margin-bottom:16px;cursor:pointer;
+    // ── 헤더 ──
+    box.innerHTML = `
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:1.5rem;margin-bottom:4px;">🏰</div>
+        <div style="font-family:'Noto Serif KR',serif;font-size:1.05rem;font-weight:700;color:var(--gold2);">방 코드가 생성되었습니다</div>
+        <div style="font-size:0.62rem;color:var(--text4);margin-top:4px;letter-spacing:0.04em;">참가자에게 코드 또는 링크를 공유하세요</div>
+      </div>
     `
+
+    // ── 코드 + 링크 공유 카드 2개 ──
     const formatted = formatCode(code)
-    codeDisplay.innerHTML = `
-      <div style="font-size:1.6rem;font-weight:900;letter-spacing:0.2em;color:var(--gold2);font-family:monospace">${formatted}</div>
-      <div style="font-size:0.65rem;color:var(--text4);margin-top:6px;">탭하여 복사</div>
-    `
-    codeDisplay.addEventListener('click', () => {
-      copyRoomCode(code)
-      codeDisplay.querySelector('div:last-child').textContent = '✓ 코드+링크 복사됨!'
-      setTimeout(() => { codeDisplay.querySelector('div:last-child').textContent = '탭하여 복사' }, 1500)
-    })
-    box.appendChild(codeDisplay)
+    const shareRow = document.createElement('div')
+    shareRow.style.cssText = 'display:flex;gap:10px;margin-bottom:20px;'
 
-    // 자리별 역할 목록
+    function makeShareCard(mainHtml, subText, onCopy) {
+      const card = document.createElement('div')
+      card.style.cssText = `
+        flex:1;background:var(--surface2);border:2px solid var(--gold2);border-radius:12px;
+        padding:16px 10px 12px;text-align:center;cursor:pointer;
+        transition:background 0.15s,border-color 0.15s;
+        -webkit-tap-highlight-color:transparent;
+      `
+      const main = document.createElement('div')
+      main.innerHTML = mainHtml
+      const hint = document.createElement('div')
+      hint.style.cssText = 'font-size:0.6rem;color:var(--text4);margin-top:8px;letter-spacing:0.03em;'
+      hint.textContent = subText
+      card.appendChild(main)
+      card.appendChild(hint)
+      card.addEventListener('click', async () => {
+        const copied = await onCopy()
+        hint.textContent = copied ? '✓ 복사됨!' : '복사 실패'
+        card.style.borderColor = copied ? 'var(--tl-base)' : 'var(--rd-light)'
+        setTimeout(() => {
+          hint.textContent = subText
+          card.style.borderColor = 'var(--gold2)'
+        }, 1500)
+      })
+      return card
+    }
+
+    shareRow.appendChild(makeShareCard(
+      `<div style="font-size:1.45rem;font-weight:900;letter-spacing:0.18em;color:var(--gold2);font-family:monospace;line-height:1.2;">${formatted}</div>`,
+      '방 코드 복사',
+      () => copyRoomCode(code)
+    ))
+    shareRow.appendChild(makeShareCard(
+      `<div style="font-size:1.6rem;line-height:1.2;">🔗</div>
+       <div style="font-size:0.65rem;color:var(--text3);margin-top:4px;font-weight:600;">바로 접속 링크</div>`,
+      '링크 복사',
+      () => copyRoomLink(code)
+    ))
+    box.appendChild(shareRow)
+
+    // ── 구분선 ──
+    const divider = document.createElement('div')
+    divider.style.cssText = 'height:1px;background:var(--lead2);margin-bottom:16px;'
+    box.appendChild(divider)
+
+    // ── 자리별 역할 목록 ──
     const listTitle = document.createElement('div')
-    listTitle.style.cssText = 'font-size:0.75rem;color:var(--text3);margin-bottom:8px;font-weight:600;'
-    listTitle.textContent = '자리별 역할 배정 (호스트 전용)'
+    listTitle.style.cssText = 'font-size:0.68rem;color:var(--text4);margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;'
+    listTitle.textContent = '자리별 역할 배정 · 호스트 전용'
     box.appendChild(listTitle)
 
     const list = document.createElement('div')
-    list.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:20px;'
+    list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:22px;'
+
+    const TEAM_COLOR = {
+      townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)',
+      minion: 'var(--rd-light)',    demon:    'var(--rd-light)',
+    }
+    const TEAM_BG = {
+      townsfolk: 'rgba(46,74,143,0.12)', outsider: 'rgba(91,179,198,0.10)',
+      minion:    'rgba(140,48,48,0.14)', demon:    'rgba(110,27,31,0.18)',
+    }
+
     assignedRoles.forEach((roleId, i) => {
       const role = ROLES_BY_ID[roleId]
-      const teamColor = {
-        townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)',
-        minion: 'var(--rd-light)', demon: 'var(--rd-light)',
-      }[role?.team] || 'var(--text2)'
+      const tc   = TEAM_COLOR[role?.team] || 'var(--text2)'
+      const tb   = TEAM_BG[role?.team]    || 'var(--surface2)'
 
       const row = document.createElement('div')
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--surface2);border-radius:6px;'
+      row.style.cssText = `
+        display:flex;align-items:center;gap:10px;
+        padding:8px 12px;border-radius:10px;
+        background:${tb};
+        border:1px solid rgba(255,255,255,0.04);
+      `
 
-      const seatBadge = document.createElement('span')
-      seatBadge.style.cssText = 'font-size:0.7rem;background:var(--lead2);color:var(--text3);border-radius:4px;padding:2px 7px;min-width:36px;text-align:center;'
-      seatBadge.textContent = `자리 ${i + 1}`
+      // 자리 번호 배지
+      const badge = document.createElement('span')
+      badge.style.cssText = `
+        font-size:0.65rem;font-weight:700;
+        background:rgba(212,168,40,0.12);color:var(--gold2);
+        border:1px solid rgba(212,168,40,0.3);
+        border-radius:6px;padding:2px 8px;min-width:34px;text-align:center;flex-shrink:0;
+      `
+      badge.textContent = `${i + 1}번`
 
-      const iconSpan = document.createElement('span')
-      iconSpan.style.cssText = 'width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;'
+      // 아이콘
+      const iconWrap = document.createElement('span')
+      iconWrap.style.cssText = 'width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;'
       if (role?.icon?.endsWith('.png')) {
         const img = document.createElement('img')
         img.src = `./asset/icons/${role.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
-        iconSpan.appendChild(img)
+        iconWrap.appendChild(img)
       } else {
-        iconSpan.textContent = role?.iconEmoji || '?'
+        iconWrap.textContent = role?.iconEmoji || '?'
       }
 
-      const nameSpan = document.createElement('span')
-      nameSpan.style.cssText = `font-size:0.82rem;font-weight:600;color:${teamColor};`
-      nameSpan.textContent = role?.name || roleId
+      // 역할명
+      const name = document.createElement('span')
+      name.style.cssText = `font-size:0.85rem;font-weight:700;color:${tc};`
+      name.textContent = role?.name || roleId
 
-      row.appendChild(seatBadge)
-      row.appendChild(iconSpan)
-      row.appendChild(nameSpan)
+      row.appendChild(badge)
+      row.appendChild(iconWrap)
+      row.appendChild(name)
 
-      // 주정뱅이: 믿는 역할 표시
+      // 주정뱅이 drunkAs
       if (roleId === 'drunk' && this.drunkAsRole) {
         const drunkAsInfo = ROLES_BY_ID[this.drunkAsRole]
         if (drunkAsInfo) {
-          const asSpan = document.createElement('span')
-          asSpan.style.cssText = 'font-size:0.65rem;color:var(--text4);margin-left:auto;'
-          asSpan.textContent = `→ ${drunkAsInfo.name}로 인지`
-          row.appendChild(asSpan)
+          const as = document.createElement('span')
+          as.style.cssText = 'font-size:0.62rem;color:var(--text4);margin-left:auto;white-space:nowrap;'
+          as.textContent = `→ ${drunkAsInfo.name} 인지`
+          row.appendChild(as)
         }
       }
 
@@ -490,18 +546,11 @@ export class HostApp {
     })
     box.appendChild(list)
 
-    // 안내 문구
-    const hint = document.createElement('div')
-    hint.style.cssText = 'font-size:0.68rem;color:var(--text4);text-align:center;margin-bottom:16px;line-height:1.6;'
-    hint.textContent = '참가자에게 방 코드와 자리 번호를 알려주세요.\n참가자는 앱에서 코드 + 자리 번호로 자신의 역할을 확인합니다.'
-    hint.style.whiteSpace = 'pre-line'
-    box.appendChild(hint)
-
-    // 게임 시작 버튼
+    // ── 게임 시작 버튼 ──
     const startBtn = document.createElement('button')
     startBtn.className = 'btn btn-gold btn-full'
-    startBtn.style.cssText = 'padding:14px;font-size:0.95rem;'
-    startBtn.textContent = '▶ 게임 시작 (이야기꾼 화면)'
+    startBtn.style.cssText = 'padding:15px;font-size:0.95rem;font-weight:700;border-radius:12px;'
+    startBtn.textContent = '▶  게임 시작'
     startBtn.addEventListener('click', () => {
       overlay.remove()
       onStart()
@@ -529,6 +578,7 @@ export class HostApp {
   }
 
   _handleStartDay() {
+    const nightResult = this._buildNightResultData()
     engine.startDay()
 
     // 밤 사망자 히스토리 기록
@@ -558,7 +608,7 @@ export class HostApp {
 
     this.currentTab = 'role'
     this._buildTabs()
-    this._showDayFlow()
+    this._showNightResultPopup(nightResult, () => this._showDayFlow())
   }
 
   _handleNextNightStep() {
@@ -601,6 +651,169 @@ export class HostApp {
       })
     }
     this.nightAction.processCurrentStep()
+  }
+
+  _buildNightResultData() {
+    const round = engine.state.round
+    const impAction = engine.nightActions
+      .filter(a => a.round === round && a.roleId === 'imp')
+      .pop()
+
+    const deathIds = [...new Set([
+      ...engine.pendingDeaths,
+      ...(impAction?.targetIds?.[0] === impAction?.actorId ? [impAction.actorId] : []),
+    ])]
+    const deathPlayers = deathIds.map(id => engine.getPlayer(id)).filter(Boolean)
+
+    if (!impAction || !impAction.targetIds || impAction.targetIds.length === 0) {
+      return {
+        round,
+        targetLabel: '없음',
+        summary: '이번 밤에는 임프 공격이 없었습니다.',
+        detail: '첫날 밤이거나, 임프가 아직 대상을 고르지 않았습니다.',
+        deathIds,
+        deathPlayers,
+      }
+    }
+
+    const targetId = impAction.targetIds[0]
+    const target = engine.getPlayer(targetId)
+    const targetLabel = target ? `${target.id}번 ${target.name}` : `${targetId}번`
+
+    if (targetId === impAction.actorId) {
+      const successor = engine.state.players.find(
+        p => p.role === 'imp' && p.status === 'alive' && p.id !== targetId
+      )
+      return {
+        round,
+        targetLabel,
+        summary: '임프가 자기 자신을 선택했습니다.',
+        detail: successor
+          ? `${targetLabel}이 자결했고, ${successor.id}번 ${successor.name}이 새 임프가 되었습니다.`
+          : `${targetLabel}이 자결했습니다.`,
+        deathIds,
+        deathPlayers,
+      }
+    }
+
+    if (deathIds.includes(targetId)) {
+      return {
+        round,
+        targetLabel,
+        summary: `${targetLabel}이 임프의 공격으로 사망했습니다.`,
+        detail: '지목 대상이 그대로 밤 사망으로 이어졌습니다.',
+        deathIds,
+        deathPlayers,
+      }
+    }
+
+    // 보호 원인 감지 (engine._resolveNight 과 동일 조건)
+    const isMonkProtected = engine.monkProtect === targetId
+    const isSoldier       = target?.role === 'soldier' && !target?.isPoisoned
+    const isMayor         = target?.role === 'mayor'   && !target?.isPoisoned
+
+    let protectReason = null
+    if (isMonkProtected) {
+      const monk = engine.state.players.find(p => p.role === 'monk' && p.status === 'alive')
+      protectReason = {
+        icon: '🛡',
+        label: '수도사 보호',
+        desc: monk
+          ? `${monk.id}번 ${monk.name}이(가) ${targetLabel}을(를) 보호하고 있습니다.`
+          : `수도사가 ${targetLabel}을(를) 보호하고 있습니다.`,
+      }
+    } else if (isSoldier) {
+      protectReason = {
+        icon: '⚔',
+        label: '군인 면역',
+        desc: `${targetLabel}은(는) 군인이라 임프의 공격에 면역입니다.`,
+      }
+    } else if (isMayor && deathPlayers.length === 0) {
+      protectReason = {
+        icon: '🏛',
+        label: '시장 튕김',
+        desc: `시장 능력으로 공격이 튕겼지만, 다른 사망자도 없었습니다.`,
+      }
+    }
+
+    if (deathPlayers.length > 0) {
+      const deathLabel = deathPlayers.map(p => `${p.id}번 ${p.name}`).join(', ')
+      const mayorDesc  = isMayor ? '시장 능력으로 공격이 튕겨 다른 플레이어가 사망했습니다.' : '실제 사망자가 발생했습니다.'
+      return {
+        round, targetLabel,
+        summary: `${targetLabel}은 살아남았고, 다른 플레이어가 사망했습니다.`,
+        detail:  `${mayorDesc} 사망자: ${deathLabel}`,
+        protectReason: isMayor ? { icon: '🏛', label: '시장 튕김', desc: `${targetLabel}의 시장 능력으로 공격이 다른 플레이어에게 튕겼습니다.` } : null,
+        deathIds, deathPlayers,
+      }
+    }
+
+    return {
+      round, targetLabel,
+      summary: `${targetLabel}은 이번 밤 사망하지 않았습니다.`,
+      detail:  protectReason ? protectReason.desc : '알 수 없는 이유로 공격이 막혔습니다.',
+      protectReason,
+      deathIds, deathPlayers,
+    }
+  }
+
+  _showNightResultPopup(result, onContinue) {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.cssText = 'text-align:center;padding:24px 18px 20px;max-width:420px;'
+
+    const deathLabel = result.deathPlayers.length > 0
+      ? result.deathPlayers.map(p => `${p.id}번 ${p.name}`).join(', ')
+      : '없음'
+
+    const protectCard = result.protectReason ? `
+      <div style="
+        background:rgba(14,116,144,0.12);border:1.5px solid rgba(14,116,144,0.5);
+        border-radius:12px;padding:12px 14px;margin-bottom:10px;
+        display:flex;align-items:flex-start;gap:10px;text-align:left;
+      ">
+        <span style="font-size:1.4rem;flex-shrink:0;line-height:1.2;">${result.protectReason.icon}</span>
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;color:var(--tl-light);margin-bottom:3px;">${result.protectReason.label}</div>
+          <div style="font-size:0.7rem;color:var(--text3);line-height:1.5;">${result.protectReason.desc}</div>
+        </div>
+      </div>
+    ` : ''
+
+    box.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:8px;">🌙</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1.04rem;font-weight:700;color:var(--gold2);margin-bottom:6px;">
+        밤 ${result.round} 임프 결과
+      </div>
+      <div style="font-size:0.72rem;color:var(--text4);margin-bottom:14px;">
+        임프가 이번 밤 누구를 노렸는지 확인합니다
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--lead2);border-radius:12px;padding:14px 12px;margin-bottom:10px;">
+        <div style="font-size:0.64rem;color:var(--text4);margin-bottom:4px;">임프 목표</div>
+        <div style="font-size:0.96rem;font-weight:800;color:var(--text2);">${result.targetLabel}</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--lead2);border-radius:12px;padding:14px 12px;margin-bottom:10px;">
+        <div style="font-size:0.64rem;color:var(--text4);margin-bottom:4px;">결과</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text);line-height:1.5;">${result.summary}</div>
+      </div>
+      ${protectCard}
+      <div style="font-size:0.68rem;color:var(--text4);margin-bottom:18px;">밤 사망자: ${deathLabel}</div>
+    `
+
+    const continueBtn = document.createElement('button')
+    continueBtn.className = 'btn btn-gold btn-full'
+    continueBtn.textContent = '낮 시작'
+    continueBtn.addEventListener('click', () => {
+      overlay.remove()
+      onContinue?.()
+    })
+
+    box.appendChild(continueBtn)
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
   }
 
   _showDayFlow() {

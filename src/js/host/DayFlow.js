@@ -1,22 +1,29 @@
 /**
- * H-06 DayFlow — 낮 진행
- * 지목 등록 + 투표 집계 + 처형 처리
+ * H-06 DayFlow — 낮 진행 (심플 버전)
+ * 처형 대상 선택 + 처단자 특수 능력 여부 확인
+ * 플레이어 선택 UI: OvalSelectPanel 과 동일한 gl-seat-oval / gl-seat-slot 재사용
  */
-import { renderPhaseHeader } from '../components/PhaseHeader.js'
-import { renderPlayerGrid } from '../components/PlayerGrid.js'
-import { renderVoteBar } from '../components/VoteBar.js'
-import { ROLES_BY_ID } from '../data/roles-tb.js'
+import { renderPhaseHeader }  from '../components/PhaseHeader.js'
+import { calcSlotMetrics }    from '../utils/ovalLayout.js'
+import { ovalSlotPos }        from '../utils/ovalLayout.js'
+import {
+  createSeatOval,
+  createSeatSlot,
+  createRoleIconEl,
+  createRoleNameLabel,
+  createSeatNumLabel,
+  buildOvalSlots,
+} from '../utils/SeatWheel.js'
 
 export class DayFlow {
   constructor({ engine, onStartNight, onGameOver, onHistoryPush }) {
-    this.engine = engine
-    this.onStartNight   = onStartNight
-    this.onGameOver     = onGameOver
-    this.onHistoryPush  = onHistoryPush || (() => {})
-    this.el = null
-    this.nominatorId  = null
-    this.targetId     = null
-    this.slayerActorId = null
+    this.engine           = engine
+    this.onStartNight     = onStartNight
+    this.onGameOver       = onGameOver
+    this.onHistoryPush    = onHistoryPush || (() => {})
+    this.el               = null
+    this.executionTargetId = null
+    this.slayerTargetId   = null
   }
 
   mount(container) {
@@ -30,161 +37,150 @@ export class DayFlow {
 
   refresh() { this._render() }
 
+  // ── 인라인 오발 선택기 빌더 ────────────────────────────────
+  /**
+   * gl-seat-oval 기반 인라인 선택 UI 생성
+   *
+   * @param {Object[]}  players      - 표시할 플레이어 배열
+   * @param {number[]}  selectedIds  - 현재 선택된 id 목록
+   * @param {Function}  onSelect     - (id|null) => void — 선택 변경 시 호출
+   * @param {number}    [maxSelect=1]
+   * @returns {HTMLElement}  oval 컨테이너
+   */
+  _buildOval(players, selectedIds, onSelect, maxSelect = 1) {
+    const oval = createSeatOval(
+      'width:100%;max-width:280px;aspect-ratio:2/3;margin:0 auto;display:block;'
+    )
+
+    const appContent = document.getElementById('app-content')
+    const containerW = appContent
+      ? Math.min(appContent.getBoundingClientRect().width - 32, 280)
+      : 260
+    const { slotPx } = calcSlotMetrics(players.length, containerW, 36)
+    const iconPx = Math.round(slotPx * 0.6)
+
+    let current = [...selectedIds]
+
+    const rebuild = () => {
+      // 슬롯만 제거 (센터 레이블 등은 없으므로 전부 초기화)
+      oval.innerHTML = ''
+
+      buildOvalSlots(oval, players, slotPx, iconPx, {
+        engine: this.engine,
+        selectedIds: current,
+        onSlotClick: (p) => {
+          if (p.status !== 'alive') return
+          const isSelected = current.includes(p.id)
+          if (isSelected) {
+            current = current.filter(id => id !== p.id)
+          } else {
+            if (maxSelect === 1) current = [p.id]
+            else if (current.length < maxSelect) current.push(p.id)
+          }
+          onSelect(current[0] ?? null)
+          rebuild()
+        },
+      })
+
+      // 자리 번호 레이블
+      players.forEach((p, i) => {
+        const { x, y } = ovalSlotPos(i, players.length)
+        oval.appendChild(
+          createSeatNumLabel(x, y, slotPx, p.id, { dimmed: p.status !== 'alive' })
+        )
+      })
+    }
+
+    rebuild()
+    return oval
+  }
+
+  // ── 메인 렌더 ─────────────────────────────────────────────
   _render() {
     this.el.innerHTML = ''
     const state = this.engine.state
-    const roleMap = {}
-    state.players.forEach(p => {
-      const role = ROLES_BY_ID[p.role]
-      roleMap[p.id] = { icon: role ? role.icon : '?', name: role ? role.name : p.role }
-    })
 
     this.el.appendChild(renderPhaseHeader(state))
 
-    // ─ 지목 섹션 ─
-    const nomCard = document.createElement('div')
-    nomCard.className = 'card'
-    nomCard.innerHTML = '<div class="card-title">🎯 지목</div>'
+    // ─ 처형 결과 ─
+    const execCard = document.createElement('div')
+    execCard.className = 'card'
+    execCard.innerHTML = '<div class="card-title">⚔️ 처형 결과</div>'
 
-    // 지목자 선택
-    const nomStep = document.createElement('div')
-    nomStep.className = 'dayflow__step'
-    nomStep.innerHTML = `<div class="section-label">① 지목자 선택</div>`
-    const nomGrid = document.createElement('div')
-    nomGrid.appendChild(renderPlayerGrid(
-      state.players.filter(p => p.status === 'alive'),
-      {
-        selectable: true,
-        maxSelect: 1,
-        selectedIds: this.nominatorId ? [this.nominatorId] : [],
-        roleMap,
-        onSelect: (ids) => { this.nominatorId = ids[0] || null; this._render() }
-      }
-    ))
-    nomStep.appendChild(nomGrid)
-    nomCard.appendChild(nomStep)
+    const execLabel = document.createElement('div')
+    execLabel.className = 'section-label'
+    execLabel.textContent = '처형된 플레이어 선택 (없으면 선택 안 함)'
+    execCard.appendChild(execLabel)
 
-    // 대상 선택
-    const targetStep = document.createElement('div')
-    targetStep.className = 'dayflow__step'
-    targetStep.innerHTML = `<div class="section-label">② 처형 대상 선택</div>`
-    const targetGrid = renderPlayerGrid(
-      state.players.filter(p => p.status === 'alive'),
-      {
-        selectable: true,
-        maxSelect: 1,
-        selectedIds: this.targetId ? [this.targetId] : [],
-        roleMap,
-        onSelect: (ids) => { this.targetId = ids[0] || null; this._render() }
-      }
+    execCard.appendChild(
+      this._buildOval(
+        state.players,
+        this.executionTargetId ? [this.executionTargetId] : [],
+        (id) => { this.executionTargetId = id; this._render() }
+      )
     )
-    targetStep.appendChild(targetGrid)
-    nomCard.appendChild(targetStep)
 
-    // 지목 등록 버튼
-    const nomBtn = document.createElement('button')
-    nomBtn.className = 'btn btn-primary btn-full mt-12'
-    nomBtn.textContent = '📌 지목 등록'
-    nomBtn.disabled = !this.nominatorId || !this.targetId
-    if (nomBtn.disabled) nomBtn.style.opacity = '0.5'
-    nomBtn.addEventListener('click', () => this._registerNomination())
-    nomCard.appendChild(nomBtn)
-    this.el.appendChild(nomCard)
-
-    // ─ 현재 지목 목록 + VoteBar ─
-    if (state.nominations.length > 0) {
-      const threshold = this.engine.getExecutionThreshold()
-
-      state.nominations.forEach((nom, idx) => {
-        const nominator = this.engine.getPlayer(nom.nominatorId)
-        const target    = this.engine.getPlayer(nom.targetId)
-        if (!target) return
-
-        const voteCard = document.createElement('div')
-        voteCard.className = 'card'
-        voteCard.innerHTML = `<div class="card-title">📊 ${nominator?.name || '?'} → ${target.name}</div>`
-        voteCard.appendChild(renderVoteBar({
-          targetName: target.name,
-          votes: nom.votes,
-          threshold,
-          isLeading: nom.votes === Math.max(...state.nominations.map(n => n.votes)) && nom.votes > 0,
-        }))
-
-        // 투표 수 조정
-        const voteRow = document.createElement('div')
-        voteRow.className = 'dayflow__vote-row'
-        voteRow.innerHTML = `
-          <button class="btn dayflow__vote-btn" data-delta="-1">－</button>
-          <span class="dayflow__vote-num">${nom.votes}표</span>
-          <button class="btn dayflow__vote-btn" data-delta="+1">＋</button>
-        `
-        voteRow.querySelectorAll('.dayflow__vote-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const delta = parseInt(btn.dataset.delta)
-            const newVotes = Math.max(0, nom.votes + delta)
-            this.engine.updateVotes(idx, newVotes)
-            this._render()
-          })
-        })
-        voteCard.appendChild(voteRow)
-
-        // 처형 버튼 (문턱값 이상)
-        if (nom.votes >= threshold) {
-          const execBtn = document.createElement('button')
-          execBtn.className = 'btn btn-danger btn-full mt-8'
-          execBtn.textContent = `⚔️ ${target.name} 처형 확정`
-          execBtn.addEventListener('click', () => this._execute(target.id))
-          voteCard.appendChild(execBtn)
-        }
-
-        this.el.appendChild(voteCard)
-      })
+    if (this.executionTargetId) {
+      const target = this.engine.getPlayer(this.executionTargetId)
+      const execBtn = document.createElement('button')
+      execBtn.className = 'btn btn-danger btn-full mt-12'
+      execBtn.textContent = `⚔️ ${target?.name || this.executionTargetId}번 처형 확정 → 밤으로`
+      execBtn.addEventListener('click', () => this._execute(this.executionTargetId))
+      execCard.appendChild(execBtn)
     }
 
-    // ─ 특수 능력 ─
-    const specialCard = document.createElement('div')
-    specialCard.className = 'card'
-    specialCard.innerHTML = '<div class="card-title">⚡ 특수 능력</div>'
+    this.el.appendChild(execCard)
 
-    // Slayer
+    // ─ 처단자 특수 능력 ─
     const slayerPlayer = state.players.find(p => p.role === 'slayer' && p.status === 'alive')
     if (slayerPlayer && !this.engine.slayerUsed) {
-      const slayRow = document.createElement('div')
-      slayRow.className = 'dayflow__special-row'
-      slayRow.innerHTML = `<span class="dayflow__special-label">🗡 처단자 선언 (${slayerPlayer.name})</span>`
-      const slayGrid = renderPlayerGrid(
-        state.players.filter(p => p.status === 'alive' && p.id !== slayerPlayer.id),
-        {
-          selectable: true,
-          maxSelect: 1,
-          roleMap,
-          onSelect: (ids) => { this.slayerActorId = ids[0] || null }
-        }
-      )
-      slayRow.appendChild(slayGrid)
+      const slayCard = document.createElement('div')
+      slayCard.className = 'card'
+      slayCard.innerHTML = `<div class="card-title">🗡 처단자 선언</div>`
 
-      const slayBtn = document.createElement('button')
-      slayBtn.className = 'btn btn-danger btn-full mt-8'
-      slayBtn.textContent = '🗡 처단자 지목 실행'
-      slayBtn.addEventListener('click', () => {
-        if (this.slayerActorId) {
-          const result = this.engine.slayerDeclare(slayerPlayer.id, this.slayerActorId)
+      const slayLabel = document.createElement('div')
+      slayLabel.className = 'section-label'
+      slayLabel.textContent = `${slayerPlayer.name} — 지목 대상 선택`
+      slayCard.appendChild(slayLabel)
+
+      const slayTargets = state.players.filter(p => p.id !== slayerPlayer.id)
+      slayCard.appendChild(
+        this._buildOval(
+          slayTargets,
+          this.slayerTargetId ? [this.slayerTargetId] : [],
+          (id) => { this.slayerTargetId = id; this._render() }
+        )
+      )
+
+      if (this.slayerTargetId) {
+        const slayBtn = document.createElement('button')
+        slayBtn.className = 'btn btn-danger btn-full mt-8'
+        slayBtn.textContent = '🗡 처단자 지목 실행'
+        slayBtn.addEventListener('click', () => {
+          const result = this.engine.slayerDeclare(slayerPlayer.id, this.slayerTargetId)
+          this.onHistoryPush({
+            type: 'slayer', phase: 'day', round: state.round,
+            actor: slayerPlayer.id, target: [this.slayerTargetId],
+            label: `🗡 처단자 지목: ${this.slayerTargetId}번`,
+            snapshot: this.engine.serialize(),
+          })
           if (result.gameOver) {
             this.onGameOver && this.onGameOver(result.winner, result.reason)
+            return
           }
+          this.slayerTargetId = null
           this._render()
-        }
-      })
-      slayRow.appendChild(slayBtn)
-      specialCard.appendChild(slayRow)
+        })
+        slayCard.appendChild(slayBtn)
+      }
+
+      this.el.appendChild(slayCard)
     }
 
-    this.el.appendChild(specialCard)
-
-    // ─ 처형 없이 낮 종료 (Mayor 3인 체크) ─
+    // ─ 처형 없이 밤으로 ─
     const endDayBtn = document.createElement('button')
     endDayBtn.className = 'btn btn-full mt-12'
-    endDayBtn.textContent = '🌙 밤으로 전환 (처형 없이)'
+    endDayBtn.textContent = '🌙 처형 없이 밤으로 전환'
     endDayBtn.addEventListener('click', () => {
       const winCheck = this.engine.checkWinCondition()
       if (winCheck.gameOver) {
@@ -194,30 +190,6 @@ export class DayFlow {
       this.onStartNight && this.onStartNight()
     })
     this.el.appendChild(endDayBtn)
-  }
-
-  _registerNomination() {
-    if (!this.nominatorId || !this.targetId) return
-    const nomId = this.nominatorId
-    const tgtId = this.targetId
-    const result = this.engine.nominate(nomId, tgtId)
-
-    this.onHistoryPush({
-      type: 'nomination', phase: 'day', round: this.engine.state.round,
-      actor: nomId, target: [tgtId],
-      label: `${nomId}번 → ${tgtId}번 지명`,
-      detail: result.virginTriggered
-        ? `${nomId}번이 ${tgtId}번을 지명 (처녀 능력 발동!)`
-        : `${nomId}번이 ${tgtId}번을 지명`,
-      snapshot: this.engine.serialize(),
-    })
-
-    if (result.virginTriggered) {
-      this._showAlert('처녀 능력 발동!', '지목자가 마을 주민이어서 즉시 처형됩니다.')
-    }
-    this.nominatorId = null
-    this.targetId    = null
-    this._render()
   }
 
   _execute(playerId) {
@@ -237,21 +209,6 @@ export class DayFlow {
     }
     this.onStartNight && this.onStartNight()
   }
-
-  _showAlert(title, message) {
-    const overlay = document.createElement('div')
-    overlay.className = 'popup-overlay'
-    overlay.innerHTML = `
-      <div class="popup-box" style="text-align:center">
-        <div style="font-size:2rem;margin-bottom:12px">⚡</div>
-        <div style="font-family:'Noto Serif KR',serif;font-size:1.1rem;font-weight:700;color:var(--gold2);margin-bottom:8px">${title}</div>
-        <div style="font-size:0.82rem;color:var(--text2);margin-bottom:16px">${message}</div>
-        <button class="btn btn-primary btn-full">확인</button>
-      </div>
-    `
-    overlay.querySelector('button').addEventListener('click', () => overlay.remove())
-    document.body.appendChild(overlay)
-  }
 }
 
 if (!document.getElementById('dayflow-style')) {
@@ -259,25 +216,6 @@ if (!document.getElementById('dayflow-style')) {
   style.id = 'dayflow-style'
   style.textContent = `
 .dayflow-screen { display: flex; flex-direction: column; gap: 10px; }
-.dayflow__step { margin-bottom: 10px; }
-.dayflow__vote-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 8px;
-}
-.dayflow__vote-btn { min-width: 44px; font-size: 1.2rem; }
-.dayflow__vote-num {
-  font-family: 'Noto Serif KR', serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  min-width: 50px;
-  text-align: center;
-}
-.dayflow__special-row { margin-bottom: 4px; }
-.dayflow__special-label { font-size: 0.78rem; color: var(--text2); display: block; margin-bottom: 6px; }
   `
   document.head.appendChild(style)
 }

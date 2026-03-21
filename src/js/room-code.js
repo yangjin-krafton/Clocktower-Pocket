@@ -125,23 +125,56 @@ export function validateRoomCode(code) {
   return decodeRoomCode(code) !== null
 }
 
+function legacyCopyText(text) {
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.top = '-9999px'
+    ta.style.left = '-9999px'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.focus()
+    ta.select()
+    ta.setSelectionRange(0, ta.value.length)
+    const ok = document.execCommand('copy')
+    ta.remove()
+    return ok
+  } catch {
+    return false
+  }
+}
+
+export async function copyText(text) {
+  if (!text) return false
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {}
+
+  return legacyCopyText(text)
+}
+
 /**
- * 방 코드 공유 텍스트 생성 + 클립보드 복사
- * @param {string} code  원본 방 코드
+ * 방 코드만 클립보드 복사
+ * @param {string} code
  * @returns {Promise<boolean>}
  */
 export async function copyRoomCode(code) {
-  const formatted = formatCode(code)
-  const baseUrl = location.origin + location.pathname
-  const link = `${baseUrl}?code=${code}`
-  const text = `🏰 Clocktower Pocket\n\n방 코드: ${formatted}\n접속 링크: ${link}`
+  if (await copyText(formatCode(code))) return true
+  return copyText(code)
+}
 
-  try {
-    await navigator.clipboard.writeText(text)
-    return true
-  } catch {
-    // fallback
-    try { await navigator.clipboard.writeText(code) } catch {}
-    return false
-  }
+/**
+ * 바로 접속 가능한 링크 클립보드 복사
+ * @param {string} code
+ * @returns {Promise<boolean>}
+ */
+export async function copyRoomLink(code) {
+  const link = `${location.origin}${location.pathname}?code=${code}`
+  return copyText(link)
 }

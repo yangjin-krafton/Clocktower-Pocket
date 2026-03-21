@@ -18,6 +18,7 @@ import {
   TEAM_BORDER,
   createSeatOval, createSeatSlot,
   createRoleIconEl, createRoleNameLabel,
+  createSeatNumLabel,
 } from '../utils/SeatWheel.js'
 import { applySlotStateMarks } from '../utils/SlotMark.js'
 
@@ -175,11 +176,12 @@ export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, 
     oval.innerHTML = ''
     slots.forEach((slot, i) => {
       const { x, y } = ovalSlotPos(i, total)
+      const p        = players.find(pp => pp.id === slot.id)
+      const isDead   = showStatus && p?.status !== 'alive'
       const role     = slot.revealed && slot.role ? ROLES_BY_ID[slot.role] : null
 
-      // 상태표시 켜짐 시: 주정뱅이 drunkAs 아이콘 + 모션 배지 처리
-      const p             = (showStatus && slot.revealed) ? players.find(pp => pp.id === slot.id) : null
-      const isDrunkWithAs = !!(p?.role === 'drunk' && p.drunkAs)
+      // 주정뱅이 drunkAs 아이콘 + 모션 배지 처리 (상태표시 켜짐 시)
+      const isDrunkWithAs = !!(showStatus && slot.revealed && p?.role === 'drunk' && p.drunkAs)
       const displayRole   = isDrunkWithAs ? ROLES_BY_ID[p.drunkAs] : role
 
       const borderColor = role ? (TEAM_BORDER[role.team] || 'var(--lead2)') : 'var(--lead2)'
@@ -188,31 +190,36 @@ export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, 
         borderColor,
         borderWidth: 2,
         isAssigned:  slot.revealed,
+        isDead,
         cursor:      'default',
       })
 
-      // drunkBadge: 상태표시 켜짐 + drunkAs 배정된 주정뱅이 → 회전 페이드 모션 표시
       slotEl.appendChild(createRoleIconEl(displayRole, iconPx, {
         fallbackEmoji: '?',
         drunkBadge:    isDrunkWithAs,
       }))
       if (slot.revealed && displayRole) slotEl.appendChild(createRoleNameLabel(displayRole, slotPx))
 
-      if (showStatus && p && slot.revealed) {
+      if (p) {
         applySlotStateMarks(slotEl, slotPx, {
-          isPoisoned:     p.isPoisoned,
-          isDrunk:        p.isDrunk && !isDrunkWithAs,
-          isProtected:    p.id === engine?.monkProtect,
-          isDeadNight:    p.status === 'dead',
-          isDeadExec:     p.status === 'executed',
-          butlerMasterId: engine?.butlerMasters?.[p.id] ?? null,
+          isDeadNight:    showStatus ? p.status === 'dead'     : false,
+          isDeadExec:     showStatus ? p.status === 'executed' : false,
+          isPoisoned:     showStatus && slot.revealed ? p.isPoisoned                : false,
+          isDrunk:        showStatus && slot.revealed ? p.isDrunk && !isDrunkWithAs : false,
+          isProtected:    showStatus && slot.revealed ? p.id === engine?.monkProtect && !engine?.state?.players?.find(mp => mp.role === 'monk')?.isPoisoned : false,
+          butlerMasterId: showStatus && slot.revealed ? engine?.butlerMasters?.[p.id] ?? null : null,
         })
       }
 
       oval.appendChild(slotEl)
+
+      // 자리번호 레이블 (showNums 토글)
+      if (showNums) {
+        oval.appendChild(createSeatNumLabel(x, y, slotPx, p?.id ?? i + 1, { dimmed: !slot.revealed }))
+      }
     })
 
-    // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시 / 미공개 슬롯 흐리게)
+    // 파이 분할 벽
     drawOvalPieNumbers(oval, total, { outerR: 116, showNumbers: false })
   }
 

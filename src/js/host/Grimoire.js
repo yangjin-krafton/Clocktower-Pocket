@@ -6,13 +6,13 @@
  * phase === 'day'   : 낮 진행
  */
 import { renderPhaseHeader }    from '../components/PhaseHeader.js'
-import { renderPlayerGrid }     from '../components/PlayerGrid.js'
+
 import { renderNightOrderList } from '../components/NightOrderList.js'
 import { renderLogList }        from '../components/LogEntry.js'
 import { ROLES_BY_ID, ROLES_TB, PLAYER_COUNTS } from '../data/roles-tb.js'
 import { RulesScreen }          from '../components/RulesScreen.js'
 import { CharacterDict }        from '../player/CharacterDict.js'
-import { formatCode, copyRoomCode } from '../room-code.js'
+import { formatCode, copyRoomCode, copyRoomLink } from '../room-code.js'
 import { calcOvalLayout, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createRoleNameLabel } from '../utils/SeatWheel.js'
 import { applySetupSlotMarks } from '../utils/SlotMark.js'
@@ -110,26 +110,79 @@ export class Grimoire {
 
     this.el.appendChild(renderPhaseHeader(state))
 
-    // 방 코드 배지 (게임 중 참조용)
+    // 방 코드 공유 카드 (게임 중 참조용)
     const cfg = this.getLobbyConfig()
     if (cfg.roomCode) {
-      const codeBadge = document.createElement('div')
-      codeBadge.style.cssText = `
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        background:rgba(212,168,40,0.08);border:1px solid rgba(212,168,40,0.25);
-        border-radius:8px;padding:7px 12px;margin-bottom:4px;cursor:pointer;
+      const codeRow = document.createElement('div')
+      codeRow.style.cssText = `
+        display:flex;align-items:stretch;gap:6px;margin-bottom:4px;
       `
-      codeBadge.innerHTML = `
-        <span style="font-size:0.65rem;color:var(--text4)">방 코드</span>
-        <span style="font-family:monospace;font-size:0.88rem;font-weight:700;letter-spacing:0.12em;color:var(--gold2)">${formatCode(cfg.roomCode)}</span>
-        <span style="font-size:0.6rem;color:var(--text4)">탭=복사</span>
+
+      // ── 좌: 코드 표시 (넓게) ──
+      const codeCard = document.createElement('div')
+      codeCard.style.cssText = `
+        flex:1;min-width:0;
+        display:flex;align-items:center;justify-content:center;
+        background:var(--surface2);border:1.5px solid rgba(212,168,40,0.45);
+        border-radius:12px;padding:10px 14px;cursor:pointer;gap:10px;
+        transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;
       `
-      codeBadge.addEventListener('click', () => {
-        copyRoomCode(cfg.roomCode)
-        codeBadge.querySelector('span:last-child').textContent = '✓ 복사됨!'
-        setTimeout(() => { codeBadge.querySelector('span:last-child').textContent = '탭=복사' }, 1500)
+      const codeText = document.createElement('div')
+      codeText.style.cssText = `
+        font-family:monospace;font-size:1.15rem;font-weight:900;
+        letter-spacing:0.14em;color:var(--gold2);white-space:nowrap;overflow:hidden;
+        text-overflow:ellipsis;
+      `
+      codeText.textContent = formatCode(cfg.roomCode)
+
+      const codeHint = document.createElement('div')
+      codeHint.style.cssText = `
+        font-size:0.55rem;color:var(--text4);white-space:nowrap;flex-shrink:0;
+      `
+      codeHint.textContent = '탭=복사'
+
+      codeCard.appendChild(codeText)
+      codeCard.appendChild(codeHint)
+      codeCard.addEventListener('click', async () => {
+        const copied = await copyRoomCode(cfg.roomCode)
+        codeHint.textContent = copied ? '✓ 복사!' : '복사 실패'
+        codeCard.style.borderColor = copied ? 'var(--tl-base)' : 'var(--rd-light)'
+        setTimeout(() => {
+          codeHint.textContent = '탭=복사'
+          codeCard.style.borderColor = 'rgba(212,168,40,0.45)'
+        }, 1500)
       })
-      this.el.appendChild(codeBadge)
+
+      // ── 우: 링크 버튼 (작게) ──
+      const linkBtn = document.createElement('div')
+      linkBtn.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:var(--surface2);border:1.5px solid rgba(212,168,40,0.45);
+        border-radius:12px;padding:10px 14px;cursor:pointer;gap:3px;
+        transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;flex-shrink:0;
+      `
+      const linkIcon = document.createElement('div')
+      linkIcon.style.cssText = 'font-size:1.1rem;line-height:1;'
+      linkIcon.textContent = '🔗'
+      const linkHint = document.createElement('div')
+      linkHint.style.cssText = 'font-size:0.52rem;color:var(--text4);white-space:nowrap;'
+      linkHint.textContent = '링크'
+
+      linkBtn.appendChild(linkIcon)
+      linkBtn.appendChild(linkHint)
+      linkBtn.addEventListener('click', async () => {
+        const copied = await copyRoomLink(cfg.roomCode)
+        linkHint.textContent = copied ? '✓ 복사!' : '복사 실패'
+        linkBtn.style.borderColor = copied ? 'var(--tl-base)' : 'var(--rd-light)'
+        setTimeout(() => {
+          linkHint.textContent = '링크'
+          linkBtn.style.borderColor = 'rgba(212,168,40,0.45)'
+        }, 1500)
+      })
+
+      codeRow.appendChild(codeCard)
+      codeRow.appendChild(linkBtn)
+      this.el.appendChild(codeRow)
     }
 
     if (state.phase === 'night') {
@@ -266,7 +319,7 @@ export class Grimoire {
     const oval = createSeatOval()
 
     // 뷰포트 높이 기준으로 타원 크기 계산 (슬롯 크기 계산용)
-    const { ovalW, slotPx, iconPx } = calcOvalLayout(total, 360, true)
+    const { slotPx, iconPx } = calcOvalLayout(total, 360, true)
 
     // Baron이 있는지 확인하고 아웃사이더 수 계산
     const hasBaron = seats.includes('baron')
@@ -524,7 +577,6 @@ export class Grimoire {
 
     // ── 주정뱅이 "믿는 역할" 선택 패널 ──
     const hasDrunk = seats.includes('drunk')
-    const drunkSeatSelected = si !== null && seats[si] === 'drunk'
     if (hasDrunk) {
       const config = this.getLobbyConfig()
       const drunkAs = config.drunkAsRole

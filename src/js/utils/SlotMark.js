@@ -49,10 +49,6 @@ export const MARK_DEFS = {
   // ── 보호 (좌상) ──────────────────────────────────────────
   protected:   { pos: 'TL', icon: '🛡', bg: '#0e7490', glow: 'rgba(14,116,144,0.5)'  },
 
-  // ── 사망 종류 (상단 중·우) ───────────────────────────────
-  dead_night:  { pos: 'TC', icon: '💀', bg: '#374151'                                  },
-  dead_exec:   { pos: 'TR', icon: '⚔',  bg: '#b91c1c', glow: 'rgba(185,28,28,0.5)'   },
-
   // ── UI 선택 (우상 — NightAction) ─────────────────────────
   check:       { pos: 'TR', icon: '✓',  bg: 'var(--gold2)', color: '#000', fw: '700'  },
 
@@ -238,6 +234,54 @@ function addPoisonEffect(slot, slotPx) {
   }
 }
 
+// ── 사망 / 처형 dim 오버레이 ─────────────────────────────────
+/**
+ * 밤 사망 — 어두운 빨간 dim / 낮 처형 — 블랙 dim
+ * 배지 없이 슬롯 전체를 반투명 색으로 덮음
+ * @param {HTMLElement} slot
+ * @param {'night'|'exec'} type
+ */
+function addDeadEffect(slot, type) {
+  const overlay = document.createElement('div')
+  overlay.className = `slot-mark slot-mark--dead-${type}`
+  overlay.style.cssText = `
+    position:absolute;inset:0;
+    border-radius:inherit;
+    background:${type === 'exec'
+      ? 'rgba(0,0,0,0.58)'
+      : 'rgba(110,12,12,0.52)'};
+    pointer-events:none;z-index:2;
+  `
+  slot.appendChild(overlay)
+}
+
+// ── 수도사 보호 이펙트 ───────────────────────────────────────
+/**
+ * TL 배지(🛡) + 슬롯 전체 방패 반투명 페이드 루프 오버레이.
+ */
+function addProtectedEffect(slot, slotPx) {
+  // 슬롯 전체를 덮는 soldier.png 반투명 페이드 루프 오버레이
+  const overlay = document.createElement('div')
+  overlay.className = 'slot-mark slot-mark--protected-overlay'
+  const imgPx = Math.round(slotPx * 0.72)
+  overlay.style.cssText = `
+    position:absolute;inset:0;
+    border-radius:inherit;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(14,116,144,0.08);
+    pointer-events:none;z-index:2;
+    animation:shield-fade 2.4s ease-in-out infinite;
+  `
+  const img = document.createElement('img')
+  img.src = './asset/icons/soldier.png'
+  img.style.cssText = `width:${imgPx}px;height:${imgPx}px;object-fit:contain;`
+  overlay.appendChild(img)
+  slot.appendChild(overlay)
+
+  // 테두리 글로우 펄스
+  slot.style.animation = 'shield-border 2.4s ease-in-out infinite'
+}
+
 // ── 집사 주인 프레임 태그 (슬롯 상단) ───────────────────────
 /**
  * 집사 슬롯 상단 중앙에 왕관 + 주인 번호를 프레임 태그로 부착.
@@ -352,9 +396,9 @@ export function applySlotStateMarks(slot, slotPx, {
 } = {}) {
   if (isPoisoned)               addPoisonEffect(slot, slotPx)
   if (isDrunk)                  addDrunkStatePill(slot, slotPx)
-  if (isProtected)              addSlotMark(slot, slotPx, 'protected')
-  if (isDeadNight)              addSlotMark(slot, slotPx, 'dead_night')
-  if (isDeadExec)               addSlotMark(slot, slotPx, 'dead_exec')
+  if (isProtected)              addProtectedEffect(slot, slotPx)
+  if (isDeadNight)              addDeadEffect(slot, 'night')
+  if (isDeadExec)               addDeadEffect(slot, 'exec')
   if (isSelectedCheck)          addSlotMark(slot, slotPx, 'check')
   if (butlerMasterId != null)   addButlerMasterPill(slot, slotPx, butlerMasterId)
 }
@@ -383,16 +427,24 @@ export function applySetupSlotMarks(slot, slotPx, {
   }
 }
 
-// ── 중독 버블 키프레임 주입 ──────────────────────────────────
-if (!document.getElementById('slot-mark-poison-style')) {
+// ── 키프레임 주입 ────────────────────────────────────────────
+if (!document.getElementById('slot-mark-anim-style')) {
   const s = document.createElement('style')
-  s.id = 'slot-mark-poison-style'
+  s.id = 'slot-mark-anim-style'
   s.textContent = `
 @keyframes poison-bubble {
   0%   { transform:translateY(0)            scale(1.0); opacity:0;    }
   12%  { opacity:0.85; }
   80%  { opacity:0.30; }
   100% { transform:translateY(calc(var(--pt, 70px) * -1)) scale(0.35); opacity:0; }
+}
+@keyframes shield-fade {
+  0%,100% { opacity:0;    }
+  45%,55% { opacity:0.55; }
+}
+@keyframes shield-border {
+  0%,100% { box-shadow:0 0 0 2px rgba(14,116,144,0.25), 0 0  8px rgba(14,116,144,0.15); }
+  50%     { box-shadow:0 0 0 2px rgba(14,116,144,0.70), 0 0 18px rgba(14,116,144,0.45); }
 }
   `
   document.head.appendChild(s)

@@ -12,6 +12,28 @@ const PLAYER_SESSION_KEY = 'ctp_player_session'
 let currentTab = 'role'
 let appInstance = null
 
+function getIncomingRoomCode() {
+  return new URLSearchParams(location.search).get('code') || ''
+}
+
+function launchPlayerApp() {
+  showLoading()
+  import('./player/app.js').then(({ PlayerApp }) => {
+    const app = new PlayerApp()
+    appInstance = app
+    app.init()
+  })
+}
+
+function launchHostApp() {
+  showLoading()
+  import('./host/app.js').then(({ HostApp }) => {
+    const app = new HostApp()
+    appInstance = app
+    app.init()
+  })
+}
+
 function buildTabs() {
   tabBar.innerHTML = ''
   const tabs = [
@@ -68,6 +90,17 @@ window.goHome = () => {
   showLanding()
 }
 
+window.goHome = () => {
+  appInstance = null
+  currentTab  = 'role'
+  if (location.search) {
+    history.replaceState(null, '', location.pathname)
+  }
+  ThemeManager.set(null)
+  buildTabs()
+  showLanding()
+}
+
 function showLoading() {
   content.innerHTML = `
     <div class="empty-state">
@@ -78,6 +111,11 @@ function showLoading() {
 }
 
 function showLanding() {
+  if (getIncomingRoomCode()) {
+    launchPlayerApp()
+    return
+  }
+
   content.innerHTML = ''
 
   const wrap = document.createElement('div')
@@ -107,21 +145,11 @@ function showLanding() {
 
   // 새 게임 버튼
   document.getElementById('btn-host').addEventListener('click', () => {
-    showLoading()
-    import('./host/app.js').then(({ HostApp }) => {
-      const app = new HostApp()
-      appInstance = app
-      app.init()
-    })
+    launchHostApp()
   })
 
   document.getElementById('btn-player').addEventListener('click', () => {
-    showLoading()
-    import('./player/app.js').then(({ PlayerApp }) => {
-      const app = new PlayerApp()
-      appInstance = app
-      app.init()
-    })
+    launchPlayerApp()
   })
 
   // ── 저장된 게임 목록 ──

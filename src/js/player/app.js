@@ -5,7 +5,7 @@
  *   방 코드 + 자리 번호 입력 → 디코딩 → 역할 카드 표시
  *   localStorage 에 마지막 세션 저장 (재방문 시 자동 복원)
  */
-import { decodeRoomCode, formatCode } from '../room-code.js'
+import { decodeRoomCode, formatCode, copyRoomCode, copyRoomLink } from '../room-code.js'
 import { Memo }                       from './Memo.js'
 import { CharacterDict }              from './CharacterDict.js'
 import { RulesScreen }                from '../components/RulesScreen.js'
@@ -463,58 +463,71 @@ export class PlayerApp {
       return
     }
 
-    // 상단: 방 코드 + 자리 번호 배지 (클릭 시 방 코드 복사)
-    const header = document.createElement('div')
-    header.style.cssText = `
-      display:flex;align-items:center;justify-content:center;
-      padding:8px 16px;background:rgba(212,168,40,0.06);
-      border-bottom:1px solid var(--lead2);
-      cursor:pointer;transition:background 0.15s;
+    // 상단: 방 코드 / 자리 번호 / 링크
+    const headerRow = document.createElement('div')
+    headerRow.style.cssText = `
+      display:flex;align-items:stretch;gap:6px;
+      padding:8px 10px 0;
     `
+
+    const makeTopCard = ({ flex = '0 0 auto', minWidth = '0', mainHtml, hintText, onCopy }) => {
+      const card = document.createElement('div')
+      card.style.cssText = `
+        flex:${flex};min-width:${minWidth};
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:var(--surface2);border:1.5px solid rgba(212,168,40,0.45);
+        border-radius:12px;padding:10px 12px;cursor:pointer;gap:4px;
+        transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;
+      `
+      const main = document.createElement('div')
+      main.innerHTML = mainHtml
+      const hint = document.createElement('div')
+      hint.style.cssText = 'font-size:0.52rem;color:var(--text4);white-space:nowrap;'
+      hint.textContent = hintText
+      card.appendChild(main)
+      card.appendChild(hint)
+      if (onCopy) {
+        card.addEventListener('click', async () => {
+          const copied = await onCopy()
+          hint.textContent = copied ? '✓ 복사!' : '복사 실패'
+          card.style.borderColor = copied ? 'var(--tl-base)' : 'var(--rd-light)'
+          setTimeout(() => {
+            hint.textContent = hintText
+            card.style.borderColor = 'rgba(212,168,40,0.45)'
+          }, 1500)
+        })
+      } else {
+        card.style.cursor = 'default'
+      }
+      return card
+    }
 
     const formattedCode = formatCode(this.session.code)
     const seatNum = this.session.seatNum
 
-    const renderHeader = (icon = '📋') => {
-      header.innerHTML = `
-        <span style="font-size:0.68rem;color:var(--text4)">
-          방 <b style="color:var(--gold2);font-family:monospace;letter-spacing:0.1em">${formattedCode}</b>
-          &nbsp;·&nbsp; 자리 <b style="color:var(--text2)">${seatNum}</b>번
-          <span style="font-size:0.6rem;margin-left:6px;opacity:0.6">${icon}</span>
-        </span>
-      `
-    }
+    headerRow.appendChild(makeTopCard({
+      flex: '1 1 auto',
+      minWidth: '0',
+      mainHtml: `<div style="font-size:1rem;font-weight:900;letter-spacing:0.14em;color:var(--gold2);font-family:monospace;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${formattedCode}</div>`,
+      hintText: '방 코드 복사',
+      onCopy: () => copyRoomCode(this.session.code),
+    }))
 
-    renderHeader()
+    headerRow.appendChild(makeTopCard({
+      flex: '0 0 auto',
+      mainHtml: `<div style="font-size:0.62rem;color:var(--text4);margin-bottom:1px;">자리</div><div style="font-size:1rem;font-weight:800;color:var(--text2);line-height:1;">${seatNum}번</div>`,
+      hintText: '내 번호',
+      onCopy: null,
+    }))
 
-    header.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(this.session.code)
-        // 피드백: 배경색 변경 + 아이콘 변경
-        header.style.background = 'rgba(212,168,40,0.15)'
-        renderHeader('✓')
-        setTimeout(() => {
-          header.style.background = 'rgba(212,168,40,0.06)'
-          renderHeader('📋')
-        }, 1000)
-      } catch (err) {
-        // fallback: 텍스트 선택
-        const textEl = header.querySelector('b')
-        if (textEl) {
-          const range = document.createRange()
-          range.selectNode(textEl)
-          window.getSelection().removeAllRanges()
-          window.getSelection().addRange(range)
-        }
-      }
-    })
-    header.addEventListener('mouseenter', () => {
-      header.style.background = 'rgba(212,168,40,0.10)'
-    })
-    header.addEventListener('mouseleave', () => {
-      header.style.background = 'rgba(212,168,40,0.06)'
-    })
-    this.content.appendChild(header)
+    headerRow.appendChild(makeTopCard({
+      flex: '0 0 auto',
+      mainHtml: `<div style="font-size:1.15rem;line-height:1;">🔗</div>`,
+      hintText: '링크 복사',
+      onCopy: () => copyRoomLink(this.session.code),
+    }))
+
+    this.content.appendChild(headerRow)
 
     // 안내 문구 (상단 바 바로 아래) - 30% 축소
     const sub = document.createElement('div')

@@ -203,7 +203,6 @@ export class NightAction {
   // ── 자리 선택 → 정보 공개 (세탁부 / 사서 / 조사관) ──
   _showRoleInfoWithSeatSelect(roleId, actor) {
     const role = ROLES_BY_ID[roleId]
-    const alivePlayers = this.engine.state.players.filter(p => p.status === 'alive')
 
     // OvalSelectPanel 은 호스트 테마 유지
     this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
@@ -211,7 +210,7 @@ export class NightAction {
       roleIcon:    role?.icon || '?',
       roleTeam:    role?.team || null,
       ability:     role?.ability || '',
-      players:     alivePlayers,
+      players:     this.engine.state.players,
       selfSeatId:  actor.id,
       maxSelect:   2,
       hostWarning: this._hostWarning(actor),
@@ -347,13 +346,10 @@ export class NightAction {
     const actor = actors[0]
     const role = ROLES_BY_ID[roleId]
 
-    // 선택 가능 대상 필터
-    let selectablePlayers = this.engine.state.players.filter(p => p.status === 'alive')
+    // 선택 가능 대상 필터 (사망/처형 슬롯은 오발에 유지, 클릭만 불가)
+    let selectablePlayers = this.engine.state.players
     if (roleId === 'monk') {
       selectablePlayers = selectablePlayers.filter(p => p.id !== actor.id)
-    }
-    if (roleId === 'fortuneteller') {
-      selectablePlayers = this.engine.state.players // 사망자도 포함
     }
 
     // OvalSelectPanel 은 호스트 테마 유지

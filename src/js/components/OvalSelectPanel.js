@@ -202,6 +202,22 @@ if (!document.getElementById('oval-select-panel-style')) {
   gap: 10px;
   flex-shrink: 0;
 }
+.oval-sel__host-warn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1.5px solid rgba(220, 38, 38, 0.45);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.18);
+  animation: warn-pulse 1.8s ease-in-out infinite;
+}
 .oval-sel__icon {
   font-size: 2.2rem;
   width: 48px;

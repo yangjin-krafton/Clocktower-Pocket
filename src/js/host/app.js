@@ -962,11 +962,12 @@ export class HostApp {
       slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
       if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
       applySlotStateMarks(slot, slotPx, {
-        isPoisoned:  player.isPoisoned,
-        isDrunk:     player.isDrunk && !isDrunkWithAs,
-        isProtected: player.id === engine.monkProtect,
-        isDeadExec:  player.status === 'executed',
-        isDeadNight: player.status === 'dead',
+        isPoisoned:     player.isPoisoned,
+        isDrunk:        player.isDrunk && !isDrunkWithAs,
+        isProtected:    player.id === engine.monkProtect,
+        isDeadExec:     player.status === 'executed',
+        isDeadNight:    player.status === 'dead',
+        butlerMasterId: engine.butlerMasters[player.id] ?? null,
       })
 
       slot.addEventListener('click', () => {

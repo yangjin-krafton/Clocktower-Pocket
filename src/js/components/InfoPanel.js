@@ -11,9 +11,7 @@
  * @returns {HTMLElement}
  */
 import { renderPlayerChip } from './PlayerChip.js'
-import { mountRevealEditPanel } from './RevealEditPanel.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
-import { ThemeManager } from '../ThemeManager.js'
 
 // 캐릭터 이름 → 진영 매핑
 const ROLE_TEAM_MAP = {
@@ -100,34 +98,13 @@ export function mountInfoPanel(data) {
   const overlay = document.createElement('div')
   overlay.className = 'info-panel-overlay panel-overlay'
 
-  // revealData 있으면 "👁 참가자에게 공개 →" 버튼으로 교체
-  const onConfirmOverride = data.revealData
-    ? () => {
-        overlay.remove()
-        ThemeManager.pushTemp('player')  // 참가자에게 보여주는 화면 → 참가자 테마
-        mountRevealEditPanel({
-          ...data.revealData,
-          onNext: () => {
-            ThemeManager.popTemp()  // 호스트 테마 복원
-            data.onConfirm?.()
-          },
-        })
-      }
-    : () => {
-        overlay.remove()
-        data.onConfirm?.()
-      }
-
   const panel = renderInfoPanel({
     ...data,
-    onConfirm: onConfirmOverride,
+    onConfirm: () => {
+      overlay.remove()
+      data.onConfirm?.()
+    },
   })
-
-  // 버튼 레이블 업데이트
-  if (data.revealData) {
-    const btn = panel.querySelector('.info-panel__confirm')
-    if (btn) btn.textContent = '👁 참가자에게 공개 →'
-  }
 
   overlay.appendChild(panel)
   document.body.appendChild(overlay)

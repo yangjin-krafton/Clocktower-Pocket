@@ -2,20 +2,16 @@
  * H-04 NightAction — 밤 역할 처리
  * 역할별로 InfoPanel 또는 SelectPanel을 렌더링
  */
-import { mountInfoPanel }          from '../components/InfoPanel.js'
-import { mountRevealEditPanel }    from '../components/RevealEditPanel.js'
+import { mountNightRevealNote }     from '../components/NightRevealNote.js'
 import { mountOvalSelectPanel }     from '../components/OvalSelectPanel.js'
-import { mountHostDecisionPanel }   from '../components/HostDecisionPanel.js'
-import { mountSpyModeSelector, mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
+import { loadNightMessages, getTemplate, fillTemplate } from '../data/NightMessages.js'
+import { mountSpyGrimoirePanel } from '../components/SpyGrimoirePanel.js'
 import { mountBluffSelectPanel }    from '../components/BluffSelectPanel.js'
 import { mountDemonBluffPanel }     from '../components/DemonBluffPanel.js'
 import { NightAdvisor }             from './NightAdvisor.js'
 import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
-import { ROLES_TB, ROLES_BY_ID } from '../data/roles-tb.js'
+import { ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
-import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
-import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel } from '../utils/SeatWheel.js'
-import { addSlotMark, applySlotStateMarks } from '../utils/SlotMark.js'
 
 export class NightAction {
   constructor({ engine, onStepDone }) {
@@ -24,6 +20,7 @@ export class NightAction {
     this._unmount      = null
     this._advisor      = new NightAdvisor()
     this._bluffAdvisor = new DemonBluffAdvisor()
+    loadNightMessages()  // 밤 시작 전에 미리 로드
   }
 
   /**
@@ -84,25 +81,21 @@ export class NightAction {
   _showMinionInfo(minions) {
     if (!minions || minions.length === 0) { this._done('minion-info'); return }
     const demonPlayers = this.engine.state.players.filter(p => p.role === 'imp')
-    const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ')
-    const demonNums  = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
+    const minionLines = minions.map(p => `${this._toNum(p)} (${ROLES_BY_ID[p.role]?.name})`).join('\n')
+    const demonNums   = demonPlayers.map(p => this._toNum(p)).join(', ') || '?'
 
-    // 블러프는 demon-info에서 선택되므로 미니언 공개 시점엔 표시 안 함
-    this._unmount = this._trackOverlay(() => mountInfoPanel({
-      title:    '미니언 공개',
+    const minionTmpl = getTemplate('minion-reveal')
+    const minionMsg = minionTmpl
+      ? fillTemplate(minionTmpl, { 임프번호: demonNums, 미니언목록: minionLines })
+      : `임프: ${demonNums}\n\n동료:\n${minionLines}\n\n번호를 모두 기억한 뒤 눈을 감으세요.`
+
+    ThemeManager.pushTemp('player')
+    this._unmount = this._trackOverlay(() => mountNightRevealNote({
       roleIcon: 'minion.png',
-      message:  `미니언: ${minionNums}\n임프: ${demonNums}`,
-      players:  [...minions, ...demonPlayers],
-      revealData: {
-        roleIcon:   'minion.png',
-        roleName:   '미니언 공개',
-        roleTeam:   'minion',
-        message:    `임프: ${demonNums}\n동료 미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}`,
-        players:    [...minions, ...demonPlayers].map(p => ({ id: p.id })),
-        allPlayers: this.engine.state.players,
-        action:     '번호를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
-      },
-      onConfirm: () => this._done('minion-info'),
+      roleName: '미니언 공개',
+      roleTeam: 'minion',
+      message:  minionMsg,
+      onNext:   () => { ThemeManager.popTemp(); this._done('minion-info') },
     }))
   }
 
@@ -136,24 +129,23 @@ export class NightAction {
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
     const bluffs = this.engine.getBluffs()
-    const bluffText = bluffs.map(r => r.name).join(', ')
-    const minionNums = minions.map(p => `${this._toNum(p)}(${ROLES_BY_ID[p.role]?.name})`).join(', ') || '없음'
+    const bluffLines  = bluffs.map(r => r.name).join('\n')
+    const minionLines = minions.length > 0
+      ? minions.map(p => `${this._toNum(p)} (${ROLES_BY_ID[p.role]?.name})`).join('\n')
+      : '없음'
 
-    this._unmount = this._trackOverlay(() => mountInfoPanel({
-      title:    '임프 정보',
+    const demonTmpl = getTemplate('demon-reveal')
+    const demonMsg = demonTmpl
+      ? fillTemplate(demonTmpl, { 미니언목록: minionLines, 블러프목록: bluffLines })
+      : `미니언:\n${minionLines}\n\n블러프:\n${bluffLines}\n\n모두 기억한 뒤 눈을 감으세요.`
+
+    ThemeManager.pushTemp('player')
+    this._unmount = this._trackOverlay(() => mountNightRevealNote({
       roleIcon: 'imp.png',
-      message:  `미니언: ${minionNums}\n블러프 3개: ${bluffText}`,
-      players:  minions,
-      revealData: {
-        roleIcon:   'imp.png',
-        roleName:   '임프 정보',
-        roleTeam:   'demon',
-        message:    `미니언: ${minions.map(p => this._toNum(p)).join(', ') || '없음'}\n블러프: ${bluffText}`,
-        players:    minions.map(p => ({ id: p.id })),
-        allPlayers: this.engine.state.players,
-        action:     '미니언 번호와 블러프 역할 3개를 모두 기억한 뒤 눈을 감고 손을 내려주세요.',
-      },
-      onConfirm: () => this._done('demon-info'),
+      roleName: '임프 정보',
+      roleTeam: 'demon',
+      message:  demonMsg,
+      onNext:   () => { ThemeManager.popTemp(); this._done('demon-info') },
     }))
   }
 
@@ -162,142 +154,139 @@ export class NightAction {
     if (!spies || spies.length === 0) { this._done('spy'); return }
     const allPlayers = this.engine.state.players
 
-    // ① 호스트가 공개 방식 선택 (모두/반/셔플)
-    this._unmount = this._trackOverlay(() => mountSpyModeSelector({
-      players: allPlayers,
-      onSelected: (mode) => {
-        // ② 선택된 방식으로 오발 그리모어 공개 (참가자 화면)
-        ThemeManager.pushTemp('player')
-        this._unmount = this._trackOverlay(() => mountSpyGrimoirePanel({
-          players: allPlayers,
-          mode,
-          onNext: () => { ThemeManager.popTemp(); this._done('spy') },
-        }))
-      },
+    this._unmount = this._trackOverlay(() => mountSpyGrimoirePanel({
+      players:  allPlayers,
+      engine:   this.engine,
+      onReveal: () => ThemeManager.pushTemp('player'),
+      onNext:   () => { ThemeManager.popTemp(); this._done('spy') },
     }))
   }
 
   // ── 정보 전달 역할 ──
   _showRoleInfo(roleId, actors) {
     if (!actors || actors.length === 0) { this._done(roleId); return }
-    const actor     = actors[0]
-    const role      = ROLES_BY_ID[roleId]
-    const isPoisoned = actor.isPoisoned || actor.isDrunk
+    const actor = actors[0]
 
-    // 항상 정확한 값 계산 (호스트 참고용)
+    // 자리 2개 선택 후 정보 공개가 필요한 역할
+    if (['washerwoman', 'librarian', 'investigator'].includes(roleId)) {
+      this._showRoleInfoWithSeatSelect(roleId, actor)
+      return
+    }
+
+    const role = ROLES_BY_ID[roleId]
     const realAccurate = this._calcAccurateValue(roleId, actor)
-
     this.engine.recordNightAction(roleId, actor.id, [], String(realAccurate))
 
-    // 옵션 생성
-    const customType = ['empath','chef'].includes(roleId) ? 'number'
-      : ['washerwoman','librarian','investigator','undertaker'].includes(roleId) ? 'player-pick'
-      : 'number'
+    ThemeManager.pushTemp('player')
+    this._unmount = this._trackOverlay(() => mountNightRevealNote({
+      roleIcon: role?.icon || '?',
+      roleName: role?.name || roleId,
+      roleTeam: role?.team || null,
+      message:  this._generateInfoMessage(roleId, realAccurate),
+      onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
+    }))
+  }
 
-    const options = []
+  // ── 자리 선택 → 정보 공개 (세탁부 / 사서 / 조사관) ──
+  _showRoleInfoWithSeatSelect(roleId, actor) {
+    const role = ROLES_BY_ID[roleId]
+    const alivePlayers = this.engine.state.players.filter(p => p.status === 'alive')
 
-    if (isPoisoned) {
-      // 중독/취함: 거짓 정보 옵션 (추천)
-      const falseVal = this._calcFalseValue(roleId, realAccurate)
-      options.push({
-        id:          'false-info',
-        icon:        '🔴',
-        label:       '거짓 정보 (추천)',
-        preview:     this._formatPreviewSimple(roleId, falseVal),
-        impact:      '중독/취함 상태 — 오정보를 제공합니다.',
-        stateReason: '',
-        recommended: true,
-        revealData:  this._buildSimpleRevealData(roleId, role, falseVal),
-      })
-    }
-
-    // 정확한 정보 — 항상 표시, 정상 상태일 때 추천
-    options.push({
-      id:          'true-info',
-      icon:        '🔵',
-      label:       '정확한 정보',
-      preview:     this._formatPreviewSimple(roleId, realAccurate),
-      impact:      '정확한 정보를 그대로 전달합니다.',
-      stateReason: '',
-      recommended: !isPoisoned,
-      revealData:  this._buildSimpleRevealData(roleId, role, realAccurate),
-    })
-
-    // 사서: "아웃사이더 없음" 옵션 (중독 여부 무관)
-    if (roleId === 'librarian') {
-      const noOutVal = { roleId: null, players: [], noOutsider: true }
-      const isAccurateNoOut = realAccurate?.noOutsider === true
-      options.push({
-        id:          'no-outsider',
-        icon:        '🚫',
-        label:       '아웃사이더 없음',
-        preview:     '아웃사이더 없음',
-        impact:      isAccurateNoOut ? '정확한 정보입니다.' : '거짓 — 실제로는 아웃사이더가 있습니다.',
-        stateReason: '',
-        recommended: isAccurateNoOut && !isPoisoned,
-        revealData: {
-          roleIcon:    role?.icon || '?',
-          roleName:    role?.name || roleId,
-          roleTeam:    role?.team || null,
-          roleAbility: role?.ability || '',
-          message:     '이 게임에 아웃사이더가 없습니다.',
-          players:     [],
-          action:      '확인한 뒤 눈을 감고 손을 내려주세요.',
-        },
-      })
-    }
-
-    options.push({
-      id:          'custom',
-      icon:        '✏️',
-      label:       '직접 선택',
-      preview:     '호스트가 직접 결정',
-      impact:      '',
-      stateReason: '',
-      recommended: false,
-      revealData:  null,
-      customType,
-    })
-
-    this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
-      roleId,
-      actorSeatId: actor.id,
-      roleName:    role?.name || roleId,
+    // OvalSelectPanel 은 호스트 테마 유지
+    this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
+      title:       role?.name || roleId,
       roleIcon:    role?.icon || '?',
-      roleIconEmoji: role?.iconEmoji || '',
       roleTeam:    role?.team || null,
-      roleAbility: role?.ability || '',
-      accurateValue: realAccurate,
-      isPoisoned,
-      analysis:    { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
-      options,
-      players:     this.engine.state.players,
-      onDecide: (chosen) => {
-        // player-pick 직접 선택: 자리 배치(오벌) 선택
-        if (chosen.id === 'custom' && chosen.customType === 'player-pick') {
-          this._showCustomPlayerPick(roleId, role, () => this._done(roleId))
-          return
-        }
+      ability:     role?.ability || '',
+      players:     alivePlayers,
+      selfSeatId:  actor.id,
+      maxSelect:   2,
+      onConfirm: (ids) => {
+        const value = this._calcValueFromSelectedSeats(roleId, ids)
+        this.engine.recordNightAction(roleId, actor.id, ids, String(value))
 
-        // RevealEditPanel 편집 → 공개
-        const finalRevealData = chosen.revealData || null
-        if (finalRevealData) {
-          // 숫자 직접 입력(customType:'number') 시 역할별 메시지 포맷 적용
-          const message = chosen.customValue !== undefined
-            ? this._formatPreviewSimple(roleId, chosen.customValue)
-            : finalRevealData.message
-          ThemeManager.pushTemp('player')
-          this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-            ...finalRevealData,
-            message,
-            allPlayers: this.engine.state.players,
-            onNext: () => { ThemeManager.popTemp(); this._done(roleId) },
-          }))
-        } else {
-          this._done(roleId)
-        }
+        // NightRevealNote 직전에 플레이어 테마 전환
+        ThemeManager.pushTemp('player')
+        this._unmount = this._trackOverlay(() => mountNightRevealNote({
+          roleIcon: role?.icon || '?',
+          roleName: role?.name || roleId,
+          roleTeam: role?.team || null,
+          message:  this._generateInfoMessage(roleId, value),
+          onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
+        }))
       },
     }))
+  }
+
+  /** 선택된 2자리 기반으로 공개 값 계산 */
+  _calcValueFromSelectedSeats(roleId, ids) {
+    const selected = ids.map(id => this.engine.getPlayer(id)).filter(Boolean)
+    switch (roleId) {
+      case 'washerwoman': {
+        const tfRoles = ['washerwoman','librarian','investigator','chef','empath','fortuneteller',
+          'undertaker','monk','ravenkeeper','virgin','slayer','soldier','mayor']
+        const target = selected.find(p => tfRoles.includes(p.role))
+        if (!target) return null
+        return { roleId: target.role, players: selected }
+      }
+      case 'librarian': {
+        const target = selected.find(p => ['butler','drunk','recluse','saint'].includes(p.role))
+        if (!target) return { roleId: null, players: selected, noOutsider: true }
+        return { roleId: target.role, players: selected }
+      }
+      case 'investigator': {
+        const target = selected.find(p => ['poisoner','spy','scarletwoman','baron'].includes(p.role))
+        if (!target) return null
+        return { roleId: target.role, players: selected }
+      }
+      default: return null
+    }
+  }
+
+  /** 정보 역할 메시지 생성 (MD 템플릿 우선, 없으면 하드코딩 폴백) */
+  _generateInfoMessage(roleId, value) {
+    switch (roleId) {
+      case 'empath': {
+        const tmpl = getTemplate('empath')
+        return tmpl
+          ? fillTemplate(tmpl, { N: value ?? 0 })
+          : `양옆으로 악 플레이어가 ${value ?? 0}명 있습니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      case 'chef': {
+        const tmpl = getTemplate('chef')
+        return tmpl
+          ? fillTemplate(tmpl, { N: value ?? 0 })
+          : `이웃한 악 플레이어 쌍이 ${value ?? 0}쌍 있습니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      case 'undertaker': {
+        if (!value) {
+          const tmpl = getTemplate('undertaker-no-execution')
+          return tmpl ?? '어젯밤 아무도 처형되지 않았습니다.\n\n눈을 감으세요.'
+        }
+        const r = ROLES_BY_ID[value.roleId]
+        const tmpl = getTemplate('undertaker')
+        return tmpl
+          ? fillTemplate(tmpl, { 역할명: r?.name || value.roleId })
+          : `어젯밤 처형된 플레이어는 ${r?.name || value.roleId}이었습니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      case 'washerwoman':
+      case 'librarian':
+      case 'investigator': {
+        if (!value) return getTemplate(roleId) ?? '확인했으면 눈을 감으세요.'
+        if (value.noOutsider) {
+          const tmpl = getTemplate('librarian-no-outsider')
+          return tmpl ?? '이 마을에는 아웃사이더가 없습니다.\n\n확인했으면 눈을 감으세요.'
+        }
+        const r = ROLES_BY_ID[value.roleId]
+        const players = value.players || []
+        const [A, B] = players.map(p => p.id)
+        const tmpl = getTemplate(roleId)
+        return tmpl
+          ? fillTemplate(tmpl, { A: A ?? '?', B: B ?? '?', 역할명: r?.name || value.roleId })
+          : `${A ?? '?'}번, ${B ?? '?'}번 중 한 명이 ${r?.name || value.roleId}입니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      default: return '확인했으면 눈을 감으세요.'
+    }
   }
 
   /** 역할별 정확한 정보값 계산 */
@@ -334,107 +323,6 @@ export class NightAction {
     }
   }
 
-  /** 중독/취함 시 랜덤 값 */
-  _calcPoisonedValue(roleId) {
-    switch (roleId) {
-      case 'empath':     return Math.floor(Math.random() * 3)
-      case 'chef':       return Math.floor(Math.random() * 5)
-      case 'undertaker': return null
-      case 'washerwoman': {
-        const alive = this.engine.state.players.filter(p => p.status === 'alive')
-        if (alive.length < 2) return null
-        const tfIds = ['washerwoman','librarian','investigator','chef','empath','fortuneteller',
-          'undertaker','monk','ravenkeeper','virgin','slayer','soldier','mayor']
-        const randomRoleId = tfIds[Math.floor(Math.random() * tfIds.length)]
-        const shuffled = [...alive].sort(() => Math.random() - 0.5)
-        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
-      }
-      case 'librarian': {
-        const alive = this.engine.state.players.filter(p => p.status === 'alive')
-        if (alive.length < 2) return null
-        const outIds = ['butler','drunk','recluse','saint']
-        const randomRoleId = outIds[Math.floor(Math.random() * outIds.length)]
-        const shuffled = [...alive].sort(() => Math.random() - 0.5)
-        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
-      }
-      case 'investigator': {
-        const alive = this.engine.state.players.filter(p => p.status === 'alive')
-        if (alive.length < 2) return null
-        const minIds = ['poisoner','spy','scarletwoman','baron']
-        const randomRoleId = minIds[Math.floor(Math.random() * minIds.length)]
-        const shuffled = [...alive].sort(() => Math.random() - 0.5)
-        return { roleId: randomRoleId, players: [shuffled[0], shuffled[1]] }
-      }
-      default:           return null
-    }
-  }
-
-  /** 거짓 정보 값 생성 (정확한 값과 다른 값) */
-  _calcFalseValue(roleId, accurate) {
-    switch (roleId) {
-      case 'empath': {
-        const n = typeof accurate === 'number' ? accurate : 0
-        return n === 0 ? 1 : 0
-      }
-      case 'chef': {
-        const n = typeof accurate === 'number' ? accurate : 0
-        return n === 0 ? 1 : 0
-      }
-      case 'washerwoman':
-      case 'librarian':
-      case 'investigator':
-        return this._calcPoisonedValue(roleId)
-      case 'undertaker':
-        if (!accurate) return null
-        const pool = Object.keys(ROLES_BY_ID).filter(id => id !== accurate.roleId)
-        return { ...accurate, roleId: pool[Math.floor(Math.random() * pool.length)] }
-      default:
-        return accurate
-    }
-  }
-
-  /** 간단한 미리보기 텍스트 */
-  _formatPreviewSimple(roleId, value) {
-    if (value === null || value === undefined) return '정보 없음'
-    switch (roleId) {
-      case 'empath': return `양옆 악 플레이어: ${value}명`
-      case 'chef':   return `이웃한 악 쌍: ${value}쌍`
-      case 'undertaker': {
-        if (!value) return '처형자 없음'
-        const r = ROLES_BY_ID[value.roleId]
-        return `${value.playerId}번 → ${r?.name || value.roleId}`
-      }
-      case 'washerwoman':
-      case 'librarian':
-      case 'investigator': {
-        if (!value) return '정보 없음'
-        if (value.noOutsider) return '아웃사이더 없음'
-        const r = ROLES_BY_ID[value.roleId]
-        const pNums = (value.players || []).map(p => `${p.id}번`).join(', ')
-        return `${r?.name || value.roleId} → ${pNums}`
-      }
-      default: return String(value)
-    }
-  }
-
-  /** 간단한 RevealData 생성 */
-  _buildSimpleRevealData(roleId, role, value) {
-    if (value === null || value === undefined) return null
-    const message = this._formatPreviewSimple(roleId, value)
-    const players = (roleId === 'washerwoman' || roleId === 'librarian' || roleId === 'investigator')
-      ? (value?.players || []).map(p => ({ id: p.id }))
-      : []
-    return {
-      roleIcon:    role?.icon || '?',
-      roleName:    role?.name || roleId,
-      roleTeam:    role?.team || null,
-      roleAbility: role?.ability || '',
-      message,
-      players,
-      action: '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
-    }
-  }
-
   // ── 선택 역할 ──
   _showRoleSelect(roleId, actors) {
     if (!actors || actors.length === 0) { this._done(roleId); return }
@@ -450,356 +338,73 @@ export class NightAction {
       selectablePlayers = this.engine.state.players // 사망자도 포함
     }
 
-    ThemeManager.pushTemp('player')  // 참가자 지목 화면 → 참가자 테마
+    // OvalSelectPanel 은 호스트 테마 유지
     this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
-      title:      role?.name || roleId,
-      roleIcon:   role?.icon || '?',
-      roleTeam:   role?.team || null,
-      ability:    role?.ability || '',
-      players:    selectablePlayers,
-      selfSeatId: actor.id,
-      maxSelect:  role?.maxSelect || 1,
+      title:       role?.name || roleId,
+      roleIcon:    role?.icon || '?',
+      roleTeam:    role?.team || null,
+      ability:     role?.ability || '',
+      players:     selectablePlayers,
+      selfSeatId:  actor.id,
+      maxSelect:   role?.maxSelect || 1,
       onConfirm: (ids) => {
-        ThemeManager.popTemp()  // 호스트 테마 복원
         this.engine.recordNightAction(roleId, actor.id, ids)
 
-        // Fortune Teller: 정보 계산
-        if (roleId === 'fortuneteller' && ids.length === 2) {
-          const isPoisonedFT = actor.isPoisoned || actor.isDrunk
-          const result = this.engine.calcFortuneTellerInfo(actor.id, ids)
-          const msgYes = '✅ 예, 그 중 한 명은 임프입니다'
-          const msgNo  = '❌ 아니오, 임프가 없습니다'
-          const accurateMsg = result ? msgYes : msgNo
-
-          // 은둔자/스파이 감지
-          const hasRecluse = ids.some(id => { const p = this.engine.getPlayer(id); return p?.role === 'recluse' })
-          const hasSpy     = ids.some(id => { const p = this.engine.getPlayer(id); return p?.role === 'spy' })
-          const needHostChoice = isPoisonedFT || hasRecluse || hasSpy
-
-          const buildFTReveal = (msg) => ({
-            roleIcon:    'fortuneteller.png',
-            roleName:    '점쟁이 결과',
-            roleTeam:    'town',
-            roleAbility: role?.ability || '',
-            message:     msg,
-            players:     ids.map(id => ({ id })),
-            action:      '결과를 기억한 뒤 눈을 감고 손을 내려주세요.',
-          })
-
-          if (needHostChoice) {
-            // 호스트가 예/아니오 선택
-            const ftOptions = []
-
-            if (isPoisonedFT) {
-              const falseMsg = result ? msgNo : msgYes
-              ftOptions.push({
-                id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
-                preview: falseMsg, impact: '중독/취함 — 오정보를 제공합니다.',
-                stateReason: '', recommended: true,
-                revealData: buildFTReveal(falseMsg),
-              })
-              ftOptions.push({
-                id: 'true-info', icon: '🔵', label: '정확한 정보',
-                preview: accurateMsg, impact: '정확한 정보를 그대로 전달합니다.',
-                stateReason: '', recommended: false,
-                revealData: buildFTReveal(accurateMsg),
-              })
-            } else {
-              // 정상 (은둔자/스파이만)
-              ftOptions.push({
-                id: 'accurate', icon: '🔵', label: '기본 결과',
-                preview: accurateMsg, impact: '레드헤링/임프 기준 결과입니다.',
-                stateReason: '', recommended: true,
-                revealData: buildFTReveal(accurateMsg),
-              })
-            }
-
-            if (hasRecluse) {
-              const recluseId = ids.find(id => this.engine.getPlayer(id)?.role === 'recluse')
-              ftOptions.push({
-                id: 'recluse-demon', icon: '🧎', label: '은둔자 → 임프로 인식',
-                preview: msgYes, impact: `${recluseId}번 은둔자를 임프로 등록합니다.`,
-                stateReason: '', recommended: false,
-                revealData: buildFTReveal(msgYes),
-              })
-            }
-
-            if (hasSpy) {
-              const spyId = ids.find(id => this.engine.getPlayer(id)?.role === 'spy')
-              ftOptions.push({
-                id: 'spy-good', icon: '🕵️', label: '스파이 → 선으로 인식',
-                preview: msgNo, impact: `${spyId}번 스파이를 선 팀으로 등록합니다.`,
-                stateReason: '', recommended: false,
-                revealData: buildFTReveal(msgNo),
-              })
-            }
-
-            this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
-              roleId: 'fortuneteller',
-              actorSeatId: actor.id,
-              roleName: '점쟁이',
-              roleIcon: 'fortuneteller.png',
-              roleIconEmoji: '🔮',
-              roleTeam: 'townsfolk',
-              roleAbility: role?.ability || '',
-              accurateValue: accurateMsg,
-              isPoisoned: isPoisonedFT,
-              analysis: { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
-              players: this.engine.state.players,
-              options: ftOptions,
-              onDecide: (chosen) => {
-                const finalRevealData = chosen.revealData || null
-                if (finalRevealData) {
-                  ThemeManager.pushTemp('player')
-                  this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-                    ...finalRevealData,
-                    allPlayers: this.engine.state.players,
-                    onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
-                  }))
-                } else {
-                  this._done(roleId, ids)
-                }
-              },
-            }))
-          } else {
-            // 정상 + 은둔자/스파이 없음: RevealEditPanel → RevealPanel
-            ThemeManager.pushTemp('player')
-            this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-              ...buildFTReveal(accurateMsg),
-              allPlayers: this.engine.state.players,
-              onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
-            }))
-          }
-        } else if (roleId === 'ravenkeeper' && ids.length === 1) {
-          // 까마귀 사육사: 선택한 플레이어의 역할 공개
-          const isPoisonedRK = actor.isPoisoned || actor.isDrunk
-          const target = this.engine.getPlayer(ids[0])
-          const targetRole = target ? ROLES_BY_ID[target.role] : null
-          // 주정뱅이는 drunkAs 역할로 표시
-          const displayRoleId = (target?.role === 'drunk' && target?.drunkAs) ? target.drunkAs : target?.role
-          const displayRole = ROLES_BY_ID[displayRoleId]
-          const accurateMsg = `${target?.id}번 → ${displayRole?.name || displayRoleId || '?'}`
-
-          const buildRKReveal = (msg) => ({
-            roleIcon:    'ravenkeeper.png',
-            roleName:    '까마귀 사육사 결과',
-            roleTeam:    'town',
-            roleAbility: role?.ability || '',
-            message:     msg,
-            players:     [{ id: ids[0] }],
-            action:      '역할을 기억한 뒤 눈을 감고 손을 내려주세요.',
-          })
-
-          if (isPoisonedRK) {
-            // 중독: 호스트가 역할 선택
-            const allRoles = [...ROLES_TB.filter(r => r.team === 'townsfolk' || r.team === 'outsider'),
-                              ...ROLES_TB.filter(r => r.team === 'minion'),
-                              ...ROLES_TB.filter(r => r.team === 'demon')]
-            const falseRole = allRoles.find(r => r.id !== displayRoleId) || allRoles[0]
-            const falseMsg = `${target?.id}번 → ${falseRole?.name || '?'}`
-
-            this._unmount = this._trackOverlay(() => mountHostDecisionPanel({
-              roleId: 'ravenkeeper',
-              actorSeatId: actor.id,
-              roleName: '까마귀 사육사',
-              roleIcon: 'ravenkeeper.png',
-              roleIconEmoji: '🐦‍⬛',
-              roleTeam: 'townsfolk',
-              roleAbility: role?.ability || '',
-              accurateValue: accurateMsg,
-              isPoisoned: true,
-              analysis: { goodCount: 0, evilCount: 0, balanceTag: '', infoCount: 0, riskLabel: '' },
-              players: this.engine.state.players,
-              options: [
-                {
-                  id: 'false-info', icon: '🔴', label: '거짓 정보 (추천)',
-                  preview: falseMsg, impact: '중독/취함 — 거짓 역할을 알려줍니다.',
-                  stateReason: '', recommended: true,
-                  revealData: buildRKReveal(falseMsg),
-                  customType: 'player-pick',
-                },
-                {
-                  id: 'true-info', icon: '🔵', label: '정확한 정보',
-                  preview: accurateMsg, impact: '정확한 역할을 그대로 전달합니다.',
-                  stateReason: '', recommended: false,
-                  revealData: buildRKReveal(accurateMsg),
-                },
-                {
-                  id: 'custom', icon: '✏️', label: '직접 선택',
-                  preview: '호스트가 직접 결정', impact: '', stateReason: '',
-                  recommended: false, revealData: null, customType: 'number',
-                },
-              ],
-              onDecide: (chosen) => {
-                const finalRevealData = chosen.revealData || null
-                if (finalRevealData) {
-                  ThemeManager.pushTemp('player')
-                  this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-                    ...finalRevealData,
-                    allPlayers: this.engine.state.players,
-                    onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
-                  }))
-                } else {
-                  this._done(roleId, ids)
-                }
-              },
-            }))
-          } else {
-            // 정상: RevealEditPanel → RevealPanel
-            ThemeManager.pushTemp('player')
-            this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-              ...buildRKReveal(accurateMsg),
-              allPlayers: this.engine.state.players,
-              onNext: () => { ThemeManager.popTemp(); this._done(roleId, ids) },
-            }))
-          }
-        } else if (roleId === 'monk' || roleId === 'butler') {
-          // 수도사 / 집사: 선택 결과를 참가자에게 공개
-          const msgMap = {
-            monk:   '오늘 밤 이 자리를 보호합니다',
-            butler: '오늘 밤 이 자리가 당신의 주인입니다',
-          }
+        const msg = this._generateSelectMessage(roleId, actor, ids)
+        if (msg) {
+          // NightRevealNote 직전에 플레이어 테마 전환
           ThemeManager.pushTemp('player')
-          this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-            roleIcon:    role?.icon || '?',
-            roleName:    role?.name || roleId,
-            roleTeam:    role?.team || null,
-            roleAbility: role?.ability || '',
-            message:     msgMap[roleId],
-            players:     ids.map(id => ({ id })),
-            allPlayers:  this.engine.state.players,
-            action:      '확인했으면 눈을 감고 손을 내려주세요.',
-            onNext:      () => { ThemeManager.popTemp(); this._done(roleId, ids) },
+          this._unmount = this._trackOverlay(() => mountNightRevealNote({
+            roleIcon: role?.icon || '?',
+            roleName: role?.name || roleId,
+            roleTeam: role?.team || null,
+            message:  msg,
+            onNext:   () => { ThemeManager.popTemp(); this._done(roleId, ids) },
           }))
         } else {
-          // poisoner / imp: 공개 없음
           this._done(roleId, ids)
         }
       }
     }))
   }
 
-  // ── 직접 선택: 역할 + 자리배치 통합 화면 ──
-  _showCustomPlayerPick(roleId, role, onDone) {
-    const maxPick = roleId === 'undertaker' ? 1 : 2
-    const allPlayers = this.engine.state.players
-
-    let selectedIds = []
-
-    const overlay = document.createElement('div')
-    overlay.className = 'hdp-overlay'
-    overlay.style.overflowY = 'auto'
-
-    const panel = document.createElement('div')
-    panel.style.cssText = 'width:100%;max-width:var(--app-max-width);margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:12px 16px 20px;'
-
-    // ── 헤더 ──
-    const hdr = document.createElement('div')
-    hdr.style.cssText = 'text-align:center;'
-    hdr.innerHTML = `
-      <div style="font-size:0.62rem;color:var(--text4);margin-bottom:2px;">🔒 호스트 전용</div>
-      <div style="font-family:'Noto Serif KR',serif;font-size:0.92rem;font-weight:700;color:var(--gold2);">${role?.name || roleId} — 플레이어 선택</div>
-      <div style="font-size:0.65rem;color:var(--text3);margin-top:2px;">자리를 탭해 ${maxPick}명을 선택하세요</div>
-    `
-    panel.appendChild(hdr)
-
-    // ── 상태 표시 ──
-    const statusEl = document.createElement('div')
-    statusEl.style.cssText = 'text-align:center;font-size:0.72rem;color:var(--tl-light);min-height:18px;'
-    panel.appendChild(statusEl)
-
-    const updateStatus = () => {
-      const pNums = selectedIds.length > 0 ? selectedIds.map(id => `${id}번`).join(', ') : '미선택'
-      statusEl.textContent = `선택: ${pNums} (${selectedIds.length}/${maxPick})`
-      confirmBtn.disabled = selectedIds.length !== maxPick
+  /** 선택 역할 메시지 생성 (공개 필요 없으면 null) */
+  _generateSelectMessage(roleId, actor, ids) {
+    switch (roleId) {
+      case 'fortuneteller': {
+        if (ids.length !== 2) return null
+        const result = this.engine.calcFortuneTellerInfo(actor.id, ids)
+        const key = result ? 'fortuneteller-yes' : 'fortuneteller-no'
+        const tmpl = getTemplate(key)
+        if (tmpl) return tmpl
+        return result
+          ? '예, 그 중 한 명은 임프입니다.\n\n확인했으면 눈을 감으세요.'
+          : '아니오, 임프가 없습니다.\n\n눈을 감으세요.'
+      }
+      case 'monk': {
+        const tmpl = getTemplate('monk')
+        return tmpl
+          ? fillTemplate(tmpl, { X: ids[0] })
+          : `오늘 밤 ${ids[0]}번을 보호합니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      case 'butler': {
+        const tmpl = getTemplate('butler')
+        return tmpl
+          ? fillTemplate(tmpl, { X: ids[0] })
+          : `오늘 밤 ${ids[0]}번이 당신의 주인입니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      case 'ravenkeeper': {
+        if (!ids[0]) return null
+        const target = this.engine.getPlayer(ids[0])
+        const displayRoleId = (target?.role === 'drunk' && target?.drunkAs) ? target.drunkAs : target?.role
+        const displayRole = ROLES_BY_ID[displayRoleId]
+        const tmpl = getTemplate('ravenkeeper')
+        return tmpl
+          ? fillTemplate(tmpl, { X: ids[0], 역할명: displayRole?.name || displayRoleId || '?' })
+          : `${ids[0]}번의 역할은 ${displayRole?.name || displayRoleId || '?'}입니다.\n\n확인했으면 눈을 감으세요.`
+      }
+      default: return null  // poisoner, imp 등 — 공개 불필요
     }
-
-    // ── 자리 배치 오벌 (호스트 자리배치 탭과 동일 스타일) ──
-    const total = allPlayers.length
-    const { slotPx, iconPx } = calcOvalLayout(total, 360, true)
-
-    const ovalWrap = document.createElement('div')
-    ovalWrap.style.cssText = 'display:flex;justify-content:center;padding:4px 0;'
-    const oval = createSeatOval()
-
-    const buildOvalSlots = () => {
-      oval.innerHTML = ''
-      allPlayers.forEach((p, i) => {
-        const pRole = ROLES_BY_ID[p.role]
-        const isDrunkAs = p.role === 'drunk' && p.drunkAs
-        const displayRole = isDrunkAs ? ROLES_BY_ID[p.drunkAs] : pRole
-        const { x, y } = ovalSlotPos(i, total)
-        const isDead = p.status !== 'alive'
-        const isSelected = selectedIds.includes(p.id)
-
-        const slot = createSeatSlot(x, y, slotPx, {
-          borderColor: isSelected ? 'var(--gold2)' : (TEAM_BORDER[pRole?.team] || 'var(--lead2)'),
-          borderWidth: 3,
-          isDead,
-          cursor:      isDead ? 'default' : undefined,
-          background:  isSelected ? 'rgba(212,168,40,0.12)' : undefined,
-          boxShadow:   isSelected ? '0 0 10px rgba(212,168,40,0.4)' : undefined,
-        })
-
-        slot.appendChild(createRoleIconEl(displayRole ?? pRole, iconPx))
-
-        applySlotStateMarks(slot, slotPx, {
-          isPoisoned:  p.isPoisoned,
-          isDrunk:     p.isDrunk && !isDrunkAs,
-          isProtected: p.id === this.engine.monkProtect,
-        })
-        if (isSelected) addSlotMark(slot, slotPx, 'check')
-
-        if (!isDead) {
-          slot.addEventListener('click', () => {
-            if (isSelected) {
-              selectedIds = selectedIds.filter(id => id !== p.id)
-            } else {
-              if (selectedIds.length >= maxPick) {
-                if (maxPick === 1) selectedIds = []
-                else return
-              }
-              selectedIds.push(p.id)
-            }
-            buildOvalSlots()
-            updateStatus()
-          })
-        }
-        oval.appendChild(slot)
-        oval.appendChild(createSeatNumLabel(x, y, slotPx, p.id, { dimmed: isDead }))
-      })
-    }
-    buildOvalSlots()
-    ovalWrap.appendChild(oval)
-    panel.appendChild(ovalWrap)
-
-    // ── 확인 버튼 ──
-    const confirmBtn = document.createElement('button')
-    confirmBtn.className = 'btn btn-gold'
-    confirmBtn.style.cssText = 'width:100%;padding:14px;font-size:0.9rem;font-weight:700;border-radius:10px;'
-    confirmBtn.textContent = '▶ 확인 → 참가자에게 공개'
-    confirmBtn.disabled = true
-    confirmBtn.addEventListener('click', () => {
-      overlay.remove()
-      ThemeManager.pushTemp('player')
-      this._unmount = this._trackOverlay(() => mountRevealEditPanel({
-        roleIcon:    role?.icon || '?',
-        roleName:    role?.name || roleId,
-        roleTeam:    role?.team || null,
-        roleAbility: role?.ability || '',
-        message:     '호스트가 정보를 전달합니다.',
-        players:     selectedIds.map(id => ({ id })),
-        allPlayers:  allPlayers,
-        action:      '정보를 기억한 뒤 눈을 감고 손을 내려주세요.',
-        onNext:      () => { ThemeManager.popTemp(); onDone() },
-      }))
-    })
-    panel.appendChild(confirmBtn)
-
-    overlay.appendChild(panel)
-    document.body.appendChild(overlay)
-    this._overlayEl = overlay
-    this._unmount = () => overlay.remove()
   }
 
   _pickRandomTownsfolk() {

@@ -190,6 +190,92 @@ function addDrunkWarnPill(slot, slotPx) {
   })
 }
 
+// ── 중독 이펙트 (바닥 글로우 그라데이션 + 버블 파티클) ──────────
+/**
+ * 슬롯 하단에 녹색 독 글로우 그라데이션을 깔고,
+ * 버블 파티클이 아래에서 위로 천천히 흘러올라가는 효과.
+ * ☠ 배지(BL)도 함께 추가.
+ */
+function addPoisonEffect(slot, slotPx) {
+  // ① 바닥 글로우 그라데이션
+  const glow = document.createElement('div')
+  glow.className = 'slot-mark slot-mark--poison-glow'
+  glow.style.cssText = `
+    position:absolute;inset:0;
+    border-radius:inherit;
+    background:linear-gradient(to top,
+      rgba(22,163,74,0.55) 0%,
+      rgba(22,163,74,0.20) 45%,
+      transparent 72%);
+    pointer-events:none;z-index:2;
+  `
+  slot.appendChild(glow)
+
+  // ② 버블 파티클 5개
+  for (let i = 0; i < 5; i++) {
+    const sz      = Math.max(3, Math.round(slotPx * (0.07 + Math.random() * 0.07)))
+    const leftPct = (12 + Math.random() * 68).toFixed(1)
+    const delay   = (Math.random() * 3).toFixed(2)
+    const dur     = (2.6 + Math.random() * 2.4).toFixed(2)
+    const travel  = Math.round(slotPx * 1.35)
+
+    const b = document.createElement('div')
+    b.className = 'slot-mark slot-mark--poison-bubble'
+    b.style.cssText = `
+      position:absolute;
+      bottom:3px;
+      left:${leftPct}%;
+      width:${sz}px;height:${sz}px;
+      border-radius:50%;
+      background:radial-gradient(circle at 35% 35%,rgba(134,239,172,0.95),rgba(22,163,74,0.55));
+      box-shadow:0 0 ${Math.round(sz * 0.9)}px rgba(74,222,128,0.75);
+      opacity:0;
+      pointer-events:none;z-index:3;
+      --pt:${travel}px;
+      animation:poison-bubble ${dur}s ease-in ${delay}s infinite;
+    `
+    slot.appendChild(b)
+  }
+}
+
+// ── 집사 주인 프레임 태그 (슬롯 상단) ───────────────────────
+/**
+ * 집사 슬롯 상단 중앙에 왕관 + 주인 번호를 프레임 태그로 부착.
+ * 슬롯 상단 테두리를 가로지르는 배너 형태.
+ */
+function addButlerMasterPill(slot, slotPx, masterId) {
+  const h      = Math.max(16, Math.round(slotPx * 0.32))
+  const fsPx   = Math.max(9,  Math.round(h * 0.58))
+  const crPx   = Math.max(8,  Math.round(h * 0.52))
+  const radius = Math.round(h * 0.45)
+
+  const el = document.createElement('div')
+  el.className = 'slot-mark slot-mark--butler_master'
+  el.style.cssText = `
+    position:absolute;
+    top:-${Math.round(h * 0.52)}px;
+    left:50%;
+    transform:translateX(-50%);
+    height:${h}px;
+    padding:0 ${Math.round(h * 0.4)}px;
+    border-radius:${radius}px;
+    background:linear-gradient(135deg,#3b2460,#5b3a8e);
+    border:1.5px solid rgba(167,139,250,0.7);
+    box-shadow:0 0 8px rgba(139,92,246,0.6), 0 2px 4px rgba(0,0,0,0.4);
+    display:flex;align-items:center;justify-content:center;
+    gap:${Math.round(h * 0.18)}px;
+    white-space:nowrap;
+    pointer-events:none;
+    z-index:4;
+  `
+  el.innerHTML = `
+    <span style="font-size:${crPx}px;font-weight:600;color:#c4b5fd;line-height:1;letter-spacing:0.02em">주인</span>
+    <span style="font-size:${fsPx}px;font-weight:700;color:#e9d5ff;line-height:1;letter-spacing:0.03em">${masterId}</span>
+  `
+  slot.appendChild(el)
+  return el
+}
+
 // ── 단일 마크 추가 ───────────────────────────────────────────
 /**
  * 슬롯에 마크 배지를 하나 추가합니다.
@@ -253,6 +339,7 @@ export function removeSlotMark(slot, markType) {
  * @param {boolean}     [states.isDeadNight]     - 💀 밤 사망      (TC)
  * @param {boolean}     [states.isDeadExec]      - ⚔ 낮 처형      (TR)
  * @param {boolean}     [states.isSelectedCheck] - ✓ 나이트 선택   (TR)
+ * @param {number|null} [states.butlerMasterId]  - 👑 집사 주인 번호 (MR)
  */
 export function applySlotStateMarks(slot, slotPx, {
   isPoisoned      = false,
@@ -261,13 +348,15 @@ export function applySlotStateMarks(slot, slotPx, {
   isDeadNight     = false,
   isDeadExec      = false,
   isSelectedCheck = false,
+  butlerMasterId  = null,
 } = {}) {
-  if (isPoisoned)      addSlotMark(slot, slotPx, 'poison')
-  if (isDrunk)         addDrunkStatePill(slot, slotPx)
-  if (isProtected)     addSlotMark(slot, slotPx, 'protected')
-  if (isDeadNight)     addSlotMark(slot, slotPx, 'dead_night')
-  if (isDeadExec)      addSlotMark(slot, slotPx, 'dead_exec')
-  if (isSelectedCheck) addSlotMark(slot, slotPx, 'check')
+  if (isPoisoned)               addPoisonEffect(slot, slotPx)
+  if (isDrunk)                  addDrunkStatePill(slot, slotPx)
+  if (isProtected)              addSlotMark(slot, slotPx, 'protected')
+  if (isDeadNight)              addSlotMark(slot, slotPx, 'dead_night')
+  if (isDeadExec)               addSlotMark(slot, slotPx, 'dead_exec')
+  if (isSelectedCheck)          addSlotMark(slot, slotPx, 'check')
+  if (butlerMasterId != null)   addButlerMasterPill(slot, slotPx, butlerMasterId)
 }
 
 // ── 준비 단계 마크 일괄 적용 ─────────────────────────────────
@@ -292,4 +381,19 @@ export function applySetupSlotMarks(slot, slotPx, {
   if (isBaron && hasBaron) {
     addBaronPips(slot, slotPx, currentOutsiders, requiredOutsiders)
   }
+}
+
+// ── 중독 버블 키프레임 주입 ──────────────────────────────────
+if (!document.getElementById('slot-mark-poison-style')) {
+  const s = document.createElement('style')
+  s.id = 'slot-mark-poison-style'
+  s.textContent = `
+@keyframes poison-bubble {
+  0%   { transform:translateY(0)            scale(1.0); opacity:0;    }
+  12%  { opacity:0.85; }
+  80%  { opacity:0.30; }
+  100% { transform:translateY(calc(var(--pt, 70px) * -1)) scale(0.35); opacity:0; }
+}
+  `
+  document.head.appendChild(s)
 }

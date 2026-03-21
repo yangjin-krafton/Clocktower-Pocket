@@ -22,12 +22,27 @@ const ROLE_TEAM_MAP = {
   '임프': 'demon'
 }
 
+// night-messages.md 코드 블록 키 (메시지 카드로 렌더링)
+const _MSG_KEYS = new Set([
+  'washerwoman', 'librarian', 'librarian-no-outsider',
+  'investigator', 'chef', 'empath',
+  'undertaker', 'undertaker-no-execution',
+  'fortuneteller-yes', 'fortuneteller-no',
+  'monk', 'butler', 'ravenkeeper',
+  'minion-reveal', 'demon-reveal',
+])
+
+function _escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
 export class RulesScreen {
-  constructor({ initialPage = 'index.md' } = {}) {
+  constructor({ initialPage = 'index.md', basePath = 'rules' } = {}) {
     this.el = null
     this._history = []          // 방문 이력 (뒤로가기용)
     this._currentPage = null
     this._initialPage = initialPage
+    this._basePath = basePath
     this._touchStartX = 0       // 스와이프 감지용
     this._touchStartY = 0
   }
@@ -99,7 +114,7 @@ export class RulesScreen {
       </div>
     `
     try {
-      const resp = await fetch(`./rules/${page}`)
+      const resp = await fetch(`./${this._basePath}/${page}`)
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const text = await resp.text()
       this._render(text)
@@ -146,6 +161,8 @@ export class RulesScreen {
       const link = e.target.closest('[data-rules-page]')
       if (link) {
         e.preventDefault()
+        const newBase = link.dataset.rulesBase
+        if (newBase) this._basePath = newBase
         this._navigate(link.dataset.rulesPage)
         this.el.scrollTop = 0
       }
@@ -162,6 +179,32 @@ export class RulesScreen {
     while (i < lines.length) {
       const line = lines[i]
 
+      // 코드 블록 (``` ... ```)
+      if (line.startsWith('```')) {
+        const lang = line.slice(3).trim()
+        const codeLines = []
+        i++
+        while (i < lines.length && !lines[i].startsWith('```')) {
+          codeLines.push(lines[i])
+          i++
+        }
+        i++ // closing ```
+        const content = codeLines.join('\n').replace(/\n$/, '')
+        result.push(_MSG_KEYS.has(lang)
+          ? this._renderMsgCard(content)
+          : `<pre class="rules-pre"><code>${_escHtml(content)}</code></pre>`)
+        continue
+      }
+      // 인용문 (> ...)
+      if (line.startsWith('> ')) {
+        const bqLines = []
+        while (i < lines.length && lines[i].startsWith('> ')) {
+          bqLines.push(this._inline(lines[i].slice(2)))
+          i++
+        }
+        result.push(`<blockquote class="rules-blockquote">${bqLines.join('<br>')}</blockquote>`)
+        continue
+      }
       // 가로선
       if (/^---+$/.test(line.trim())) {
         result.push('<hr class="rules-hr">')
@@ -244,6 +287,32 @@ export class RulesScreen {
     return `<table class="rules-table"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`
   }
 
+  /** 코드 블록을 메시지 미리보기 카드로 렌더링 */
+  _renderMsgCard(text) {
+    if (!text) return ''
+    const paras = text.split('\n\n')
+    const parts = []
+    paras.forEach((para, idx) => {
+      const isLast   = idx === paras.length - 1
+      const isAction = isLast && /눈을 감으세요/.test(para)
+      if (isAction) {
+        parts.push(`<div class="rules-msg-divider"></div>`)
+        parts.push(`<div class="rules-msg-action"><span class="rules-msg-arrow">→</span>${this._msgMarkup(para)}</div>`)
+      } else {
+        const lines = para.split('\n').map(l => this._msgMarkup(l)).join('<br>')
+        parts.push(`<p class="rules-msg-para">${lines}</p>`)
+      }
+    })
+    return `<div class="rules-msg-card">${parts.join('')}</div>`
+  }
+
+  /** 메시지 카드용 인라인 마크업: 변수 {X} 강조 + 숫자번 강조 */
+  _msgMarkup(text) {
+    const esc = _escHtml(text)
+    const vars = esc.replace(/\{([^}]+)\}/g, '<span class="rules-msg-var">{$1}</span>')
+    return vars.replace(/(\d+번)/g, '<b class="rules-msg-num">$1</b>')
+  }
+
   /** 인라인 마크다운: ![alt](img), [text](*.md), **bold**, `code` */
   _inline(text) {
     // HTML 이스케이프 먼저
@@ -280,7 +349,12 @@ export class RulesScreen {
       return `<img class="${cls}" src="${resolved}" alt="${alt}" loading="lazy">`
     })
 
-    // [text](page.md) → 인앱 링크
+    // [text](../folder/page.md) → 크로스 폴더 인앱 링크
+    s = s.replace(/\[([^\]]+)\]\((?:\.\.\/)([\w-]+)\/([\w-]+\.md)\)/g,
+      (_, label, folder, page) =>
+        `<a class="rules-link" data-rules-page="${page}" data-rules-base="${folder}">${label}</a>`
+    )
+    // [text](page.md) → 같은 폴더 인앱 링크
     s = s.replace(/\[([^\]]+)\]\(([^)]+\.md)\)/g, (_, label, page) =>
       `<a class="rules-link" data-rules-page="${page}">${label}</a>`
     )
@@ -569,6 +643,84 @@ if (!document.getElementById('rules-screen-style')) {
 
 /* 여백 */
 .rules-spacer { height: 4px; }
+
+/* ── 코드 블록 (일반) ── */
+.rules-pre {
+  background: var(--surface2);
+  border: 1px solid var(--lead2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 6px 0;
+  overflow-x: auto;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--text2);
+}
+
+/* ── 인용문 ── */
+.rules-blockquote {
+  border-left: 3px solid var(--lead2);
+  margin: 4px 0 8px;
+  padding: 4px 0 4px 12px;
+  font-size: 0.78rem;
+  color: var(--text3);
+  line-height: 1.7;
+}
+.rules-blockquote .rules-code {
+  background: color-mix(in srgb, var(--tl-light) 10%, transparent);
+  border-color: color-mix(in srgb, var(--tl-light) 25%, transparent);
+  color: var(--tl-light);
+}
+
+/* ── 메시지 카드 (코드 블록 → 미리보기) ── */
+.rules-msg-card {
+  background: var(--surface);
+  border: 1.5px solid var(--lead2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 6px 0 10px;
+}
+.rules-msg-para {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--text);
+  word-break: keep-all;
+}
+/* 템플릿 변수 {X} */
+.rules-msg-var {
+  color: var(--tl-light);
+  background: color-mix(in srgb, var(--tl-light) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tl-light) 25%, transparent);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 0.88em;
+  letter-spacing: 0.01em;
+}
+/* 숫자번 강조 */
+.rules-msg-num {
+  color: var(--gold2);
+  font-weight: 700;
+  font-style: normal;
+}
+.rules-msg-divider {
+  height: 1px;
+  background: var(--lead2);
+  margin: 12px 0 9px;
+}
+.rules-msg-action {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text3);
+  line-height: 1.65;
+}
+.rules-msg-arrow {
+  color: var(--text4);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
   `
   document.head.appendChild(style)
 }

@@ -157,6 +157,21 @@ export class Grimoire {
       nextBtn.addEventListener('click', () => this.onNextNightStep?.())
       btnGrid.appendChild(nextBtn)
 
+      // 현재 단계 액터가 중독/취함 상태이면 경고 칩 표시
+      if (state.currentNightStep) {
+        const actors = this.engine.getCurrentNightActor()
+        const actor  = actors?.[0]
+        if (actor?.isPoisoned || actor?.isDrunk) {
+          const chip = document.createElement('div')
+          chip.className = 'gl-night-warn-chip btn-grid-full'
+          const parts = []
+          if (actor.isPoisoned) parts.push('☠ 중독')
+          if (actor.isDrunk)    parts.push('🍾 취함')
+          chip.textContent = `⚠ ${parts.join(' + ')} — 능력 무효화`
+          btnGrid.appendChild(chip)
+        }
+      }
+
       const toDayBtn = document.createElement('button')
       toDayBtn.className = 'btn btn-grid-full'
       toDayBtn.textContent = '🌅 낮으로 전환'
@@ -726,6 +741,27 @@ if (!document.getElementById('grimoire-lobby-style')) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* ── 밤 단계 경고 칩 ── */
+.gl-night-warn-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1.5px solid rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.2);
+  animation: gl-warn-pulse 1.8s ease-in-out infinite;
+}
+@keyframes gl-warn-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(220,38,38,0.2); }
+  50%       { box-shadow: 0 0 20px rgba(220,38,38,0.5); border-color: rgba(220,38,38,0.8); }
 }
 
 /* ── 상단 헤더 ── */

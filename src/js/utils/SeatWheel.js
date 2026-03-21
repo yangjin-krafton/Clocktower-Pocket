@@ -145,23 +145,26 @@ export function createRoleIconEl(role, iconPx, {
   iconWrap.appendChild(iconEl)
 
   if (drunkBadge) {
-    const h    = Math.round(iconPx * 0.32)
-    const fsPx = Math.round(h * 0.65)
-    const px   = Math.round(h * 0.28)
-    const badge = document.createElement('div')
-    badge.style.cssText = `
-      position:absolute;top:-4px;right:-4px;
-      height:${h}px;padding:0 ${px}px;min-width:${h}px;
-      border-radius:${Math.round(h / 2)}px;
-      background:#7c3aed;
+    // iconWrap 전체가 천천히 360° 회전
+    iconWrap.style.animation = 'drunk-rotate 9s linear infinite'
+
+    // ① 역할 아이콘: absolute 로 겹쳐 놓고 fade-in/out
+    iconEl.style.cssText += ';position:absolute;top:0;left:0;animation:drunk-fade 6s ease-in-out infinite'
+
+    // ② drunk.png: half-cycle(-3s) 오프셋으로 교대 페이드
+    const drunkEl = document.createElement('div')
+    drunkEl.style.cssText = `
+      position:absolute;top:0;left:0;
+      width:${iconPx}px;height:${iconPx}px;
+      border-radius:50%;background:var(--surface2);overflow:hidden;
       display:flex;align-items:center;justify-content:center;
-      font-size:${fsPx}px;line-height:1;font-weight:700;
-      color:#fff;white-space:nowrap;
-      border:1px solid var(--surface);z-index:2;
-      box-shadow:0 0 5px rgba(124,58,237,0.55);
+      animation:drunk-fade 6s ease-in-out infinite;animation-delay:-3s;
     `
-    badge.textContent = '🍾'
-    iconWrap.appendChild(badge)
+    const drunkImg = document.createElement('img')
+    drunkImg.src = './asset/icons/drunk.png'
+    drunkImg.style.cssText = 'width:85%;height:85%;object-fit:contain;'
+    drunkEl.appendChild(drunkImg)
+    iconWrap.appendChild(drunkEl)
   }
 
   return iconWrap

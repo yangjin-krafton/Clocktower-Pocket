@@ -19,7 +19,7 @@ import { encodeRoomCode, formatCode, copyRoomCode } from '../room-code.js'
 import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
-import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel } from '../utils/SeatWheel.js'
+import { TEAM_BORDER, createSeatOval, createSeatSlot, createRoleIconEl, createSeatNumLabel, createRoleNameLabel } from '../utils/SeatWheel.js'
 import { applySlotStateMarks } from '../utils/SlotMark.js'
 
 
@@ -960,6 +960,7 @@ export class HostApp {
         isDead,
       })
       slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
+      if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
       applySlotStateMarks(slot, slotPx, {
         isPoisoned:  player.isPoisoned,
         isDrunk:     player.isDrunk && !isDrunkWithAs,

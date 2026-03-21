@@ -16,16 +16,24 @@
  * 사용처: Grimoire.js, host/app.js, NightAction.js
  */
 
-// ── 8방향 포지션 CSS ─────────────────────────────────────────
-const POS = {
-  TL: 'top:-5px;left:-5px',
-  TC: 'top:-5px;left:50%;transform:translateX(-50%)',
-  TR: 'top:-5px;right:-5px',
-  ML: 'top:50%;left:-5px;transform:translateY(-50%)',
-  MR: 'top:50%;right:-5px;transform:translateY(-50%)',
-  BL: 'bottom:-5px;left:-5px',
-  BC: 'bottom:-5px;left:50%;transform:translateX(-50%)',
-  BR: 'bottom:-5px;right:-5px',
+// ── 8방향 포지션 CSS (슬롯 크기 비례) ───────────────────────
+/** 배지 오버행: 슬롯 크기의 9%, 최소 3px 최대 8px */
+function posOff(slotPx) {
+  return Math.min(8, Math.max(3, Math.round(slotPx * 0.09)))
+}
+
+function posFor(slotPx) {
+  const o = posOff(slotPx)
+  return {
+    TL: `top:-${o}px;left:-${o}px`,
+    TC: `top:-${o}px;left:50%;transform:translateX(-50%)`,
+    TR: `top:-${o}px;right:-${o}px`,
+    ML: `top:50%;left:-${o}px;transform:translateY(-50%)`,
+    MR: `top:50%;right:-${o}px;transform:translateY(-50%)`,
+    BL: `bottom:-${o}px;left:-${o}px`,
+    BC: `bottom:-${o}px;left:50%;transform:translateX(-50%)`,
+    BR: `bottom:-${o}px;right:-${o}px`,
+  }
 }
 
 // ── 마크 정의 레지스트리 ─────────────────────────────────────
@@ -63,59 +71,107 @@ function badgeSz(slotPx) {
  * @param {HTMLElement} slot
  * @param {number}      slotPx
  * @param {object}      opts
- * @param {string}      opts.pos       - POS 키
- * @param {string}      opts.text      - 표시할 텍스트
- * @param {string}      opts.bg        - 배경색
- * @param {string}      opts.cls       - slot-mark--XXX 클래스명
- * @param {string}      [opts.glow]    - 글로우 색
- * @param {boolean}     [opts.pulse]   - 펄스 애니메이션 여부
+ * @param {string}      opts.pos        - POS 키
+ * @param {string}      [opts.text]     - 표시할 텍스트 (imgSrc와 택일)
+ * @param {string}      [opts.imgSrc]   - 이미지 경로 — 지정 시 원형 아이콘 배지
+ * @param {string}      opts.bg         - 배경색
+ * @param {string}      opts.cls        - slot-mark--XXX 클래스명
+ * @param {string}      [opts.glow]     - 글로우 색
+ * @param {boolean}     [opts.pulse]    - 펄스 애니메이션 여부
+ * @param {number}      [opts.scale]    - 배지 크기 배율 (기본 1)
  */
-function createPillBadge(slot, slotPx, { pos, text, bg, cls, glow = '', pulse = false }) {
-  const h    = badgeSz(slotPx)
+function createPillBadge(slot, slotPx, { pos, text = '', imgSrc = '', bg, cls, glow = '', pulse = false, scale = 1 }) {
+  const h    = Math.round(badgeSz(slotPx) * scale)
   const fsPx = Math.max(8, Math.round(h * 0.62))
+
+  // imgSrc 있으면 원형, 없으면 pill
+  const isImg    = !!imgSrc
+  const widthCSS = isImg ? `width:${h}px;` : `padding:0 ${Math.round(h * 0.3)}px;min-width:${h}px;`
+  const radCSS   = `border-radius:${Math.round(h / 2)}px;`
 
   const el = document.createElement('div')
   el.className = `slot-mark slot-mark--${cls}`
   el.style.cssText = `
-    position:absolute;${POS[pos]};
-    height:${h}px;padding:0 ${Math.round(h * 0.3)}px;min-width:${h}px;
-    border-radius:${Math.round(h / 2)}px;
+    position:absolute;${posFor(slotPx)[pos]};
+    height:${h}px;${widthCSS}${radCSS}
     background:${bg};
     display:flex;align-items:center;justify-content:center;
     font-size:${fsPx}px;line-height:1;font-weight:700;
-    color:#fff;white-space:nowrap;
+    color:#fff;white-space:nowrap;overflow:hidden;
     border:1px solid var(--surface);z-index:3;pointer-events:none;
     ${glow  ? `box-shadow:0 0 6px ${glow};`                        : ''}
     ${pulse ? 'animation:drunk-pulse 1.5s ease-in-out infinite;'   : ''}
   `
-  el.textContent = text
+
+  if (isImg) {
+    const img = document.createElement('img')
+    img.src = imgSrc
+    img.style.cssText = `width:80%;height:80%;object-fit:contain;`
+    el.appendChild(img)
+  } else {
+    el.textContent = text
+  }
+
   slot.appendChild(el)
   return el
 }
 
-// ── 카운트 필 (남작 X/Y) ─────────────────────────────────────
-function addCountMark(slot, slotPx, pos, current, required) {
-  const isOk = current >= required
-  return createPillBadge(slot, slotPx, {
-    pos,
-    text:  `${current}/${required}`,
-    bg:    isOk ? '#0e7490' : '#b45309',
-    glow:  isOk ? 'rgba(14,116,144,0.55)' : 'rgba(180,83,9,0.55)',
-    cls:   'baron',
-  })
+// ── 남작 Pip 도트 (아웃사이더 충족 현황) ─────────────────────
+/**
+ * 슬롯 바로 아래 중앙에 required 개수만큼 점 표시.
+ * 채운 점(●) = 현재 배정된 아웃사이더, 빈 점(○) = 미충족.
+ * 미충족 상태의 빈 점은 pip-blink 애니메이션으로 깜빡입니다.
+ */
+function addBaronPips(slot, slotPx, current, required) {
+  const dotSz   = Math.max(5, Math.round(slotPx * 0.11))
+  const gap     = Math.round(dotSz * 0.6)
+  const off     = posOff(slotPx)
+  const isOk    = current >= required
+  const borderW = Math.max(1, Math.round(dotSz * 0.2))
+
+  const wrap = document.createElement('div')
+  wrap.className = 'slot-mark slot-mark--baron'
+  wrap.style.cssText = `
+    position:absolute;
+    bottom:-${off + dotSz + 3}px;
+    left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:${gap}px;
+    pointer-events:none;z-index:3;
+  `
+
+  for (let i = 0; i < required; i++) {
+    const filled = i < current
+    const dot = document.createElement('div')
+    dot.style.cssText = `
+      width:${dotSz}px;height:${dotSz}px;flex-shrink:0;
+      border-radius:50%;
+      background:${filled ? 'var(--tl-light)' : 'transparent'};
+      border:${borderW}px solid var(--tl-light);
+      opacity:${filled ? '1' : '0.4'};
+      ${filled ? 'box-shadow:0 0 4px rgba(91,179,198,0.7);' : ''}
+      ${!filled && !isOk ? 'animation:pip-blink 1.2s ease-in-out infinite;' : ''}
+    `
+    wrap.appendChild(dot)
+  }
+
+  if (!isOk) slot.classList.add('gl-seat-slot--baron-warn')
+
+  slot.appendChild(wrap)
+  return wrap
 }
 
-// ── 취함 상태 필 (게임 중 isDrunk) ───────────────────────────
+// ── 취함 상태 아이콘 (게임 중 isDrunk) ───────────────────────
 /**
- * 게임 중 isDrunk 상태 — 슬롯 우하단 pill "취함"
+ * 게임 중 isDrunk 상태 — 슬롯 우하단 원형 아이콘 배지
  */
 function addDrunkStatePill(slot, slotPx) {
   return createPillBadge(slot, slotPx, {
-    pos:  'BR',
-    text: '취함',
-    bg:   '#7c3aed',
-    glow: 'rgba(124,58,237,0.55)',
-    cls:  'drunk',
+    pos:    'BR',
+    imgSrc: './asset/icons/drunk.png',
+    bg:     '#241c11',
+    glow:   'rgba(37, 39, 44, 0.55)',
+    cls:    'drunk',
+    scale:  3,
   })
 }
 
@@ -149,6 +205,7 @@ export function addSlotMark(slot, slotPx, markType, customDef) {
   if (!def) return null
 
   const sz       = badgeSz(slotPx)
+  const POS      = posFor(slotPx)
   const posCSS   = POS[def.pos] ?? POS.TR
   const glowCSS  = def.glow ? `box-shadow:0 0 6px ${def.glow};` : ''
   const colorCSS = `color:${def.color ?? '#fff'};`
@@ -179,6 +236,10 @@ export function addSlotMark(slot, slotPx, markType, customDef) {
 export function removeSlotMark(slot, markType) {
   const sel = markType ? `.slot-mark--${markType}` : '.slot-mark'
   slot.querySelectorAll(sel).forEach(el => el.remove())
+  // baron 마크 제거 시 경고 클래스도 함께 정리
+  if (!markType || markType === 'baron') {
+    slot.classList.remove('gl-seat-slot--baron-warn')
+  }
 }
 
 // ── 게임 상태 마크 일괄 적용 ─────────────────────────────────
@@ -229,6 +290,6 @@ export function applySetupSlotMarks(slot, slotPx, {
 } = {}) {
   if (isDrunkWarn) addDrunkWarnPill(slot, slotPx)
   if (isBaron && hasBaron) {
-    addCountMark(slot, slotPx, 'ML', currentOutsiders, requiredOutsiders)
+    addBaronPips(slot, slotPx, currentOutsiders, requiredOutsiders)
   }
 }

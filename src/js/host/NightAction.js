@@ -137,6 +137,7 @@ export class NightAction {
   }
 
   _showDemonInfoPanel() {
+    const imp     = this.engine.state.players.find(p => p.role === 'imp')
     const minions = this.engine.state.players.filter(p =>
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
@@ -146,15 +147,20 @@ export class NightAction {
       ? minions.map(p => `${this._toNum(p)} (${ROLES_BY_ID[p.role]?.name})`).join('\n')
       : '없음'
 
+    // 진홍의 여인 승계 시 — 블러프가 기존 임프에서 인계됨을 명시
+    const successionNote = imp?.wasScarletWoman
+      ? '⚠ 진홍의 여인 승계 — 기존 임프의 블러프를 인계받습니다.\n\n'
+      : ''
+
     const demonTmpl = getTemplate('demon-reveal')
-    const demonMsg = demonTmpl
+    const demonMsg = successionNote + (demonTmpl
       ? fillTemplate(demonTmpl, { 미니언목록: minionLines, 블러프목록: bluffLines })
-      : `미니언:\n${minionLines}\n\n블러프:\n${bluffLines}\n\n모두 기억한 뒤 눈을 감으세요.`
+      : `미니언:\n${minionLines}\n\n블러프:\n${bluffLines}\n\n모두 기억한 뒤 눈을 감으세요.`)
 
     ThemeManager.pushTemp('player')
     this._unmount = this._trackOverlay(() => mountNightRevealNote({
       roleIcon: 'imp.png',
-      roleName: '임프 정보',
+      roleName: imp?.wasScarletWoman ? '새 임프 (진홍 승계)' : '임프 정보',
       roleTeam: 'demon',
       message:  demonMsg,
       onBack:   () => { ThemeManager.popTemp(); this._showDemonInfoPanel() },

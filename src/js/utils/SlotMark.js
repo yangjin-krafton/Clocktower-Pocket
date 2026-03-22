@@ -320,6 +320,36 @@ function addButlerMasterPill(slot, slotPx, masterId) {
   return el
 }
 
+// ── 진홍의 여인 → 임프 승계 모션 ────────────────────────────
+/**
+ * 슬롯 위에 imp 아이콘이 둥둥 떠오르는 모션.
+ * 진홍의 여인이 임프를 승계한 슬롯에 부착.
+ */
+function addScarletWomanImpFloat(slot, slotPx) {
+  const iconPx = Math.round(slotPx * 0.72)
+
+  const el = document.createElement('div')
+  el.className = 'slot-mark slot-mark--sw-imp-float'
+  el.style.cssText = `
+    position:absolute;
+    top:-${Math.round(iconPx * 0.72)}px;
+    left:50%;
+    width:${iconPx}px;height:${iconPx}px;
+    pointer-events:none;z-index:5;
+    filter:drop-shadow(0 0 8px rgba(220,38,38,0.85));
+    animation:sw-imp-float 2.2s ease-in-out infinite;
+  `
+  const img = document.createElement('img')
+  img.src = './asset/icons/imp.png'
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.92;'
+  el.appendChild(img)
+  slot.appendChild(el)
+
+  // 슬롯 테두리 붉은 펄스
+  slot.style.animation = 'sw-imp-border 2.2s ease-in-out infinite'
+  return el
+}
+
 // ── 단일 마크 추가 ───────────────────────────────────────────
 /**
  * 슬롯에 마크 배지를 하나 추가합니다.
@@ -386,13 +416,14 @@ export function removeSlotMark(slot, markType) {
  * @param {number|null} [states.butlerMasterId]  - 👑 집사 주인 번호 (MR)
  */
 export function applySlotStateMarks(slot, slotPx, {
-  isPoisoned      = false,
-  isDrunk         = false,
-  isProtected     = false,
-  isDeadNight     = false,
-  isDeadExec      = false,
-  isSelectedCheck = false,
-  butlerMasterId  = null,
+  isPoisoned        = false,
+  isDrunk           = false,
+  isProtected       = false,
+  isDeadNight       = false,
+  isDeadExec        = false,
+  isSelectedCheck   = false,
+  butlerMasterId    = null,
+  isScarletWomanImp = false,   // 진홍의 여인 → 임프 승계 슬롯
 } = {}) {
   if (isPoisoned)               addPoisonEffect(slot, slotPx)
   if (isDrunk)                  addDrunkStatePill(slot, slotPx)
@@ -401,6 +432,7 @@ export function applySlotStateMarks(slot, slotPx, {
   if (isDeadExec)               addDeadEffect(slot, 'exec')
   if (isSelectedCheck)          addSlotMark(slot, slotPx, 'check')
   if (butlerMasterId != null)   addButlerMasterPill(slot, slotPx, butlerMasterId)
+  if (isScarletWomanImp)        addScarletWomanImpFloat(slot, slotPx)
 }
 
 // ── 준비 단계 마크 일괄 적용 ─────────────────────────────────
@@ -445,6 +477,14 @@ if (!document.getElementById('slot-mark-anim-style')) {
 @keyframes shield-border {
   0%,100% { box-shadow:0 0 0 2px rgba(14,116,144,0.25), 0 0  8px rgba(14,116,144,0.15); }
   50%     { box-shadow:0 0 0 2px rgba(14,116,144,0.70), 0 0 18px rgba(14,116,144,0.45); }
+}
+@keyframes sw-imp-float {
+  0%,100% { transform:translateX(-50%) translateY(0px);   opacity:0.80; }
+  50%     { transform:translateX(-50%) translateY(-9px);  opacity:1.00; }
+}
+@keyframes sw-imp-border {
+  0%,100% { box-shadow:0 0 0 2px rgba(220,38,38,0.20), 0 0  8px rgba(220,38,38,0.12); }
+  50%     { box-shadow:0 0 0 2px rgba(220,38,38,0.75), 0 0 18px rgba(220,38,38,0.45); }
 }
   `
   document.head.appendChild(s)

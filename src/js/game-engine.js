@@ -246,18 +246,7 @@ export class GameEngine {
       this._log('night', `${imp.name}(임프)이 자결했습니다.`)
     }
 
-    // Scarlet Woman 승계 조건: 생존자 5명 이상
-    const aliveCount = this.state.players.filter(p => p.status === 'alive').length
-    if (aliveCount >= 5) {
-      const sw = this.state.players.find(p => p.role === 'scarletwoman' && p.status === 'alive')
-      if (sw) {
-        sw.role = 'imp'
-        sw.team = 'evil'
-        this._log('night', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
-        this.emit('scarletWomanSucceeded', { playerId: sw.id })
-        return
-      }
-    }
+    if (this._tryScarletWomanSuccession()) return
 
     // 일반 승계: 살아있는 미니언 중 무작위
     const minions = this.state.players.filter(
@@ -270,6 +259,28 @@ export class GameEngine {
       this._log('night', `${newImp.name}이(가) 새 임프로 승계됩니다!`)
       this.emit('impSucceeded', { playerId: newImp.id })
     }
+  }
+
+  /**
+   * 진홍의 여인 승계 시도.
+   * 임프 사망 직후 호출 — 사망 후 생존자 4명 이상(= 죽기 전 5명 이상)이면 승계.
+   * @returns {boolean} 승계 성공 여부
+   */
+  _tryScarletWomanSuccession() {
+    const aliveAfter = this.state.players.filter(p => p.status === 'alive').length
+    // 규칙: "임프 포함 5명 이상 생존 시" = 임프 사망 후 4명 이상
+    if (aliveAfter >= 4) {
+      const sw = this.state.players.find(p => p.role === 'scarletwoman' && p.status === 'alive')
+      if (sw) {
+        sw.role = 'imp'
+        sw.team = 'evil'
+        sw.wasScarletWoman = true   // 슬롯 마크(둥둥 모션) 표시용
+        this._log('event', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
+        this.emit('scarletWomanSucceeded', { playerId: sw.id })
+        return true
+      }
+    }
+    return false
   }
 
   /** 시장 튕김 대상 호스트 결정 기록 */
@@ -394,6 +405,9 @@ export class GameEngine {
       return { gameOver: true, winner: 'evil', reason: 'saint' }
     }
 
+    // 임프 처형 → 진홍의 여인 승계 체크 (승계 시 checkWinCondition 에서 임프 생존 감지)
+    if (p.role === 'imp') this._tryScarletWomanSuccession()
+
     this.emit('stateChanged', this.state)
     return this.checkWinCondition()
   }
@@ -415,6 +429,8 @@ export class GameEngine {
     if (isActualDemon && !actor.isPoisoned && !actor.isDrunk) {
       this.killPlayer(targetId, 'slayer')
       this._log('day', `임프 적중! ${target.name} 즉시 사망.`)
+      // 처단자로 임프 사망 → 진홍의 여인 승계 체크
+      this._tryScarletWomanSuccession()
       this.emit('stateChanged', this.state)
       return { hit: true, ...this.checkWinCondition() }
     } else {

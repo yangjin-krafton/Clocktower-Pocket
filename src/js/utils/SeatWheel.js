@@ -273,13 +273,14 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
     if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
 
     applySlotStateMarks(slot, slotPx, {
-      isPoisoned:      p.isPoisoned,
-      isDrunk:         p.isDrunk && !isDrunkWithAs,
-      isProtected:     engine ? p.id === engine.monkProtect && !monkPoisoned : false,
-      isDeadNight:     p.status === 'dead',
-      isDeadExec:      p.status === 'executed',
-      isSelectedCheck: isSelected,
-      butlerMasterId:  engine?.butlerMasters?.[p.id] ?? null,
+      isPoisoned:        p.isPoisoned,
+      isDrunk:           p.isDrunk && !isDrunkWithAs,
+      isProtected:       engine ? p.id === engine.monkProtect && !monkPoisoned : false,
+      isDeadNight:       p.status === 'dead',
+      isDeadExec:        p.status === 'executed',
+      isSelectedCheck:   isSelected,
+      butlerMasterId:    engine?.butlerMasters?.[p.id] ?? null,
+      isScarletWomanImp: !!p.wasScarletWoman,
     })
 
     if (onSlotClick && !isSelf) {

@@ -320,16 +320,17 @@ function addButlerMasterPill(slot, slotPx, masterId) {
   return el
 }
 
-// ── 진홍의 여인 → 임프 승계 모션 ────────────────────────────
+// ── 임프 승계 모션 (공용) ───────────────────────────────────
 /**
- * 슬롯 위에 imp 아이콘이 둥둥 떠오르는 모션.
- * 진홍의 여인이 임프를 승계한 슬롯에 부착.
+ * 슬롯 위에 이전 역할 아이콘이 둥둥 떠오르는 모션.
+ * 임프 승계가 발생한 슬롯에 부착 (진홍의 여인, 독약꾼, 스파이 등 모든 케이스 공통).
+ * @param {string} fromRoleIcon  이전 역할 icon 파일명 (예: 'scarletwoman.png')
  */
-function addScarletWomanImpFloat(slot, slotPx) {
+function addImpSuccessionFloat(slot, slotPx) {
   const iconPx = Math.round(slotPx * 0.72)
 
   const el = document.createElement('div')
-  el.className = 'slot-mark slot-mark--sw-imp-float'
+  el.className = 'slot-mark slot-mark--imp-succession-float'
   el.style.cssText = `
     position:absolute;
     top:-${Math.round(iconPx * 0.72)}px;
@@ -339,9 +340,9 @@ function addScarletWomanImpFloat(slot, slotPx) {
     filter:drop-shadow(0 0 8px rgba(220,38,38,0.85));
     animation:sw-imp-float 2.2s ease-in-out infinite;
   `
-  // 슬롯은 이미 imp 아이콘을 표시하므로, 부유 마크는 원래 역할(진홍의 여인) 아이콘으로
+  // 슬롯은 이전 역할을 그대로 표시 — 떠있는 아이콘은 새로 얻은 임프 역할
   const img = document.createElement('img')
-  img.src = './asset/new/Icon_scarletwoman.png'
+  img.src = './asset/new/Icon_imp.png'
   img.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.92;'
   el.appendChild(img)
   slot.appendChild(el)
@@ -424,7 +425,7 @@ export function applySlotStateMarks(slot, slotPx, {
   isDeadExec        = false,
   isSelectedCheck   = false,
   butlerMasterId    = null,
-  isScarletWomanImp = false,   // 진홍의 여인 → 임프 승계 슬롯
+  isImpSuccession = false,       // 임프 승계 슬롯 — imp 아이콘 둥둥 모션
 } = {}) {
   if (isPoisoned)               addPoisonEffect(slot, slotPx)
   if (isDrunk)                  addDrunkStatePill(slot, slotPx)
@@ -433,7 +434,7 @@ export function applySlotStateMarks(slot, slotPx, {
   if (isDeadExec)               addDeadEffect(slot, 'exec')
   if (isSelectedCheck)          addSlotMark(slot, slotPx, 'check')
   if (butlerMasterId != null)   addButlerMasterPill(slot, slotPx, butlerMasterId)
-  if (isScarletWomanImp)        addScarletWomanImpFloat(slot, slotPx)
+  if (isImpSuccession)          addImpSuccessionFloat(slot, slotPx)
 }
 
 // ── 준비 단계 마크 일괄 적용 ─────────────────────────────────

@@ -253,13 +253,18 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
     const isSelf        = p.id === selfSeatId
     const isSelected    = selectedIds.includes(p.id)
     const isDrunkWithAs = p.role === 'drunk' && !!p.drunkAs
-    const displayRole   = isDrunkWithAs ? ROLES_BY_ID[p.drunkAs] : role
+    const isSuccession  = !!p.successionFromRole
+
+    // 표시 역할 우선순위: 주정뱅이 drunkAs > 임프 승계 이전 역할 > 현재 역할
+    const displayRole = isDrunkWithAs  ? ROLES_BY_ID[p.drunkAs]
+                      : isSuccession   ? ROLES_BY_ID[p.successionFromRole]
+                      : role
 
     const borderColor = isSelected
       ? 'var(--gold)'
       : isSelf
         ? 'var(--gold2)'
-        : (TEAM_BORDER[role?.team] || 'var(--lead2)')
+        : (TEAM_BORDER[role?.team] || 'var(--lead2)')   // 테두리는 현재 역할(임프) 기준
 
     const slot = createSeatSlot(x, y, slotPx, {
       borderColor,
@@ -270,17 +275,17 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
     })
 
     slot.appendChild(createRoleIconEl(displayRole ?? role, iconPx, { drunkBadge: isDrunkWithAs }))
-    if (role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
+    if (displayRole ?? role) slot.appendChild(createRoleNameLabel(displayRole ?? role, slotPx))
 
     applySlotStateMarks(slot, slotPx, {
-      isPoisoned:        p.isPoisoned,
-      isDrunk:           p.isDrunk && !isDrunkWithAs,
-      isProtected:       engine ? p.id === engine.monkProtect && !monkPoisoned : false,
-      isDeadNight:       p.status === 'dead',
-      isDeadExec:        p.status === 'executed',
-      isSelectedCheck:   isSelected,
-      butlerMasterId:    engine?.butlerMasters?.[p.id] ?? null,
-      isScarletWomanImp: !!p.wasScarletWoman,
+      isPoisoned:      p.isPoisoned,
+      isDrunk:         p.isDrunk && !isDrunkWithAs,
+      isProtected:     engine ? p.id === engine.monkProtect && !monkPoisoned : false,
+      isDeadNight:     p.status === 'dead',
+      isDeadExec:      p.status === 'executed',
+      isSelectedCheck: isSelected,
+      butlerMasterId:  engine?.butlerMasters?.[p.id] ?? null,
+      isImpSuccession: isSuccession,
     })
 
     if (onSlotClick && !isSelf) {

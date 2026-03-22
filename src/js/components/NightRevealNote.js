@@ -360,6 +360,9 @@ function _markup(text) {
   return s
 }
 
+// ── 공유 export (Memo 등 재사용) ─────────────────────────────────
+export { _renderInto as renderNoteBody, _autoScale as autoScaleNoteBody }
+
 // ── CSS ──────────────────────────────────────────────────────────
 if (!document.getElementById('reveal-note-style')) {
   const style = document.createElement('style')

@@ -162,8 +162,10 @@ export class NightAction {
       : '없음'
 
     // 진홍의 여인 승계 시 — 블러프가 기존 임프에서 인계됨을 명시
-    const successionNote = imp?.wasScarletWoman
-      ? '⚠ 진홍의 여인 승계 — 기존 임프의 블러프를 인계받습니다.\n\n'
+    const prevRole = imp?.successionFromRole
+    const prevRoleName = ROLES_BY_ID[prevRole]?.name || prevRole
+    const successionNote = prevRole
+      ? `⚠ ${prevRoleName} 승계 — 기존 임프의 블러프를 인계받습니다.\n\n`
       : ''
 
     const demonTmpl = getTemplate('demon-reveal')
@@ -174,7 +176,7 @@ export class NightAction {
     ThemeManager.pushTemp('player')
     this._unmount = this._trackOverlay(() => mountNightRevealNote({
       roleIcon: 'imp.png',
-      roleName: imp?.wasScarletWoman ? '새 임프 (진홍 승계)' : '임프 정보',
+      roleName: prevRole ? `새 임프 (${prevRoleName} 승계)` : '임프 정보',
       roleTeam: 'demon',
       message:  demonMsg,
       onBack:   () => { ThemeManager.popTemp(); this._showDemonInfoPanel(stepId) },
@@ -420,13 +422,19 @@ export class NightAction {
       roleTeam:    role?.team || null,
       ability:     role?.ability || '',
       players:     selectablePlayers,
-      selfSeatId:  actor.id,
+      selfSeatId:  roleId === 'imp' ? null : actor.id,  // 임프는 자기 자신 선택 가능 (자결)
       maxSelect:   role?.maxSelect || 1,
       hostWarning: this._hostWarning(actor),
       engine:      this.engine,
       onBack:      () => { this._unmount = null },
       onConfirm: (ids) => {
         this.engine.recordNightAction(roleId, actor.id, ids)
+
+        // 임프 자결 → 즉시 승계 처리
+        if (roleId === 'imp' && ids[0] === actor.id) {
+          this._handleImpSelfKillImmediate(actor)
+          return
+        }
 
         const msg = this._generateSelectMessage(roleId, actor, ids)
         if (msg) {
@@ -444,6 +452,40 @@ export class NightAction {
           this._done(roleId, ids)
         }
       }
+    }))
+  }
+
+  // ── 임프 자결 즉시 처리 ──
+  _handleImpSelfKillImmediate(actor) {
+    const result = this.engine.killImpSelf(actor.id)
+
+    if (result.type === 'sw' || result.type === 'none') {
+      // 진홍의 여인 자동 승계 or 미니언 없음 → 그냥 진행
+      this._done('imp')
+      return
+    }
+
+    // 살아있는 미니언이 1명이면 자동 선택
+    if (result.minions.length === 1) {
+      this.engine.applyMinionSuccession(result.minions[0].id)
+      this._done('imp')
+      return
+    }
+
+    // 미니언 여럿 → 호스트가 선택
+    this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
+      title:     '임프 승계 — 미니언 선택',
+      roleIcon:  'imp.png',
+      roleTeam:  'demon',
+      ability:   '임프가 자결했습니다. 새 임프가 될 미니언을 선택하세요.',
+      players:   result.minions,
+      selfSeatId: null,
+      maxSelect: 1,
+      engine:    this.engine,
+      onConfirm: (ids) => {
+        if (ids.length > 0) this.engine.applyMinionSuccession(ids[0])
+        this._done('imp')
+      },
     }))
   }
 

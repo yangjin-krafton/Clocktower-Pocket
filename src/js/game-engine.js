@@ -35,7 +35,8 @@ export class GameEngine {
     this.poisonedThisNight    = null  // 이번 밤 독약꾼 대상
     this.undertakerTarget     = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
     this.mayorBounceTarget    = null  // 시장 튕김 대상 (호스트가 선택)
-    this.impSuccessionPending = false // 임프 승계 발생 → 다음 밤 imp-succession 스텝 주입
+    this.impSuccessionPending  = false // 임프 승계 발생 → 다음 밤 imp-succession 스텝 주입
+    this.impSelfKillResolved   = false // NightAction에서 즉시 처리 → _resolveNight 재처리 방어
   }
 
   // ─────────────────────────────────────
@@ -222,11 +223,13 @@ export class GameEngine {
       const targetId = impKillAction.targetIds[0]
       const target = this.getPlayer(targetId)
       if (target && target.status === 'alive') {
-        const impPlayer = this.getPlayer(impKillAction.actorId)
-
         if (targetId === impKillAction.actorId) {
-          // Imp self-kill → 승계
-          this._handleImpSelfKill(impKillAction.actorId)
+          // Imp self-kill → 즉시 처리된 경우 재처리 방어
+          if (this.impSelfKillResolved) {
+            this.impSelfKillResolved = false
+          } else {
+            this._handleImpSelfKill(impKillAction.actorId)
+          }
         } else if (this.monkProtect === targetId) {
           // 수도사 보호
           this._log('night', `수도사가 ${target.name}을(를) 보호했습니다.`)
@@ -272,6 +275,49 @@ export class GameEngine {
   }
 
   /**
+   * 임프 자결 즉시 처리 (NightAction에서 호출).
+   * - 임프를 즉시 사망 처리
+   * - SW 승계 시도 → 성공 시 { type:'sw' }
+   * - 실패 시 살아있는 미니언 목록 반환 → NightAction이 선택 UI 제공
+   * @returns {{ type:'sw'|'choose'|'none', minions:object[] }}
+   */
+  killImpSelf(impId) {
+    const imp = this.getPlayer(impId)
+    if (imp) {
+      imp.status = 'dead'
+      this._log('night', `${imp.name}(임프)이 자결했습니다.`)
+    }
+    this.impSelfKillResolved = true  // _resolveNight 재처리 방지
+
+    if (this._tryScarletWomanSuccession()) {
+      this.emit('stateChanged', this.state)
+      return { type: 'sw', minions: [] }
+    }
+
+    const minions = this.state.players.filter(
+      p => p.status === 'alive' && ['poisoner','spy','scarletwoman','baron'].includes(p.role)
+    )
+    this.emit('stateChanged', this.state)
+    return { type: minions.length === 0 ? 'none' : 'choose', minions }
+  }
+
+  /**
+   * 미니언 → 임프 승계 적용 (NightAction 선택 후 호출).
+   */
+  applyMinionSuccession(minionId) {
+    const newImp = this.getPlayer(minionId)
+    if (!newImp) return
+    newImp.successionFromRole = newImp.role  // 슬롯 마크용 이전 역할 저장
+    newImp.role = 'imp'
+    newImp.team = 'evil'
+    newImp.needsBluffAssignment = true
+    this.impSuccessionPending = true
+    this._log('night', `${newImp.name}이(가) 새 임프로 선택되었습니다!`)
+    this.emit('impSucceeded', { playerId: newImp.id })
+    this.emit('stateChanged', this.state)
+  }
+
+  /**
    * 진홍의 여인 승계 시도.
    * 임프 사망 직후 호출 — 사망 후 생존자 4명 이상(= 죽기 전 5명 이상)이면 승계.
    * @returns {boolean} 승계 성공 여부
@@ -284,7 +330,7 @@ export class GameEngine {
       if (sw) {
         sw.role = 'imp'
         sw.team = 'evil'
-        sw.wasScarletWoman = true     // 슬롯 마크(둥둥 모션) 표시용
+        sw.successionFromRole = 'scarletwoman'  // 슬롯 마크(둥둥 모션) + 정보 패널용
         this.impSuccessionPending = true  // 다음 밤 imp-succession 스텝 주입
         this._log('event', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
         this.emit('scarletWomanSucceeded', { playerId: sw.id })
@@ -299,7 +345,7 @@ export class GameEngine {
     this.mayorBounceTarget = targetId
   }
 
-  _handleMayorBounce(impId, mayorId) {
+  _handleMayorBounce(_impId, _mayorId) {
     const targetId = this.mayorBounceTarget
     const bounced  = targetId ? this.getPlayer(targetId) : null
     if (!bounced || bounced.status !== 'alive') {
@@ -736,6 +782,7 @@ export class GameEngine {
       undertakerTarget:  this.undertakerTarget,
       mayorBounceTarget:    this.mayorBounceTarget,
       impSuccessionPending: this.impSuccessionPending,
+      impSelfKillResolved:  this.impSelfKillResolved,
     }
   }
 
@@ -757,6 +804,7 @@ export class GameEngine {
     this.undertakerTarget  = data.undertakerTarget  ?? null
     this.mayorBounceTarget    = data.mayorBounceTarget    ?? null
   this.impSuccessionPending = data.impSuccessionPending ?? false
+  this.impSelfKillResolved  = data.impSelfKillResolved  ?? false
     this.emit('stateChanged', this.state)
   }
 

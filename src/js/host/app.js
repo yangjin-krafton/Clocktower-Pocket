@@ -239,7 +239,7 @@ export class HostApp {
       this.currentScreen = rulesScreen
     } else if (tabId === 'memo') {
       import('../player/Memo.js').then(({ Memo }) => {
-        const memo = new Memo()
+        const memo = new Memo({ gameKey: this._saveId || 'session' })
         memo.mount(this.container)
         this.currentScreen = memo
       })
@@ -860,7 +860,7 @@ export class HostApp {
     this.currentScreen = victory
   }
 
-  _handlePlayerAction(action, actorId) {}
+  _handlePlayerAction(_action, _actorId) {}
 
   // ─────────────────────────────────────
   // 히스토리 시스템
@@ -1146,7 +1146,7 @@ export class HostApp {
     const total = players.length
 
     // 가용 공간 계산: page-content 기준 (padding top 12 + bottom 68 = 80, sub header ~26px)
-    const { ovalW, ovalH, rawH, slotPx, iconPx } = calcOvalLayout(total, 106)
+    const { rawH, slotPx, iconPx } = calcOvalLayout(total, 106)
     const contentH = rawH - 80   // el min-height 용 (subheader 제외)
 
     const el = document.createElement('div')
@@ -1156,57 +1156,6 @@ export class HostApp {
 
     buildOvalSlots(oval, players, slotPx, iconPx, {
       engine,
-      onSlotClick: (player) => {
-        document.getElementById('host-seat-popup')?.remove()
-        const role          = ROLES_BY_ID[player.role]
-        const isDead        = player.status !== 'alive'
-        const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
-        const drunkAsRole   = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : null
-        const teamLabel     = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
-        const shownRole     = isDrunkWithAs ? drunkAsRole : role
-        const roleIconSrc   = shownRole?.icon ? `./asset/new/Icon_${shownRole.icon}` : ''
-        const aliveColor    = isDead ? 'var(--rd-light)' : 'var(--tl-light)'
-        const statusParts   = [
-          `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="${isDead ? './asset/death.png' : './asset/life.png'}" alt="" style="width:13px;height:13px;object-fit:contain;">${isDead ? '사망' : '생존'}</span>`,
-          player.isPoisoned ? `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="./asset/new/Icon_poisoner.png" alt="" style="width:13px;height:13px;object-fit:contain;">중독</span>` : '',
-          player.isDrunk ? `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="./asset/new/Icon_drunk.png" alt="" style="width:13px;height:13px;object-fit:contain;">취함</span>` : '',
-        ].filter(Boolean).join(' · ')
-        const ov = document.createElement('div')
-        ov.className = 'popup-overlay'
-        ov.id = 'host-seat-popup'
-        const box = document.createElement('div')
-        box.className = 'popup-box'
-        box.style.padding = '16px'
-        box.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
-              ${roleIconSrc
-                ? `<img src="${roleIconSrc}" alt="" style="width:100%;height:100%;object-fit:contain;">`
-                : `<div style="font-size:1.6rem;">?</div>`
-              }
-            </div>
-            <div>
-              <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.id}번 자리</div>
-              ${isDrunkWithAs
-                ? `<div style="font-size:0.72rem;color:var(--tl-light)">${drunkAsRole?.name || ''} <span style="color:var(--text4)">(본인 인지)</span></div>
-                   <div style="font-size:0.65rem;color:#a78bfa;margin-top:1px;display:flex;align-items:center;gap:5px;"><img src="./asset/new/Icon_drunk.png" alt="" style="width:13px;height:13px;object-fit:contain;">실제: 주정뱅이 · 아웃사이더</div>`
-                : `<div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>`
-              }
-              <div style="font-size:0.68rem;margin-top:2px;color:${aliveColor};display:flex;align-items:center;gap:0;flex-wrap:wrap;">${statusParts}</div>
-            </div>
-          </div>
-          <div style="font-size:0.68rem;color:var(--text4);line-height:1.5;">${isDrunkWithAs ? (drunkAsRole?.ability || '') : (role?.ability || '')}</div>
-        `
-        const closeBtn = document.createElement('button')
-        closeBtn.className = 'btn btn-full'
-        closeBtn.style.marginTop = '12px'
-        closeBtn.textContent = '닫기'
-        closeBtn.addEventListener('click', () => ov.remove())
-        box.appendChild(closeBtn)
-        ov.appendChild(box)
-        ov.addEventListener('click', e => { if (e.target === ov) ov.remove() })
-        document.body.appendChild(ov)
-      },
     })
 
     // 자리 번호 레이블

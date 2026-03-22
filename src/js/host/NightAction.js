@@ -12,6 +12,7 @@ import { DemonBluffAdvisor }        from './DemonBluffAdvisor.js'
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 import { ThemeManager } from '../ThemeManager.js'
 
+
 export class NightAction {
   constructor({ engine, onStepDone }) {
     this.engine        = engine
@@ -179,31 +180,29 @@ export class NightAction {
 
   // ── 시장 튕김 대상 선택 ──
   _showMayorBounce() {
-    const state      = this.engine.state
-    const mayorId    = state.nightOrder && (() => {
-      const impAction = this.engine.nightActions
-        .filter(a => a.round === state.round && a.roleId === 'imp').pop()
-      return impAction?.targetIds?.[0] ?? null
-    })()
-    const impAction  = this.engine.nightActions
+    const state     = this.engine.state
+    const impAction = this.engine.nightActions
       .filter(a => a.round === state.round && a.roleId === 'imp').pop()
-    const impId      = impAction?.actorId ?? null
+    const impId = impAction?.actorId ?? null
 
-    // 시장·임프 제외 생존자 = 튕김 후보
-    const candidates = state.players.filter(
-      p => p.status === 'alive' && p.id !== mayorId && p.id !== impId
+    // 임프만 제외 — 시장 본인 포함 (독/취한 시장이 그대로 사망하는 케이스 지원)
+    const bounceTargets = state.players.filter(p =>
+      p.status === 'alive' && p.id !== impId
     )
 
     this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
-      title:      '시장 튕김',
-      roleIcon:   'mayor.png',
-      roleTeam:   'town',
-      ability:    '임프 공격이 시장을 노렸습니다. 공격이 튕길 대상을 선택하세요.\n군인을 선택하면 아무도 사망하지 않습니다.',
-      players:    candidates,
-      selfSeatId: null,
-      maxSelect:  1,
-      hostWarning: null,
-      engine:     this.engine,
+      title:     '시장 — 공격 튕김',
+      roleIcon:  'mayor.png',
+      roleTeam:  'town',
+      ability:   '임프 공격이 시장을 노렸습니다. 튕길 대상을 선택하거나, 시장 생존으로 진행하세요. 군인 선택 시 아무도 사망하지 않습니다.',
+      players:   bounceTargets,
+      maxSelect: 1,
+      engine:    this.engine,
+      backLabel: '→ 시장 생존',
+      onBack:    () => {
+        this.engine.recordMayorBounce(null)
+        this._done('mayor-bounce', [])
+      },
       onConfirm: (ids) => {
         this.engine.recordMayorBounce(ids[0] ?? null)
         this._done('mayor-bounce', ids)

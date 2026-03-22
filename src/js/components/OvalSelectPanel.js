@@ -22,7 +22,7 @@ export function mountOvalSelectPanel(data) {
   const {
     title, roleIcon = '🎯', roleTeam, ability,
     players = [], selfSeatId,
-    maxSelect = 1, onConfirm, onBack, hostWarning, engine,
+    maxSelect = 1, onConfirm, onBack, backLabel = '← 되돌리기', hostWarning, engine,
   } = data
 
   let selectedIds = []
@@ -153,7 +153,7 @@ export function mountOvalSelectPanel(data) {
   if (onBack) {
     const backBtn = document.createElement('button')
     backBtn.className = 'btn oval-sel__back-btn'
-    backBtn.textContent = '← 되돌리기'
+    backBtn.textContent = backLabel
     backBtn.addEventListener('click', () => {
       overlay.remove()
       onBack()

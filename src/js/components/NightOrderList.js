@@ -7,8 +7,9 @@
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
 const SPECIAL_STEPS = {
-  'minion-info': { name: '미니언 공개', icon: '🎭' },
-  'demon-info':  { name: '임프 정보',   icon: '👿' },
+  'minion-info':  { name: '미니언 공개',   icon: '🎭' },
+  'demon-info':   { name: '임프 정보',     icon: '👿' },
+  'mayor-bounce': { name: '시장 — 튕김',  icon: '🏛' },
 }
 
 // 이야기꾼용 밤 행동 요약 (간결한 지시문)
@@ -29,6 +30,7 @@ const NIGHT_HINTS = {
   'monk':          '1명 지목 → 오늘 밤 임프 공격으로부터 보호',
   'ravenkeeper':   '이 밤 사망 시 — 1명 지목 → 역할 귓속말',
   'imp':           '1명 지목 → 처치 (자신 선택 시 미니언 승계)',
+  'mayor-bounce':  '임프 공격 튕김 — 튕길 대상 선택 (시장 생존도 가능)',
 }
 
 export function renderNightOrderList(data, onStepClick = null) {

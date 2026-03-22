@@ -289,7 +289,7 @@ export class GameEngine {
     }
     this.impSelfKillResolved = true  // _resolveNight 재처리 방지
 
-    if (this._tryScarletWomanSuccession()) {
+    if (this._tryScarletWomanSuccession(true)) {  // 현재 밤 마지막에 삽입
       this.emit('stateChanged', this.state)
       return { type: 'sw', minions: [] }
     }
@@ -311,7 +311,7 @@ export class GameEngine {
     newImp.role = 'imp'
     newImp.team = 'evil'
     newImp.needsBluffAssignment = true
-    this.impSuccessionPending = true
+    this._insertImpSuccessionStep()
     this._log('night', `${newImp.name}이(가) 새 임프로 선택되었습니다!`)
     this.emit('impSucceeded', { playerId: newImp.id })
     this.emit('stateChanged', this.state)
@@ -320,24 +320,38 @@ export class GameEngine {
   /**
    * 진홍의 여인 승계 시도.
    * 임프 사망 직후 호출 — 사망 후 생존자 4명 이상(= 죽기 전 5명 이상)이면 승계.
+   * @param {boolean} currentNight  true: 현재 밤 끝에 삽입 / false: 다음 밤으로 예약
    * @returns {boolean} 승계 성공 여부
    */
-  _tryScarletWomanSuccession() {
+  _tryScarletWomanSuccession(currentNight = false) {
     const aliveAfter = this.state.players.filter(p => p.status === 'alive').length
-    // 규칙: "임프 포함 5명 이상 생존 시" = 임프 사망 후 4명 이상
     if (aliveAfter >= 4) {
       const sw = this.state.players.find(p => p.role === 'scarletwoman' && p.status === 'alive')
       if (sw) {
         sw.role = 'imp'
         sw.team = 'evil'
-        sw.successionFromRole = 'scarletwoman'  // 슬롯 마크(둥둥 모션) + 정보 패널용
-        this.impSuccessionPending = true  // 다음 밤 imp-succession 스텝 주입
+        sw.successionFromRole = 'scarletwoman'
+        if (currentNight) {
+          this._insertImpSuccessionStep()  // 현재 밤 마지막에 삽입
+        } else {
+          this.impSuccessionPending = true  // 다음 밤 첫 스텝으로 예약
+        }
         this._log('event', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
         this.emit('scarletWomanSucceeded', { playerId: sw.id })
         return true
       }
     }
     return false
+  }
+
+  /**
+   * 현재 밤 순서 마지막에 imp-succession 삽입.
+   * 이미 있으면 중복 추가하지 않음.
+   */
+  _insertImpSuccessionStep() {
+    if (!this.state.nightOrder.includes('imp-succession')) {
+      this.state.nightOrder.push('imp-succession')
+    }
   }
 
   /** 시장 튕김 대상 호스트 결정 기록 */

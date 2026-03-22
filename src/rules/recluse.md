@@ -1,6 +1,6 @@
-# ![](../asset/icons/recluse.png) 은둔자 (Recluse)
+﻿# ![](../asset/new/Icon_recluse.png) 은둔자 (Recluse)
 
-**진영**: ![](../asset/editions/tb-outsider.png) 아웃사이더 (선 팀)
+**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
 
 ---
 
@@ -22,13 +22,13 @@
 
 은둔자는 다음 조사에서 **악으로 나타날 수 있습니다**:
 
-- ![](../asset/icons/washerwoman.png) **세탁부**: 다른 Townsfolk로 나타날 수 있음
-- ![](../asset/icons/librarian.png) **사서**: Outsider로 정확히 나타남
-- ![](../asset/icons/investigator.png) **조사관**: **미니언**으로 나타날 수 있음
-- ![](../asset/icons/chef.png) **요리사**: 악 쌍 수를 늘릴 수 있음
-- ![](../asset/icons/empath.png) **공감인**: 악으로 카운트될 수 있음
-- ![](../asset/icons/fortuneteller.png) **점쟁이**: **임프**으로 나타날 수 있음
-- ![](../asset/icons/undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
+- ![](../asset/new/Icon_washerwoman.png) **세탁부**: 다른 Townsfolk로 나타날 수 있음
+- ![](../asset/new/Icon_librarian.png) **사서**: Outsider로 정확히 나타남
+- ![](../asset/new/Icon_investigator.png) **조사관**: **미니언**으로 나타날 수 있음
+- ![](../asset/new/Icon_chef.png) **요리사**: 악 쌍 수를 늘릴 수 있음
+- ![](../asset/new/Icon_empath.png) **공감인**: 악으로 카운트될 수 있음
+- ![](../asset/new/Icon_fortuneteller.png) **점쟁이**: **임프**으로 나타날 수 있음
+- ![](../asset/new/Icon_undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
 
 ### 주의할 점
 
@@ -48,9 +48,10 @@
 ## 상호작용
 
 - **모든 정보형**: 당신을 악으로 등록할 수 있습니다.
-- ![](../asset/icons/spy.png) **스파이**: 스파이도 선으로 등록되므로 혼란이 가중됩니다.
-- ![](../asset/icons/slayer.png) **처단자**: 당신을 임프로 조사해도 **죽지 않습니다** (진짜 임프가 아님).
+- ![](../asset/new/Icon_spy.png) **스파이**: 스파이도 선으로 등록되므로 혼란이 가중됩니다.
+- ![](../asset/new/Icon_slayer.png) **처단자**: 당신을 임프로 조사해도 **죽지 않습니다** (진짜 임프가 아님).
 
 ---
 
 → [아웃사이더 목록](outsider.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

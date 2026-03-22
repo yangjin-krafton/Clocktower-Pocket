@@ -1,6 +1,6 @@
-# ![](../asset/icons/saint.png) 성자 (Saint)
+﻿# ![](../asset/new/Icon_saint.png) 성자 (Saint)
 
-**진영**: ![](../asset/editions/tb-outsider.png) 아웃사이더 (선 팀)
+**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
 
 ---
 
@@ -56,9 +56,10 @@
 ## 상호작용
 
 - **모든 플레이어**: 당신을 처형하면 안 됩니다!
-- ![](../asset/icons/slayer.png) **처단자**: 학살자 능력으로 죽어도 패배 조건이 **아닙니다** (처형만 패배).
-- ![](../asset/icons/imp.png) **임프**: 밤에 죽는 것은 괜찮습니다.
+- ![](../asset/new/Icon_slayer.png) **처단자**: 학살자 능력으로 죽어도 패배 조건이 **아닙니다** (처형만 패배).
+- ![](../asset/new/Icon_imp.png) **임프**: 밤에 죽는 것은 괜찮습니다.
 
 ---
 
 → [아웃사이더 목록](outsider.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

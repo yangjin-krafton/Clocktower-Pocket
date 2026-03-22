@@ -1,6 +1,6 @@
-# ![](../asset/icons/virgin.png) 처녀 (Virgin)
+﻿# ![](../asset/new/Icon_virgin.png) 처녀 (Virgin)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (Townsfolk)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (Townsfolk)
 
 ---
 
@@ -33,8 +33,8 @@
 
 ### 주의사항
 
-- ![](../asset/icons/drunk.png) **취함/드렁크**: 처녀가 취해 있거나 실제로 드렁크라면 능력이 발동하지 않을 수 있습니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독된 동안에는 능력이 막힐 수 있습니다.
+- ![](../asset/new/Icon_drunk.png) **취함/드렁크**: 처녀가 취해 있거나 실제로 드렁크라면 능력이 발동하지 않을 수 있습니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독된 동안에는 능력이 막힐 수 있습니다.
 - **한 번만 소모**: 첫 지목 때 발동하지 않았더라도, 그 확인 기회 자체는 소모됩니다.
 - **아웃사이더는 발동 안 함**: 선한 편이어도 Outsider가 지목하면 능력은 발동하지 않습니다.
 - **미니언/악마도 발동 안 함**: 일반적으로 evil이 지목하면 아무 일도 일어나지 않고 투표를 계속합니다.
@@ -50,11 +50,12 @@
 
 ## 상호작용
 
-- ![](../asset/editions/tb-townsfolk.png) **마을 주민**: 첫 지목자라면 즉시 처형되고, 그날 낮은 종료됩니다.
-- ![](../asset/editions/tb-outsider.png) **아웃사이더**: 지목해도 능력은 발동하지 않습니다.
-- ![](../asset/editions/tb-minion.png) **미니언 / ![](../asset/icons/imp.png) 악마**: 지목해도 일반적으로 능력은 발동하지 않습니다.
+- ![](../asset/new/Generic_townsfolk.png) **마을 주민**: 첫 지목자라면 즉시 처형되고, 그날 낮은 종료됩니다.
+- ![](../asset/new/Generic_outsider.png) **아웃사이더**: 지목해도 능력은 발동하지 않습니다.
+- ![](../asset/new/Generic_minion.png) **미니언 / ![](../asset/new/Icon_imp.png) 악마**: 지목해도 일반적으로 능력은 발동하지 않습니다.
 - **처형 관련 능력**: 이 처형은 정식 처형이므로, 처형된 플레이어를 참조하는 능력과 상호작용합니다.
 
 ---
 
 [마을 주민 목록](townsfolk.md) | [낮 규칙](day.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

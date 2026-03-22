@@ -1,6 +1,6 @@
-# ![](../asset/icons/undertaker.png) 장의사 (Undertaker)
+﻿# ![](../asset/new/Icon_undertaker.png) 장의사 (Undertaker)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -22,13 +22,13 @@
 
 - **처형만 조사**: ![](../asset/death.png) 밤에 죽은 사람은 **조사 안 됩니다**.
 - **처형 없으면 정보 없음**: 그날 처형이 없었다면 정보를 받지 않습니다.
-- **진짜 역할**: ![](../asset/icons/drunk.png) 술꾼라도 **원래 역할**을 봅니다.
+- **진짜 역할**: ![](../asset/new/Icon_drunk.png) 술꾼라도 **원래 역할**을 봅니다.
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
-- ![](../asset/icons/spy.png) **스파이**: 다른 역할로 등록될 수 있습니다.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 다른 역할로 등록될 수 있습니다.
 - **처형 타이밍**: 처형은 낮 종료 시에 발생합니다 → [낮 규칙](day.md)
 
 ### 전략 팁
@@ -42,10 +42,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/drunk.png) **주정뱅이**: 술꾼의 **진짜 Townsfolk 역할**을 봅니다.
-- ![](../asset/icons/spy.png) **스파이**: 다른 역할로 등록되어 틀린 정보를 줄 수 있습니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 다른 역할로 등록될 수 있습니다.
+- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 술꾼의 **진짜 Townsfolk 역할**을 봅니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 다른 역할로 등록되어 틀린 정보를 줄 수 있습니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 다른 역할로 등록될 수 있습니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [낮 규칙](day.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

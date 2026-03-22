@@ -1,6 +1,6 @@
-# ![](../asset/icons/slayer.png) 처단자 (Slayer)
+﻿# ![](../asset/new/Icon_slayer.png) 처단자 (Slayer)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -27,14 +27,14 @@
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
-- ![](../asset/icons/recluse.png) **은둔자**: 임프로 등록되어도 **죽지 않습니다** (진짜 임프만 죽음).
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 임프로 등록되어도 **죽지 않습니다** (진짜 임프만 죽음).
 - **공개 능력**: 사용하면 모두가 알게 되므로 블러프가 어렵습니다.
 
 ### 전략 팁
 
-1. **정보 수집**: ![](../asset/icons/fortuneteller.png) 점술사, ![](../asset/icons/empath.png) 공감자 정보를 모으세요.
+1. **정보 수집**: ![](../asset/new/Icon_fortuneteller.png) 점술사, ![](../asset/new/Icon_empath.png) 공감자 정보를 모으세요.
 2. **확신 필요**: 70% 이상 확신이 들 때 사용하세요.
 3. **늦은 게임**: 3-4일차에 사용하면 정보가 많아 성공률이 높습니다.
 4. **블러프 대비**: 악 팀도 학살자를 사칭할 수 있습니다.
@@ -44,10 +44,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 성공하면 즉시 죽이고 선 팀 승리.
-- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 생존자 5명 이상이면 승계될 수 있으니 주의.
-- ![](../asset/icons/recluse.png) **은둔자**: 임프로 등록되어도 능력은 발동 안 됨.
+- ![](../asset/new/Icon_imp.png) **임프**: 성공하면 즉시 죽이고 선 팀 승리.
+- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 생존자 5명 이상이면 승계될 수 있으니 주의.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 임프로 등록되어도 능력은 발동 안 됨.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

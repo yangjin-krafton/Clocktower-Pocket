@@ -1,6 +1,6 @@
-# ![](../asset/icons/empath.png) 공감인 (Empath)
+﻿# ![](../asset/new/Icon_empath.png) 공감인 (Empath)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -15,7 +15,7 @@
 ### 당신이 해야 할 일
 
 - **매일 밤 정보 수집**: 양옆 이웃의 선악을 계속 추적하세요.
-- **변화 감지**: 이웃이 죽거나 ![](../asset/icons/poisoner.png) 중독 상태가 바뀌면 숫자가 달라집니다.
+- **변화 감지**: 이웃이 죽거나 ![](../asset/new/Icon_poisoner.png) 중독 상태가 바뀌면 숫자가 달라집니다.
 - **패턴 분석**: 여러 밤의 정보를 모아 악을 찾으세요.
 
 ### 정보 해석
@@ -26,10 +26,10 @@
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
-- ![](../asset/icons/spy.png) **스파이**: 선으로 등록되면 악 수가 줄어듭니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 악으로 등록되면 악 수가 늘어납니다.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 선으로 등록되면 악 수가 줄어듭니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 악으로 등록되면 악 수가 늘어납니다.
 - **좌석 기준**: 이웃은 사망자 제외하고 **생존자 기준**으로 재계산됩니다.
 
 ### 전략 팁
@@ -37,16 +37,17 @@
 1. **정보 기록**: 매일 밤 받은 숫자를 메모하세요.
 2. **변화 추적**: 전날과 달라졌다면 이웃 변화나 중독을 의심하세요.
 3. **공개 타이밍**: 악이 확실하면 공개하고, 애매하면 더 정보를 모으세요.
-4. **중독 의심**: 정보가 이상하다면 ![](../asset/icons/poisoner.png) 독살자를 찾으세요.
+4. **중독 의심**: 정보가 이상하다면 ![](../asset/new/Icon_poisoner.png) 독살자를 찾으세요.
 
 ---
 
 ## 상호작용
 
-- ![](../asset/icons/poisoner.png) **독약꾼**: 중독되면 틀린 정보를 받습니다.
-- ![](../asset/icons/spy.png) **스파이**: 선으로 등록되면 악 수가 줄어듭니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 악으로 등록되면 악 수가 늘어납니다.
+- ![](../asset/new/Icon_poisoner.png) **독약꾼**: 중독되면 틀린 정보를 받습니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 선으로 등록되면 악 수가 줄어듭니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 악으로 등록되면 악 수가 늘어납니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

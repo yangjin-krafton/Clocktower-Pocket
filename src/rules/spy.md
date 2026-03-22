@@ -1,6 +1,6 @@
-# ![](../asset/icons/spy.png) 스파이 (Spy)
+﻿# ![](../asset/new/Icon_spy.png) 스파이 (Spy)
 
-**진영**: ![](../asset/editions/tb-minion.png) 미니언 (악 팀)
+**진영**: ![](../asset/new/Generic_minion.png) 미니언 (악 팀)
 
 ---
 
@@ -30,13 +30,13 @@
 
 스파이는 다음 조사에서 **선으로 나타날 수 있습니다**:
 
-- ![](../asset/icons/washerwoman.png) **세탁부**: Townsfolk로 나타날 수 있음
-- ![](../asset/icons/librarian.png) **사서**: Outsider로 나타날 수 있음
-- ![](../asset/icons/investigator.png) **조사관**: 미니언으로 **안 나타날** 수 있음
-- ![](../asset/icons/chef.png) **요리사**: 악 쌍 수를 줄일 수 있음
-- ![](../asset/icons/empath.png) **공감인**: 선으로 카운트될 수 있음
-- ![](../asset/icons/fortuneteller.png) **점쟁이**: 선으로 나타날 수 있음
-- ![](../asset/icons/undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
+- ![](../asset/new/Icon_washerwoman.png) **세탁부**: Townsfolk로 나타날 수 있음
+- ![](../asset/new/Icon_librarian.png) **사서**: Outsider로 나타날 수 있음
+- ![](../asset/new/Icon_investigator.png) **조사관**: 미니언으로 **안 나타날** 수 있음
+- ![](../asset/new/Icon_chef.png) **요리사**: 악 쌍 수를 줄일 수 있음
+- ![](../asset/new/Icon_empath.png) **공감인**: 선으로 카운트될 수 있음
+- ![](../asset/new/Icon_fortuneteller.png) **점쟁이**: 선으로 나타날 수 있음
+- ![](../asset/new/Icon_undertaker.png) **장의사**: 다른 역할로 나타날 수 있음
 
 ### 전략 팁
 
@@ -63,18 +63,18 @@
 
 ### 블러프 예시
 
-- ![](../asset/icons/washerwoman.png) **세탁부**: 거짓 정보로 혼란 유발
-- ![](../asset/icons/empath.png) **공감인**: 선으로 등록되면 신뢰도 상승
-- ![](../asset/icons/butler.png) **집사**: 투표 제약 거짓말로 의심 회피
-- ![](../asset/icons/recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능
+- ![](../asset/new/Icon_washerwoman.png) **세탁부**: 거짓 정보로 혼란 유발
+- ![](../asset/new/Icon_empath.png) **공감인**: 선으로 등록되면 신뢰도 상승
+- ![](../asset/new/Icon_butler.png) **집사**: 투표 제약 거짓말로 의심 회피
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능
 
 ---
 
 ## 상호작용
 
 - **모든 정보형**: 선으로 등록되어 조사를 피할 수 있습니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 은둔자가 있으면 둘 다 왜곡되어 혼란이 가중됩니다.
-- ![](../asset/icons/drunk.png) **주정뱅이**: 술꾼의 진짜 역할도 압니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 은둔자가 있으면 둘 다 왜곡되어 혼란이 가중됩니다.
+- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 술꾼의 진짜 역할도 압니다.
 
 ---
 
@@ -87,3 +87,4 @@
 ---
 
 → [미니언 목록](minion.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

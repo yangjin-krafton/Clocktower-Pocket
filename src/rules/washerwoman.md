@@ -1,6 +1,6 @@
-# ![](../asset/icons/washerwoman.png) 세탁부 (Washerwoman)
+﻿# ![](../asset/new/Icon_washerwoman.png) 세탁부 (Washerwoman)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -20,10 +20,10 @@
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
-- ![](../asset/icons/spy.png) **스파이**: 스파이가 마을 주민으로 등록될 수 있습니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 은둔자가 악으로 잘못 등록될 수 있습니다.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 스파이가 마을 주민으로 등록될 수 있습니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 은둔자가 악으로 잘못 등록될 수 있습니다.
 
 ### 전략 팁
 
@@ -35,10 +35,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/spy.png) **스파이**: 마을 주민으로 잘못 나타날 수 있습니다.
-- ![](../asset/icons/recluse.png) **은둔자**: 조사 결과를 왜곡할 수 있습니다.
-- ![](../asset/icons/drunk.png) **주정뱅이**: 당신이 취했다면 정보가 틀립니다.
+- ![](../asset/new/Icon_spy.png) **스파이**: 마을 주민으로 잘못 나타날 수 있습니다.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 조사 결과를 왜곡할 수 있습니다.
+- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 당신이 취했다면 정보가 틀립니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

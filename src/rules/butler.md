@@ -1,6 +1,6 @@
-# ![](../asset/icons/butler.png) 집사 (Butler)
+﻿# ![](../asset/new/Icon_butler.png) 집사 (Butler)
 
-**진영**: ![](../asset/editions/tb-outsider.png) 아웃사이더 (선 팀)
+**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
 
 ---
 
@@ -102,12 +102,12 @@
 
 | 역할 | 상호작용 |
 |---|---|
-| ![](../asset/icons/poisoner.png) **독살자** | 집사가 중독되면 투표 제약이 풀릴 수 있음 (이야기꾼 재량) |
-| ![](../asset/icons/drunk.png) **주정뱅이** | 집사가 실제로 주정뱅이라면 투표 제약 없음 (능력이 작동하지 않으므로) |
-| ![](../asset/icons/spy.png) **스파이** | 스파이가 집사의 주인 선택을 알 수 있음 |
-| ![](../asset/icons/imp.png) **임프** | 주인이 임프면 의도적으로 투표를 안 해 집사의 투표권 봉쇄 가능 |
-| ![](../asset/icons/baron.png) **남작** | 남작으로 인해 집사가 추가로 게임에 등장할 수 있음 |
-| ![](../asset/icons/slayer.png) **학살자** | 집사의 학살자 선언은 투표와 무관하게 자유롭게 가능 |
+| ![](../asset/new/Icon_poisoner.png) **독살자** | 집사가 중독되면 투표 제약이 풀릴 수 있음 (이야기꾼 재량) |
+| ![](../asset/new/Icon_drunk.png) **주정뱅이** | 집사가 실제로 주정뱅이라면 투표 제약 없음 (능력이 작동하지 않으므로) |
+| ![](../asset/new/Icon_spy.png) **스파이** | 스파이가 집사의 주인 선택을 알 수 있음 |
+| ![](../asset/new/Icon_imp.png) **임프** | 주인이 임프면 의도적으로 투표를 안 해 집사의 투표권 봉쇄 가능 |
+| ![](../asset/new/Icon_baron.png) **남작** | 남작으로 인해 집사가 추가로 게임에 등장할 수 있음 |
+| ![](../asset/new/Icon_slayer.png) **학살자** | 집사의 학살자 선언은 투표와 무관하게 자유롭게 가능 |
 
 ---
 
@@ -128,3 +128,4 @@ A: 제약은 유지됩니다. 죽은 주인이 투표 토큰을 사용하지 않
 ---
 
 → [아웃사이더 목록](outsider.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

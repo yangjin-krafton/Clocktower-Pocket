@@ -1,6 +1,6 @@
-# ![](../asset/icons/monk.png) 수도사 (Monk)
+﻿# ![](../asset/new/Icon_monk.png) 수도사 (Monk)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -20,20 +20,20 @@
 
 ### 보호 규칙
 
-- **임프 공격만 막음**: 처형이나 ![](../asset/icons/slayer.png) 학살자 능력은 막지 못합니다.
+- **임프 공격만 막음**: 처형이나 ![](../asset/new/Icon_slayer.png) 학살자 능력은 막지 못합니다.
 - **매일 밤**: 매일 밤마다 1명을 선택합니다.
 - **자신 제외**: 자신은 보호할 수 없습니다.
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 보호가 **실패**합니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 보호가 **실패**합니다.
-- ![](../asset/icons/soldier.png) **군인**: 이미 면역인 병사를 보호할 필요는 없습니다.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 보호가 **실패**합니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 보호가 **실패**합니다.
+- ![](../asset/new/Icon_soldier.png) **군인**: 이미 면역인 병사를 보호할 필요는 없습니다.
 - **공격 여부 확인**: 아침에 사망자가 없다고 보호 성공은 아닙니다.
 
 ### 전략 팁
 
-1. **핵심 역할 보호**: ![](../asset/icons/fortuneteller.png) 점술사, ![](../asset/icons/empath.png) 공감자 같은 강력한 역할을 보호하세요.
+1. **핵심 역할 보호**: ![](../asset/new/Icon_fortuneteller.png) 점술사, ![](../asset/new/Icon_empath.png) 공감자 같은 강력한 역할을 보호하세요.
 2. **블러프 방지**: 역할을 공개하지 마세요. 악 팀이 당신을 피할 수 있습니다.
 3. **패턴 변경**: 매번 다른 사람을 보호해 예측을 어렵게 하세요.
 4. **보호 성공 추론**: 누군가 계속 살아있다면 당신이 보호했거나 임프가 피한 것입니다.
@@ -42,10 +42,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 임프의 공격을 막습니다.
-- ![](../asset/icons/soldier.png) **군인**: 이미 면역이므로 보호 불필요.
-- ![](../asset/icons/mayor.png) **시장**: 공격이 튕겨도 보호 효과는 적용됩니다.
+- ![](../asset/new/Icon_imp.png) **임프**: 임프의 공격을 막습니다.
+- ![](../asset/new/Icon_soldier.png) **군인**: 이미 면역이므로 보호 불필요.
+- ![](../asset/new/Icon_mayor.png) **시장**: 공격이 튕겨도 보호 효과는 적용됩니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

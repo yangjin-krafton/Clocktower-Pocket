@@ -1,6 +1,6 @@
-# ![](../asset/icons/poisoner.png) 독약꾼 (Poisoner)
+﻿# ![](../asset/new/Icon_poisoner.png) 독약꾼 (Poisoner)
 
-**진영**: ![](../asset/editions/tb-minion.png) 미니언 (악 팀)
+**진영**: ![](../asset/new/Generic_minion.png) 미니언 (악 팀)
 
 ---
 
@@ -17,22 +17,22 @@
 
 - **정보 차단**: 강력한 정보형 역할을 중독시키세요.
 - **혼란 유발**: 중독으로 선 팀의 정보를 틀리게 만드세요.
-- **임프 보조**: ![](../asset/icons/imp.png) 임프를 도와 선 팀을 혼란시키세요.
+- **임프 보조**: ![](../asset/new/Icon_imp.png) 임프를 도와 선 팀을 혼란시키세요.
 
 ### 중독 대상 우선순위
 
 1. **강력한 정보형**
-   - ![](../asset/icons/fortuneteller.png) 점술사: 임프 찾기를 막음
-   - ![](../asset/icons/empath.png) 공감자: 악 위치 정보를 막음
-   - ![](../asset/icons/undertaker.png) 장의사: 처형 조사를 막음
+   - ![](../asset/new/Icon_fortuneteller.png) 점술사: 임프 찾기를 막음
+   - ![](../asset/new/Icon_empath.png) 공감자: 악 위치 정보를 막음
+   - ![](../asset/new/Icon_undertaker.png) 장의사: 처형 조사를 막음
 
 2. **위협적인 역할**
-   - ![](../asset/icons/slayer.png) 학살자: 임프 킬을 막음
-   - ![](../asset/icons/monk.png) 수도사: 임프 공격 보호를 막음
+   - ![](../asset/new/Icon_slayer.png) 학살자: 임프 킬을 막음
+   - ![](../asset/new/Icon_monk.png) 수도사: 임프 공격 보호를 막음
 
 3. **혼란 유발**
-   - ![](../asset/icons/washerwoman.png) 빨래꾼: 틀린 정보 제공
-   - ![](../asset/icons/investigator.png) 탐정: 미니언 조사 방해
+   - ![](../asset/new/Icon_washerwoman.png) 빨래꾼: 틀린 정보 제공
+   - ![](../asset/new/Icon_investigator.png) 탐정: 미니언 조사 방해
 
 ### 중독 지속 시간
 
@@ -58,9 +58,9 @@
 ## 상호작용
 
 - **모든 능력**: 모든 능력을 오작동시킬 수 있습니다.
-- ![](../asset/icons/soldier.png) **군인**: 중독되면 임프 면역이 사라집니다.
-- ![](../asset/icons/monk.png) **수도사**: 중독되면 보호가 실패합니다.
-- ![](../asset/icons/drunk.png) **주정뱅이**: 술꾼는 이미 오작동하므로 중독해도 의미 없습니다.
+- ![](../asset/new/Icon_soldier.png) **군인**: 중독되면 임프 면역이 사라집니다.
+- ![](../asset/new/Icon_monk.png) **수도사**: 중독되면 보호가 실패합니다.
+- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 술꾼는 이미 오작동하므로 중독해도 의미 없습니다.
 
 ---
 
@@ -73,3 +73,4 @@
 ---
 
 → [미니언 목록](minion.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

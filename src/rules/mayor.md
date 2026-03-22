@@ -1,6 +1,6 @@
-# ![](../asset/icons/mayor.png) 시장 (Mayor)
+﻿# ![](../asset/new/Icon_mayor.png) 시장 (Mayor)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -30,12 +30,12 @@
 
 - **무작위**: 임프가 시장을 공격하면 다른 사람이 대신 죽을 수 있습니다.
 - **확정 아님**: 항상 튕기는 것은 아닙니다 (이야기꾼 판단).
-- ![](../asset/icons/soldier.png) **군인 우선**: 병사가 있다면 병사에게 튕길 수 있습니다 (병사는 안 죽음).
+- ![](../asset/new/Icon_soldier.png) **군인 우선**: 병사가 있다면 병사에게 튕길 수 있습니다 (병사는 안 죽음).
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
 - **공개 주의**: 시장임을 공개하면 처형 타겟이 될 수 있습니다.
 - **3인 전략**: 악 팀도 3인을 피하려 할 수 있습니다.
 
@@ -51,10 +51,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 공격이 튕겨나갈 수 있습니다.
-- ![](../asset/icons/soldier.png) **군인**: 튕긴 공격이 병사에게 가면 아무도 안 죽습니다.
-- ![](../asset/icons/scarletwoman.png) **진홍의 여인**: 최종 3인에 스칼렛 우먼이 있으면 주의하세요.
+- ![](../asset/new/Icon_imp.png) **임프**: 공격이 튕겨나갈 수 있습니다.
+- ![](../asset/new/Icon_soldier.png) **군인**: 튕긴 공격이 병사에게 가면 아무도 안 죽습니다.
+- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 최종 3인에 스칼렛 우먼이 있으면 주의하세요.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

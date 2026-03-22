@@ -1,12 +1,12 @@
-# ![](../asset/icons/scarletwoman.png) 진홍의 여인 (Scarlet Woman)
+﻿# ![](../asset/new/Icon_scarletwoman.png) 진홍의 여인 (Scarlet Woman)
 
-**진영**: ![](../asset/editions/tb-minion.png) 미니언 (악 팀)
+**진영**: ![](../asset/new/Generic_minion.png) 미니언 (악 팀)
 
 ---
 
 ## 능력
 
-**생존자 5명 이상**일 때 ![](../asset/icons/imp.png) 임프가 죽으면,
+**생존자 5명 이상**일 때 ![](../asset/new/Icon_imp.png) 임프가 죽으면,
 당신이 **새 임프**이 된다.
 
 ---
@@ -30,7 +30,7 @@
 
 ### 승계 후
 
-- **당신이 임프**: 이제 당신이 ![](../asset/icons/imp.png) 임프입니다.
+- **당신이 임프**: 이제 당신이 ![](../asset/new/Icon_imp.png) 임프입니다.
 - **밤 공격**: 다음 밤부터 공격할 수 있습니다.
 - **승리 조건**: 임프로서 악 팀 승리를 이끄세요.
 - **블러프 인계**: 기존 임프가 받은 블러프 3개를 **그대로 인계**받습니다. 새 블러프는 추가 지급되지 않습니다.
@@ -69,10 +69,10 @@
 
 스칼렛 우먼은 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/icons/empath.png) **공감인**: 정보를 주면서 신뢰를 얻으세요.
-- ![](../asset/icons/butler.png) **집사**: 투표 제약으로 의심을 피하세요.
-- ![](../asset/icons/recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능.
-- ![](../asset/icons/ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지 가능.
+- ![](../asset/new/Icon_empath.png) **공감인**: 정보를 주면서 신뢰를 얻으세요.
+- ![](../asset/new/Icon_butler.png) **집사**: 투표 제약으로 의심을 피하세요.
+- ![](../asset/new/Icon_recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능.
+- ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지 가능.
 
 ---
 
@@ -90,9 +90,9 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 임프가 죽으면 당신이 승계합니다.
-- ![](../asset/icons/slayer.png) **처단자**: 학살자가 임프를 죽여도 승계됩니다.
-- ![](../asset/icons/mayor.png) **시장**: 최종 3인 전에 승계하세요.
+- ![](../asset/new/Icon_imp.png) **임프**: 임프가 죽으면 당신이 승계합니다.
+- ![](../asset/new/Icon_slayer.png) **처단자**: 학살자가 임프를 죽여도 승계됩니다.
+- ![](../asset/new/Icon_mayor.png) **시장**: 최종 3인 전에 승계하세요.
 
 ---
 
@@ -105,3 +105,4 @@
 ---
 
 → [미니언 목록](minion.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

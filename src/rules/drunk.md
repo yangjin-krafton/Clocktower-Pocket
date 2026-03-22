@@ -1,12 +1,12 @@
-# ![](../asset/icons/drunk.png) 주정뱅이 (Drunk)
+﻿# ![](../asset/new/Icon_drunk.png) 주정뱅이 (Drunk)
 
-**진영**: ![](../asset/editions/tb-outsider.png) 아웃사이더 (선 팀)
+**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
 
 ---
 
 ## 능력
 
-당신은 ![](../asset/editions/tb-townsfolk.png) **마을 주민**이라고 믿지만, 실제로는 **아웃사이더**이고 능력이 **오작동**한다.
+당신은 ![](../asset/new/Generic_townsfolk.png) **마을 주민**이라고 믿지만, 실제로는 **아웃사이더**이고 능력이 **오작동**한다.
 
 ---
 
@@ -19,7 +19,7 @@
 
 ### 술꾼의 특징
 
-- **거짓 역할**: 당신은 ![](../asset/editions/tb-townsfolk.png) Townsfolk를 받았지만 **거짓**입니다.
+- **거짓 역할**: 당신은 ![](../asset/new/Generic_townsfolk.png) Townsfolk를 받았지만 **거짓**입니다.
 - **오작동**: 당신의 능력은 **작동하지 않습니다**.
 - **잘못된 정보**: 받는 정보가 모두 **틀릴 수 있습니다**.
 
@@ -41,8 +41,8 @@
 
 - **이야기꾼만 앎**: 누가 Drunk인지는 이야기꾼만 압니다.
 - **플레이어는 모름**: 당신도 자신이 Drunk인지 **모릅니다**.
-- ![](../asset/icons/librarian.png) **사서**: 사서가 당신을 조사하면 **진짜 Townsfolk 역할**을 봅니다.
-- ![](../asset/icons/undertaker.png) **장의사**: 당신이 처형되면 **진짜 Townsfolk 역할**이 공개됩니다.
+- ![](../asset/new/Icon_librarian.png) **사서**: 사서가 당신을 조사하면 **진짜 Townsfolk 역할**을 봅니다.
+- ![](../asset/new/Icon_undertaker.png) **장의사**: 당신이 처형되면 **진짜 Townsfolk 역할**이 공개됩니다.
 
 ---
 
@@ -53,3 +53,4 @@
 ---
 
 → [아웃사이더 목록](outsider.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

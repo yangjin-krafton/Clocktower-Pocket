@@ -1,6 +1,6 @@
-# ![](../asset/icons/ravenkeeper.png) 까마귀 사육사 (Ravenkeeper)
+﻿# ![](../asset/new/Icon_ravenkeeper.png) 까마귀 사육사 (Ravenkeeper)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -20,16 +20,16 @@
 
 ### 발동 조건
 
-- **밤 사망만**: ![](../asset/icons/imp.png) 임프 공격으로 죽어야 발동됩니다.
+- **밤 사망만**: ![](../asset/new/Icon_imp.png) 임프 공격으로 죽어야 발동됩니다.
 - **처형은 불가**: 낮에 처형되면 발동 **안 됩니다**.
 - **즉시 조사**: 죽는 그 밤에 이야기꾼에게 조사 대상을 알립니다.
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/icons/poisoner.png) **중독**: 중독 상태에서 죽으면 **잘못된 정보**를 받습니다.
-- ![](../asset/icons/monk.png) **수도사**: 수도사가 보호하면 죽지 않아 능력 발동 안 됨.
-- ![](../asset/icons/soldier.png) **군인**: 병사는 밤에 안 죽으므로 대상으로 안전합니다.
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독 상태에서 죽으면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_monk.png) **수도사**: 수도사가 보호하면 죽지 않아 능력 발동 안 됨.
+- ![](../asset/new/Icon_soldier.png) **군인**: 병사는 밤에 안 죽으므로 대상으로 안전합니다.
 
 ### 전략 팁
 
@@ -42,10 +42,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 임프에게 죽으면 능력이 발동됩니다.
-- ![](../asset/icons/monk.png) **수도사**: 보호받으면 능력이 발동 안 됩니다.
-- ![](../asset/icons/soldier.png) **군인**: 밤에 안 죽으므로 안전한 조사 대상입니다.
+- ![](../asset/new/Icon_imp.png) **임프**: 임프에게 죽으면 능력이 발동됩니다.
+- ![](../asset/new/Icon_monk.png) **수도사**: 보호받으면 능력이 발동 안 됩니다.
+- ![](../asset/new/Icon_soldier.png) **군인**: 밤에 안 죽으므로 안전한 조사 대상입니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

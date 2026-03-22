@@ -1,6 +1,6 @@
-# ![](../asset/icons/soldier.png) 군인 (Soldier)
+﻿# ![](../asset/new/Icon_soldier.png) 군인 (Soldier)
 
-**진영**: ![](../asset/editions/tb-townsfolk.png) 마을 주민 (선 팀)
+**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
 
 ---
 
@@ -20,14 +20,14 @@
 
 ### 면역 규칙
 
-- **임프 공격만**: ![](../asset/icons/imp.png) 임프의 밤 공격만 막습니다.
+- **임프 공격만**: ![](../asset/new/Icon_imp.png) 임프의 밤 공격만 막습니다.
 - **처형은 죽음**: 낮 처형으로는 죽습니다.
-- **다른 능력**: ![](../asset/icons/slayer.png) 학살자 능력으로도 죽지 않습니다 (임프가 아니므로).
+- **다른 능력**: ![](../asset/new/Icon_slayer.png) 학살자 능력으로도 죽지 않습니다 (임프가 아니므로).
 
 ### 주의할 점
 
-- ![](../asset/icons/drunk.png) **취함**: 당신이 취한 상태면 면역이 **사라집니다** (죽을 수 있음).
-- ![](../asset/icons/poisoner.png) **중독**: 중독되면 면역이 **사라집니다** (죽을 수 있음).
+- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 면역이 **사라집니다** (죽을 수 있음).
+- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 면역이 **사라집니다** (죽을 수 있음).
 - **처형 주의**: 처형으로는 죽으므로 의심받지 않도록 하세요.
 - **블러프 가능**: 악 팀도 병사를 사칭할 수 있습니다.
 
@@ -43,10 +43,11 @@
 
 ## 상호작용
 
-- ![](../asset/icons/imp.png) **임프**: 임프의 밤 공격을 무시합니다.
-- ![](../asset/icons/monk.png) **수도사**: 이미 면역이므로 보호 불필요.
-- ![](../asset/icons/poisoner.png) **독약꾼**: 중독되면 면역이 사라집니다.
+- ![](../asset/new/Icon_imp.png) **임프**: 임프의 밤 공격을 무시합니다.
+- ![](../asset/new/Icon_monk.png) **수도사**: 이미 면역이므로 보호 불필요.
+- ![](../asset/new/Icon_poisoner.png) **독약꾼**: 중독되면 면역이 사라집니다.
 
 ---
 
 → [마을 주민 목록](townsfolk.md) | [역할 분류](roles.md) | [규칙 메인](index.md)
+

@@ -1,4 +1,4 @@
-# 주요 상태
+﻿# 주요 상태
 
 플레이어는 게임 중 다양한 상태를 가질 수 있습니다.
 
@@ -33,14 +33,14 @@
 > ⚠️ 사망한 플레이어도 **처형 대상이 될 수 있습니다** (하루 1회 처형 규칙에 포함).
 
 ### "사망 시" 능력 예외
-- ![](../asset/icons/ravenkeeper.png) **까마귀 사육사**: 사망하는 그 밤에 능력이 발동합니다.
+- ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 사망하는 그 밤에 능력이 발동합니다.
 - 이러한 능력은 사망 "시점"에 작동하며, 이후에는 비활성화됩니다.
 
 ---
 
-## ![](../asset/icons/poisoner.png) 중독 (Poisoned)
+## ![](../asset/new/Icon_poisoner.png) 중독 (Poisoned)
 
-![](../asset/icons/poisoner.png) [독살자](minion.md)가 매 밤 1명을 중독시킵니다.
+![](../asset/new/Icon_poisoner.png) [독살자](minion.md)가 매 밤 1명을 중독시킵니다.
 
 ### 중독 효과
 
@@ -65,7 +65,7 @@
 
 ---
 
-## ![](../asset/icons/drunk.png) 취함 (Drunk)
+## ![](../asset/new/Icon_drunk.png) 취함 (Drunk)
 
 [주정뱅이](outsider.md) 역할에 부여된 **영구 상태**입니다.
 
@@ -86,7 +86,7 @@
 
 ## 중독 vs 취함 비교
 
-| 구분 | ![](../asset/icons/poisoner.png) 중독 | ![](../asset/icons/drunk.png) 취함 |
+| 구분 | ![](../asset/new/Icon_poisoner.png) 중독 | ![](../asset/new/Icon_drunk.png) 취함 |
 |------|------|------|
 | **원인** | 독살자가 매 밤 선택 | 주정뱅이 역할 자체 |
 | **지속** | 1밤 + 다음 낮 (재선택 시 연장) | **영구** (게임 전체) |
@@ -119,3 +119,4 @@
 ---
 
 → [밤 진행](night.md) | [미니언](minion.md) | [처음으로](index.md)
+

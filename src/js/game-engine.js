@@ -257,18 +257,19 @@ export class GameEngine {
       this._log('night', `${imp.name}(임프)이 자결했습니다.`)
     }
 
-    if (this._tryScarletWomanSuccession()) return
+    if (this._tryScarletWomanSuccession(true)) return
 
-    // 일반 승계: 살아있는 미니언 중 무작위
+    // 일반 승계 (폴백): 살아있는 미니언 중 무작위
     const minions = this.state.players.filter(
       p => p.status === 'alive' && ['poisoner','spy','scarletwoman','baron'].includes(p.role)
     )
     if (minions.length > 0) {
       const newImp = minions[Math.floor(Math.random() * minions.length)]
+      newImp.successionFromRole = newImp.role
       newImp.role = 'imp'
       newImp.team = 'evil'
-      newImp.needsBluffAssignment   = true  // imp-succession 에서 블러프 재배정
-      this.impSuccessionPending     = true  // 다음 밤 imp-succession 스텝 주입
+      newImp.needsBluffAssignment = true
+      this._insertImpSuccessionStep()
       this._log('night', `${newImp.name}이(가) 새 임프로 승계됩니다!`)
       this.emit('impSucceeded', { playerId: newImp.id })
     }

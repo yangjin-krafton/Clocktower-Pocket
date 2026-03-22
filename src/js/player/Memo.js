@@ -117,7 +117,25 @@ export class Memo {
     const textarea = document.createElement('textarea')
     textarea.className = 'reveal-note__textarea'
     textarea.value     = localStorage.getItem(this._lsKey) || ''
-    textarea.placeholder = '메모를 입력하세요...\n\n예)\n3번: 점쟁이 주장, 신뢰\n7번: 임프 의심 → 처형 유도'
+    textarea.placeholder = [
+      '── 자리 번호 강조 ──',
+      '3번 처형 후보 / 7번 임프 의심',
+      '',
+      '── 카운트 칩 ──',
+      '요리사: 악 쌍 1쌍 / 공감인: 이웃 악 2명 / 후보 3개',
+      '',
+      '── 예 · 아니오 ──',
+      '점쟁이 1번·5번 조사 → 예',
+      '6번·9번 조사 → 아니오',
+      '',
+      '── 역할명 팀 색상 ──',
+      '마을: 점쟁이 공감인 요리사 수도사 처단자 처녀 군인 시장',
+      '아웃: 집사 은둔자 주정뱅이 성자',
+      '미니언: 독약꾼 스파이 진홍의 여인 남작',
+      '악마: 임프',
+      '',
+      '눈을 감으세요',
+    ].join('\n')
     textarea.style.display = 'none'
 
     card.appendChild(bodyEl)

@@ -141,13 +141,75 @@ export class NightAction {
     const imp = this.engine.state.players.find(p => p.role === 'imp' && p.status === 'alive')
     if (!imp) { this._done('imp-succession'); return }
 
-    // 일반 미니언 승계 → 블러프 초기화 후 재배정
-    if (imp.needsBluffAssignment) {
-      this.engine.setBluffs([])
-      imp.needsBluffAssignment = false
-    }
+    // 호스트에게 전달 시점 선택 제공
+    this._showImpSuccessionChoice(imp)
+  }
 
-    this._showDemonInfo([imp], 'imp-succession')
+  _showImpSuccessionChoice(imp) {
+    const prevRole = imp.successionFromRole
+    const prevName = ROLES_BY_ID[prevRole]?.name || prevRole || '미니언'
+
+    const overlay = document.createElement('div')
+    overlay.className = 'oval-sel-overlay panel-overlay'
+
+    const panel = document.createElement('div')
+    panel.className = 'oval-sel-panel'
+    panel.style.gap = '16px'
+
+    // 안내 텍스트
+    const info = document.createElement('div')
+    info.style.cssText = 'font-size:0.95rem;color:var(--text2);line-height:1.7;text-align:center;padding:12px 0 4px;'
+    info.innerHTML =
+      `<strong style="color:var(--rd-light)">${prevName}</strong>이(가) 새 임프로 승계됐습니다.<br>` +
+      `블러프 3개를 언제 전달하시겠습니까?`
+    panel.appendChild(info)
+
+    // "지금 전달" 버튼
+    const nowBtn = document.createElement('button')
+    nowBtn.className = 'btn btn-primary btn-full'
+    nowBtn.textContent = '지금 전달 →'
+    nowBtn.addEventListener('click', () => {
+      overlay.remove()
+      // 일반 미니언 승계 → 블러프 재배정 (기존 블러프를 pre-select 상태로 제공)
+      if (imp.needsBluffAssignment) {
+        imp.needsBluffAssignment = false
+        // 기존 블러프를 초기 선택 상태로 전달 — 호스트가 그대로 확인 or 교체
+        const currentBluffs = this.engine.getBluffs()
+        this.engine.setBluffs([])  // 일단 초기화 후 선택에서 다시 세팅
+        const pool = this.engine.getBluffPool()
+        const drunkPlayer = this.engine.state.players.find(p => p.role === 'drunk' && p.drunkAs)
+        this._unmount = this._trackOverlay(() => mountBluffSelectPanel({
+          pool,
+          drunkAsRoleId:   drunkPlayer?.drunkAs || null,
+          initialSelected: currentBluffs,
+          onConfirm: (bluffs) => {
+            this.engine.setBluffs(bluffs)
+            this._showDemonInfoPanel('imp-succession')
+          },
+        }))
+        return
+      }
+      this._showDemonInfo([imp], 'imp-succession')
+    })
+
+    // "다음 밤으로 미루기" 버튼
+    const laterBtn = document.createElement('button')
+    laterBtn.className = 'btn btn-full'
+    laterBtn.style.cssText = 'background:var(--surface2);border:1.5px solid var(--lead2);color:var(--text3);'
+    laterBtn.textContent = '다음 밤 시작 시 전달'
+    laterBtn.addEventListener('click', () => {
+      overlay.remove()
+      // 다음 밤 첫 스텝으로 예약 (needsBluffAssignment 유지)
+      this.engine.impSuccessionPending = true
+      this._done('imp-succession')
+    })
+
+    panel.appendChild(nowBtn)
+    panel.appendChild(laterBtn)
+    overlay.appendChild(panel)
+    document.body.appendChild(overlay)
+    this._overlayEl = overlay
+    this._unmount = () => overlay.remove()
   }
 
   _showDemonInfoPanel(stepId = 'demon-info') {

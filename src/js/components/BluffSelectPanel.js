@@ -5,8 +5,9 @@
  *   pool       {Object[]}  선택 가능한 역할 배열 (ROLES_TB 형식)
  *   onConfirm  {Function}  onConfirm(selectedRoles[]) — 3개 선택 후 호출
  */
-export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, onConfirm }) {
-  let selected = []
+export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, initialSelected = [], onConfirm }) {
+  // 기존 블러프가 있으면 pre-select (승계 시 기존 블러프 유지/교체 모드)
+  let selected = initialSelected.filter(r => pool.some(p => p.id === r.id))
 
   const overlay = document.createElement('div')
   overlay.className = 'bluff-sel-overlay'
@@ -24,7 +25,9 @@ export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, onConfi
     </div>
     <div class="bluff-sel__hdr-text">
       <div class="bluff-sel__title">블러프 3개 선택</div>
-      <div class="bluff-sel__subtitle">임프에게 전달할 역할을 3개 고르세요</div>
+      <div class="bluff-sel__subtitle">${initialSelected.length === 3
+        ? '기존 블러프가 선택된 상태입니다. 그대로 확인하거나 교체하세요.'
+        : '임프에게 전달할 역할을 3개 고르세요'}</div>
     </div>
   `
   panel.appendChild(hdr)
@@ -83,7 +86,7 @@ export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, onConfi
   const confirmBtn = document.createElement('button')
   confirmBtn.className = 'bluff-sel__confirm btn btn-primary'
   confirmBtn.textContent = '다음 →'
-  confirmBtn.disabled = true
+  confirmBtn.disabled = selected.length !== 3
   confirmBtn.addEventListener('click', () => {
     overlay.remove()
     onConfirm && onConfirm([...selected])

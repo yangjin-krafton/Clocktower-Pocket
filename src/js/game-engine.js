@@ -32,9 +32,10 @@ export class GameEngine {
     this.virginTriggered = false
     this.slayerUsed = false
     this.butlerMasters = {} // { playerId: masterId }
-    this.poisonedThisNight = null // 이번 밤 독약꾼 대상
-    this.undertakerTarget  = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
-    this.mayorBounceTarget = null  // 시장 튕김 대상 (호스트가 선택)
+    this.poisonedThisNight    = null  // 이번 밤 독약꾼 대상
+    this.undertakerTarget     = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
+    this.mayorBounceTarget    = null  // 시장 튕김 대상 (호스트가 선택)
+    this.impSuccessionPending = false // 임프 승계 발생 → 다음 밤 imp-succession 스텝 주입
   }
 
   // ─────────────────────────────────────
@@ -173,6 +174,13 @@ export class GameEngine {
     this.state.players.forEach(p => { p.isPoisoned = false })
 
     const order = this.buildNightOrder()
+
+    // 임프 승계 발생 시 → 첫 스텝으로 imp-succession 삽입
+    if (this.impSuccessionPending) {
+      order.unshift('imp-succession')
+      this.impSuccessionPending = false
+    }
+
     this.state.nightOrder = order
     this.state.currentNightStep = order[0] || null
 
@@ -256,6 +264,8 @@ export class GameEngine {
       const newImp = minions[Math.floor(Math.random() * minions.length)]
       newImp.role = 'imp'
       newImp.team = 'evil'
+      newImp.needsBluffAssignment   = true  // imp-succession 에서 블러프 재배정
+      this.impSuccessionPending     = true  // 다음 밤 imp-succession 스텝 주입
       this._log('night', `${newImp.name}이(가) 새 임프로 승계됩니다!`)
       this.emit('impSucceeded', { playerId: newImp.id })
     }
@@ -274,7 +284,8 @@ export class GameEngine {
       if (sw) {
         sw.role = 'imp'
         sw.team = 'evil'
-        sw.wasScarletWoman = true   // 슬롯 마크(둥둥 모션) 표시용
+        sw.wasScarletWoman = true     // 슬롯 마크(둥둥 모션) 표시용
+        this.impSuccessionPending = true  // 다음 밤 imp-succession 스텝 주입
         this._log('event', `${sw.name}(진홍의 여인)이 새 임프로 승계됩니다!`)
         this.emit('scarletWomanSucceeded', { playerId: sw.id })
         return true
@@ -723,7 +734,8 @@ export class GameEngine {
       butlerMasters:    { ...this.butlerMasters },
       poisonedThisNight: this.poisonedThisNight,
       undertakerTarget:  this.undertakerTarget,
-      mayorBounceTarget: this.mayorBounceTarget,
+      mayorBounceTarget:    this.mayorBounceTarget,
+      impSuccessionPending: this.impSuccessionPending,
     }
   }
 
@@ -743,7 +755,8 @@ export class GameEngine {
     this.butlerMasters     = data.butlerMasters || {}
     this.poisonedThisNight = data.poisonedThisNight ?? null
     this.undertakerTarget  = data.undertakerTarget  ?? null
-    this.mayorBounceTarget = data.mayorBounceTarget ?? null
+    this.mayorBounceTarget    = data.mayorBounceTarget    ?? null
+  this.impSuccessionPending = data.impSuccessionPending ?? false
     this.emit('stateChanged', this.state)
   }
 

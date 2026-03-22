@@ -9,7 +9,8 @@ import { ROLES_BY_ID } from '../data/roles-tb.js'
 const SPECIAL_STEPS = {
   'minion-info':  { name: '미니언 공개',   icon: '🎭' },
   'demon-info':   { name: '임프 정보',     icon: '👿' },
-  'mayor-bounce': { name: '시장 — 튕김',  icon: '🏛' },
+  'mayor-bounce':   { name: '시장 — 튕김',   icon: '🏛' },
+  'imp-succession': { name: '임프 승계',     icon: '💋' },
 }
 
 // 이야기꾼용 밤 행동 요약 (간결한 지시문)
@@ -25,12 +26,14 @@ const NIGHT_HINTS = {
   'fortuneteller': '2명 지목 → 임프 포함 여부 귓속말 (레드헤링 주의)',
   'butler':        '주인 1명 지목',
   'spy':           '그리모어 공개 → 정보 확인',
+  'scarletwoman':  '임프 자리 번호 귓속말 · 승계 조건 안내',
   'baron':         '아웃사이더 +2 반영 확인 (첫 밤 한 번)',
   'undertaker':    '어제 처형된 플레이어의 역할 귓속말',
   'monk':          '1명 지목 → 오늘 밤 임프 공격으로부터 보호',
   'ravenkeeper':   '이 밤 사망 시 — 1명 지목 → 역할 귓속말',
   'imp':           '1명 지목 → 처치 (자신 선택 시 미니언 승계)',
-  'mayor-bounce':  '임프 공격 튕김 — 튕길 대상 선택 (시장 생존도 가능)',
+  'mayor-bounce':    '임프 공격 튕김 — 튕길 대상 선택 (시장 생존도 가능)',
+  'imp-succession':  '임프 승계 — 새 임프에게 블러프 배정 · 미니언 정보 전달',
 }
 
 export function renderNightOrderList(data, onStepClick = null) {
@@ -68,7 +71,7 @@ export function renderNightOrderList(data, onStepClick = null) {
     // PNG 이미지면 img 태그로, 아니면 emoji로 표시
     if (icon && icon.endsWith('.png')) {
       const img = document.createElement('img')
-      img.src = `./asset/icons/${icon}`
+      img.src = `./asset/new/Icon_${icon}`
       img.alt = name
       img.className = 'night-order__icon-img'
       iconSpan.appendChild(img)

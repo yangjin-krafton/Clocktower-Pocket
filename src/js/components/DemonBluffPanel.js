@@ -32,7 +32,7 @@ export function mountDemonBluffPanel({ analysis, options, drunkAsRoleId = null, 
   hdr.innerHTML = `
     <div class="dbp__hdr-icon">
       <img class="dbp__hdr-token-bg"   src="./asset/token.png" alt="">
-      <img class="dbp__hdr-token-icon" src="./asset/icons/imp.png" alt="임프">
+      <img class="dbp__hdr-token-icon" src="./asset/new/Icon_imp.png" alt="임프">
     </div>
     <div>
       <div class="dbp__hdr-title">임프 블러프 전략</div>
@@ -105,7 +105,7 @@ export function mountDemonBluffPanel({ analysis, options, drunkAsRoleId = null, 
         wrap.title = role.name + (isDrunkAs ? ' (주정뱅이 인지)' : '')
         wrap.innerHTML = `
           <img class="dbp__token-bg"   src="./asset/token.png" alt="">
-          <img class="dbp__token-icon" src="./asset/icons/${role.icon}" alt="${role.name}" loading="lazy">
+          <img class="dbp__token-icon" src="./asset/new/Icon_${role.icon}" alt="${role.name}" loading="lazy">
           ${isDrunkAs ? '<div class="dbp__drunk-badge">🍾</div>' : ''}
         `
         const nameEl = document.createElement('div')

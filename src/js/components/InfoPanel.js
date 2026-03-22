@@ -38,7 +38,7 @@ export function renderInfoPanel(data) {
     iconEl.className = 'info-panel__icon info-panel__icon--token'
     iconEl.innerHTML = `
       <img class="info-panel__token-bg"   src="./asset/token.png" alt="">
-      <img class="info-panel__token-icon" src="./asset/icons/${roleIcon}" alt="${title}">
+      <img class="info-panel__token-icon" src="./asset/new/Icon_${roleIcon}" alt="${title}">
     `
   } else {
     iconEl.textContent = roleIcon

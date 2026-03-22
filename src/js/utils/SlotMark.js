@@ -163,7 +163,7 @@ function addBaronPips(slot, slotPx, current, required) {
 function addDrunkStatePill(slot, slotPx) {
   return createPillBadge(slot, slotPx, {
     pos:    'BR',
-    imgSrc: './asset/icons/drunk.png',
+    imgSrc: './asset/new/Icon_drunk.png',
     bg:     '#241c11',
     glow:   'rgba(37, 39, 44, 0.55)',
     cls:    'drunk',
@@ -273,7 +273,7 @@ function addProtectedEffect(slot, slotPx) {
     animation:shield-fade 2.4s ease-in-out infinite;
   `
   const img = document.createElement('img')
-  img.src = './asset/icons/soldier.png'
+  img.src = './asset/new/Icon_soldier.png'
   img.style.cssText = `width:${imgPx}px;height:${imgPx}px;object-fit:contain;`
   overlay.appendChild(img)
   slot.appendChild(overlay)
@@ -339,8 +339,9 @@ function addScarletWomanImpFloat(slot, slotPx) {
     filter:drop-shadow(0 0 8px rgba(220,38,38,0.85));
     animation:sw-imp-float 2.2s ease-in-out infinite;
   `
+  // 슬롯은 이미 imp 아이콘을 표시하므로, 부유 마크는 원래 역할(진홍의 여인) 아이콘으로
   const img = document.createElement('img')
-  img.src = './asset/icons/imp.png'
+  img.src = './asset/new/Icon_scarletwoman.png'
   img.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.92;'
   el.appendChild(img)
   slot.appendChild(el)

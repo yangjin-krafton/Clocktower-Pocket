@@ -51,7 +51,7 @@ export function renderPlayerChip(player, opts = {}) {
 
   if (roleIcon && roleIcon.endsWith('.png')) {
     const img = document.createElement('img')
-    img.src = `./asset/icons/${roleIcon}`
+    img.src = `./asset/new/Icon_${roleIcon}`
     img.alt = `${player.id}번`
     iconWrap.appendChild(img)
   } else if (roleIconEmoji) {

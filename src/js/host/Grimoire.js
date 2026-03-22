@@ -545,7 +545,7 @@ export class Grimoire {
       iconDiv.className = 'dict__token-icon'
       if (role.icon?.endsWith('.png')) {
         const img = document.createElement('img')
-        img.src = `./asset/icons/${role.icon}`
+        img.src = `./asset/new/Icon_${role.icon}`
         img.alt = role.name
         iconDiv.appendChild(img)
       } else {
@@ -618,7 +618,7 @@ export class Grimoire {
         iconDiv.className = 'dict__token-icon'
         if (role.icon?.endsWith('.png')) {
           const img = document.createElement('img')
-          img.src = `./asset/icons/${role.icon}`
+          img.src = `./asset/new/Icon_${role.icon}`
           img.alt = role.name
           iconDiv.appendChild(img)
         } else {
@@ -733,7 +733,7 @@ export class Grimoire {
     // PNG 이미지면 img 태그로, 아니면 emoji로 표시
     if (role?.icon && role.icon.endsWith('.png')) {
       const img = document.createElement('img')
-      img.src = `./asset/icons/${role.icon}`
+      img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name
       img.style.cssText = 'width:50px;height:50px;object-fit:contain;'
       iconSpan.appendChild(img)

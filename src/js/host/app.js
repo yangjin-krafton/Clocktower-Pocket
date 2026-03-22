@@ -515,7 +515,7 @@ export class HostApp {
       iconWrap.style.cssText = 'width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;'
       if (role?.icon?.endsWith('.png')) {
         const img = document.createElement('img')
-        img.src = `./asset/icons/${role.icon}`
+        img.src = `./asset/new/Icon_${role.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
         iconWrap.appendChild(img)
       } else {
@@ -1163,6 +1163,14 @@ export class HostApp {
         const isDrunkWithAs = player.role === 'drunk' && player.drunkAs
         const drunkAsRole   = isDrunkWithAs ? ROLES_BY_ID[player.drunkAs] : null
         const teamLabel     = { townsfolk:'마을 주민', outsider:'아웃사이더', minion:'미니언', demon:'임프' }
+        const shownRole     = isDrunkWithAs ? drunkAsRole : role
+        const roleIconSrc   = shownRole?.icon ? `./asset/new/Icon_${shownRole.icon}` : ''
+        const aliveColor    = isDead ? 'var(--rd-light)' : 'var(--tl-light)'
+        const statusParts   = [
+          `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="${isDead ? './asset/death.png' : './asset/life.png'}" alt="" style="width:13px;height:13px;object-fit:contain;">${isDead ? '사망' : '생존'}</span>`,
+          player.isPoisoned ? `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="./asset/new/Icon_poisoner.png" alt="" style="width:13px;height:13px;object-fit:contain;">중독</span>` : '',
+          player.isDrunk ? `<span style="display:inline-flex;align-items:center;gap:4px;"><img src="./asset/new/Icon_drunk.png" alt="" style="width:13px;height:13px;object-fit:contain;">취함</span>` : '',
+        ].filter(Boolean).join(' · ')
         const ov = document.createElement('div')
         ov.className = 'popup-overlay'
         ov.id = 'host-seat-popup'
@@ -1171,15 +1179,20 @@ export class HostApp {
         box.style.padding = '16px'
         box.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <div style="font-size:2rem;">${isDrunkWithAs ? (drunkAsRole?.iconEmoji || '?') : (role?.iconEmoji || '?')}</div>
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+              ${roleIconSrc
+                ? `<img src="${roleIconSrc}" alt="" style="width:100%;height:100%;object-fit:contain;">`
+                : `<div style="font-size:1.6rem;">?</div>`
+              }
+            </div>
             <div>
               <div style="font-weight:700;font-size:0.92rem;color:var(--text)">${player.id}번 자리</div>
               ${isDrunkWithAs
                 ? `<div style="font-size:0.72rem;color:var(--tl-light)">${drunkAsRole?.name || ''} <span style="color:var(--text4)">(본인 인지)</span></div>
-                   <div style="font-size:0.65rem;color:#a78bfa;margin-top:1px;">🍾 실제: 주정뱅이 · 아웃사이더</div>`
+                   <div style="font-size:0.65rem;color:#a78bfa;margin-top:1px;display:flex;align-items:center;gap:5px;"><img src="./asset/new/Icon_drunk.png" alt="" style="width:13px;height:13px;object-fit:contain;">실제: 주정뱅이 · 아웃사이더</div>`
                 : `<div style="font-size:0.72rem;color:var(--text3)">${role?.name || player.role} · ${teamLabel[role?.team] || ''}</div>`
               }
-              <div style="font-size:0.68rem;margin-top:2px;color:${isDead ? 'var(--rd-light)' : 'var(--tl-light)'}">${isDead ? '💀 사망' : '✅ 생존'}${player.isPoisoned ? ' · ☠ 중독' : ''}${player.isDrunk ? ' · 🍾 취함' : ''}</div>
+              <div style="font-size:0.68rem;margin-top:2px;color:${aliveColor};display:flex;align-items:center;gap:0;flex-wrap:wrap;">${statusParts}</div>
             </div>
           </div>
           <div style="font-size:0.68rem;color:var(--text4);line-height:1.5;">${isDrunkWithAs ? (drunkAsRole?.ability || '') : (role?.ability || '')}</div>

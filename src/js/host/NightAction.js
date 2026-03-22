@@ -41,6 +41,8 @@ export class NightAction {
       this._showSpyInfo(actors)
     } else if (step === 'mayor-bounce') {
       this._showMayorBounce()
+    } else if (step === 'imp-succession') {
+      this._showImpSuccession()
     } else if (type === 'info') {
       this._showRoleInfo(step, actors)
     } else if (type === 'select') {
@@ -111,32 +113,44 @@ export class NightAction {
     }))
   }
 
-  // ── 임프 정보 ──
-  _showDemonInfo(demons) {
-    if (!demons || demons.length === 0) { this._done('demon-info'); return }
+  // ── 임프 정보 (첫 밤) ──
+  _showDemonInfo(demons, stepId = 'demon-info') {
+    if (!demons || demons.length === 0) { this._done(stepId); return }
 
-    // 이미 블러프가 선택돼 있으면 선택 단계 스킵 (재진입 방어)
+    // 블러프가 이미 배정돼 있으면 선택 단계 스킵 (재진입 방어)
     if (this.engine.getBluffs().length === 3) {
-      this._showDemonInfoPanel()
+      this._showDemonInfoPanel(stepId)
       return
     }
 
-    // 바로 직접 선택 — BluffSelectPanel
     const pool = this.engine.getBluffPool()
     const drunkPlayer = this.engine.state.players.find(p => p.role === 'drunk' && p.drunkAs)
-    const drunkAsRoleId = drunkPlayer?.drunkAs || null
 
     this._unmount = this._trackOverlay(() => mountBluffSelectPanel({
       pool,
-      drunkAsRoleId,
+      drunkAsRoleId: drunkPlayer?.drunkAs || null,
       onConfirm: (selectedBluffs) => {
         this.engine.setBluffs(selectedBluffs)
-        this._showDemonInfoPanel()
+        this._showDemonInfoPanel(stepId)
       },
     }))
   }
 
-  _showDemonInfoPanel() {
+  // ── 임프 승계 (진홍 / 일반 미니언 공통) ──
+  _showImpSuccession() {
+    const imp = this.engine.state.players.find(p => p.role === 'imp' && p.status === 'alive')
+    if (!imp) { this._done('imp-succession'); return }
+
+    // 일반 미니언 승계 → 블러프 초기화 후 재배정
+    if (imp.needsBluffAssignment) {
+      this.engine.setBluffs([])
+      imp.needsBluffAssignment = false
+    }
+
+    this._showDemonInfo([imp], 'imp-succession')
+  }
+
+  _showDemonInfoPanel(stepId = 'demon-info') {
     const imp     = this.engine.state.players.find(p => p.role === 'imp')
     const minions = this.engine.state.players.filter(p =>
       ['poisoner','spy','scarletwoman','baron'].includes(p.role)
@@ -163,8 +177,8 @@ export class NightAction {
       roleName: imp?.wasScarletWoman ? '새 임프 (진홍 승계)' : '임프 정보',
       roleTeam: 'demon',
       message:  demonMsg,
-      onBack:   () => { ThemeManager.popTemp(); this._showDemonInfoPanel() },
-      onNext:   () => { ThemeManager.popTemp(); this._done('demon-info') },
+      onBack:   () => { ThemeManager.popTemp(); this._showDemonInfoPanel(stepId) },
+      onNext:   () => { ThemeManager.popTemp(); this._done(stepId) },
     }))
   }
 

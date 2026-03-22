@@ -47,7 +47,7 @@ export function mountNightRevealNote(data) {
     roleBadge.innerHTML = `
       <div style="position:relative;width:18px;height:18px;flex-shrink:0;">
         <img src="./asset/token.png" style="position:absolute;inset:0;width:100%;height:100%;" alt="">
-        <img src="./asset/icons/${roleIcon}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="">
+        <img src="./asset/new/Icon_${roleIcon}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="">
       </div>
       <span style="color:${tc.color}">${roleName}</span>
     `

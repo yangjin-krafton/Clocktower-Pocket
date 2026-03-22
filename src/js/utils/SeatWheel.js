@@ -138,7 +138,7 @@ export function createRoleIconEl(role, iconPx, {
   `
   if (role?.icon?.endsWith('.png')) {
     const img = document.createElement('img')
-    img.src = `./asset/icons/${role.icon}`
+    img.src = `./asset/new/Icon_${role.icon}`
     img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
     iconEl.appendChild(img)
   } else if (role) {
@@ -165,7 +165,7 @@ export function createRoleIconEl(role, iconPx, {
       animation:drunk-fade 6s ease-in-out infinite;animation-delay:-3s;
     `
     const drunkImg = document.createElement('img')
-    drunkImg.src = './asset/icons/drunk.png'
+    drunkImg.src = './asset/new/Icon_drunk.png'
     drunkImg.style.cssText = 'width:85%;height:85%;object-fit:contain;'
     drunkEl.appendChild(drunkImg)
     iconWrap.appendChild(drunkEl)

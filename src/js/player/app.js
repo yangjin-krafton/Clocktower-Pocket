@@ -708,7 +708,7 @@ export class PlayerApp {
     iconWrap.className = 'dict__modal-icon'
     if (role.icon?.endsWith('.png')) {
       const img = document.createElement('img')
-      img.src = `./asset/icons/${role.icon}`
+      img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name
       img.className = 'dict__modal-icon-img'
       iconWrap.appendChild(img)

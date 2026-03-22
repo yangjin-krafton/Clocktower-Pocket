@@ -62,4 +62,5 @@ export const NIGHT_MESSAGES = {
 
   'demon-reveal':
     `\n{미니언목록}\n\n게임에 없는 역할:\n{블러프목록}\n\n모두 기억한 뒤 눈을 감으세요.`,
+
 }

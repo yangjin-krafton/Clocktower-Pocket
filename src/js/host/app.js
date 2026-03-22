@@ -661,7 +661,7 @@ export class HostApp {
 
     const deathIds = [...new Set([
       ...engine.pendingDeaths,
-      ...(impAction?.targetIds?.[0] === impAction?.actorId ? [impAction.actorId] : []),
+      ...(impAction && impAction.targetIds?.[0] === impAction.actorId ? [impAction.actorId] : []),
     ])]
     const deathPlayers = deathIds.map(id => engine.getPlayer(id)).filter(Boolean)
 

@@ -2,7 +2,7 @@
  * C-07c NightRevealNote — 밤 정보 공개 쪽지
  *
  * display 모드: 자동 포맷 렌더링 (숫자 강조 · 행동 안내 분리)
- * edit   모드: 탭 → textarea 편집, 포커스 아웃 → 다시 렌더링
+ * edit   모드: 상단 바 ✏ 버튼 → textarea 편집 → ↩ 완료 버튼
  */
 import { ROLES_BY_ID } from '../data/roles-tb.js'
 
@@ -13,6 +13,16 @@ const TEAM_COLORS = {
   demon:   { color: 'var(--rd-light)', glow: 'rgba(110,27,31,0.22)' },
   default: { color: 'var(--gold2)',    glow: 'rgba(212,168,40,0.1)' },
 }
+
+// 폰트 배율 — localStorage 에 저장해 앱 재시작 후에도 유지
+const _LS_KEY   = 'rnote_font_scale'
+const SCALE_MIN = 0.5
+const SCALE_MAX = 4.0
+const SCALE_STEP = 0.1
+let _globalScale = (() => {
+  const v = parseFloat(localStorage.getItem(_LS_KEY))
+  return (isFinite(v) && v >= SCALE_MIN && v <= SCALE_MAX) ? v : 1.0
+})()
 
 export function mountNightRevealNote(data) {
   const { roleIcon, roleName, roleTeam, message, onNext } = data
@@ -26,10 +36,11 @@ export function mountNightRevealNote(data) {
   panel.style.background =
     `radial-gradient(ellipse 100% 35% at 50% 0%, ${tc.glow} 0%, transparent 50%)`
 
-  // ── 상단 바 ──
+  // ── 상단 바 ──────────────────────────────────────────────────
   const topBar = document.createElement('div')
   topBar.className = 'reveal-note__top-bar'
 
+  // 역할 배지
   const roleBadge = document.createElement('div')
   roleBadge.className = 'reveal-note__role-badge'
   if (roleIcon && roleIcon.endsWith('.png')) {
@@ -45,65 +56,145 @@ export function mountNightRevealNote(data) {
       `<span>${roleIcon || '🎴'}</span><span style="color:${tc.color}">${roleName}</span>`
   }
 
-  const editHint = document.createElement('span')
-  editHint.className = 'reveal-note__edit-hint'
-  editHint.textContent = '탭하여 수정'
+  // 우측 컨트롤 그룹: [A−][A+] [✏ 수정 / ↩ 완료]
+  const topRight = document.createElement('div')
+  topRight.className = 'reveal-note__top-right'
+
+  const fontDecBtn = document.createElement('button')
+  fontDecBtn.className = 'reveal-note__font-btn'
+  fontDecBtn.textContent = 'A−'
+  fontDecBtn.setAttribute('aria-label', '글자 작게')
+
+  const fontSlider = document.createElement('input')
+  fontSlider.type  = 'range'
+  fontSlider.className = 'reveal-note__font-slider'
+  fontSlider.min   = String(SCALE_MIN)
+  fontSlider.max   = String(SCALE_MAX)
+  fontSlider.step  = String(SCALE_STEP)
+  fontSlider.value = String(_globalScale)
+  fontSlider.setAttribute('aria-label', '글자 크기')
+
+  const fontIncBtn = document.createElement('button')
+  fontIncBtn.className = 'reveal-note__font-btn'
+  fontIncBtn.textContent = 'A+'
+  fontIncBtn.setAttribute('aria-label', '글자 크게')
+
+  const editToggleBtn = document.createElement('button')
+  editToggleBtn.className = 'reveal-note__edit-toggle'
+  editToggleBtn.innerHTML = '<span class="rn-et-icon">✏</span><span class="rn-et-label">수정</span>'
+
+  topRight.appendChild(fontDecBtn)
+  topRight.appendChild(fontSlider)
+  topRight.appendChild(fontIncBtn)
+  topRight.appendChild(editToggleBtn)
 
   topBar.appendChild(roleBadge)
-  topBar.appendChild(editHint)
+  topBar.appendChild(topRight)
   panel.appendChild(topBar)
 
-  // ── 메시지 카드 ──
+  // ── 메시지 카드 ──────────────────────────────────────────────
   const card = document.createElement('div')
   card.className = 'reveal-note__card'
 
-  // display 모드: 렌더링된 body
+  // display 모드
   const bodyEl = document.createElement('div')
   bodyEl.className = 'reveal-note__body'
 
-  // edit 모드: textarea (기본 숨김)
+  // edit 모드
   const textarea = document.createElement('textarea')
   textarea.className = 'reveal-note__textarea'
   textarea.value = message || ''
   textarea.style.display = 'none'
 
-  // 렌더 + 자동 스케일 (display 모드)
+  // ── 폰트 적용 ──
   let _scaledFs = '1.4rem'
+
+  const _applyScale = () => {
+    const mainEl = bodyEl.querySelector('.reveal-note__main')
+    if (!mainEl) return
+    const base   = parseFloat(_scaledFs)
+    const scaled = Math.max(0.5, Math.min(8.0, base * _globalScale))
+    mainEl.style.fontSize   = `${scaled.toFixed(2)}rem`
+    textarea.style.fontSize = `${scaled.toFixed(2)}rem`
+    fontSlider.value = String(_globalScale)
+    localStorage.setItem(_LS_KEY, String(_globalScale))
+  }
+
   const _refresh = (text) => {
     _renderInto(bodyEl, text, tc.color)
     _autoScale(bodyEl, (fs) => {
       _scaledFs = fs
-      textarea.style.fontSize = fs
+      _applyScale()
     })
   }
   _refresh(message || '')
 
-  // 카드 탭 → edit 모드
-  card.addEventListener('click', () => {
-    if (textarea.style.display !== 'none') return
-    bodyEl.style.display = 'none'
-    textarea.style.display = 'block'
-    textarea.style.fontSize = _scaledFs
-    card.classList.add('reveal-note__card--editing')
-    editHint.textContent = '수정 중'
-    textarea.focus()
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length)
+  fontDecBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    _globalScale = Math.max(SCALE_MIN, parseFloat((_globalScale - SCALE_STEP).toFixed(2)))
+    _applyScale()
+  })
+  fontIncBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    _globalScale = Math.min(SCALE_MAX, parseFloat((_globalScale + SCALE_STEP).toFixed(2)))
+    _applyScale()
+  })
+  fontSlider.addEventListener('input', (e) => {
+    e.stopPropagation()
+    _globalScale = parseFloat(fontSlider.value)
+    _applyScale()
   })
 
-  // textarea blur → display 모드 (재렌더링 + 재스케일)
-  textarea.addEventListener('blur', () => {
+  // ── edit 모드 진입 / 종료 ──
+  let _editing = false
+
+  const _enterEdit = () => {
+    if (_editing) return
+    _editing = true
+    bodyEl.style.display = 'none'
+    textarea.style.display = 'block'
+    card.classList.add('reveal-note__card--editing')
+    editToggleBtn.innerHTML = '<span class="rn-et-icon">↩</span><span class="rn-et-label">완료</span>'
+    editToggleBtn.classList.add('reveal-note__edit-toggle--done')
+    nextBtn.style.display = 'none'
+    textarea.focus()
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length)
+  }
+
+  const _exitEdit = () => {
+    if (!_editing) return
+    _editing = false
     _refresh(textarea.value)
     bodyEl.style.display = 'flex'
     textarea.style.display = 'none'
     card.classList.remove('reveal-note__card--editing')
-    editHint.textContent = '탭하여 수정'
+    editToggleBtn.innerHTML = '<span class="rn-et-icon">✏</span><span class="rn-et-label">수정</span>'
+    editToggleBtn.classList.remove('reveal-note__edit-toggle--done')
+    nextBtn.style.display = ''
+  }
+
+  editToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    _editing ? _exitEdit() : _enterEdit()
   })
+
+  // 카드 탭 → edit 진입 (편집 중이 아닐 때)
+  card.addEventListener('click', () => { if (!_editing) _enterEdit() })
+
+  // textarea blur → exit (키보드 내리기 등 fallback)
+  // pointerdown on editToggleBtn 이 blur 보다 먼저 실행되므로 버튼 클릭은 영향 없음
+  textarea.addEventListener('blur', () => {
+    // 약간 딜레이: 버튼 pointerdown → blur → click 순서 보장
+    setTimeout(() => { if (_editing) _exitEdit() }, 80)
+  })
+  // 버튼 pointerdown: blur 방지
+  editToggleBtn.addEventListener('pointerdown', (e) => { if (_editing) e.preventDefault() })
 
   card.appendChild(bodyEl)
   card.appendChild(textarea)
   panel.appendChild(card)
 
-  // ── 다음 버튼 ──
+  // ── 다음 버튼 ───────────────────────────────────────────────
   const nextBtn = document.createElement('button')
   nextBtn.className = 'reveal-note__next btn btn-primary'
   nextBtn.textContent = '[ 호스트 ] 다음 →'
@@ -120,12 +211,6 @@ export function mountNightRevealNote(data) {
 
 // ── 자동 폰트 스케일 ───────────────────────────────────────────
 
-/**
- * bodyEl 안의 .reveal-note__main 폰트 크기를 이진 탐색으로 결정.
- * 가용 높이에 꽉 차면서 넘치지 않는 최대 크기를 찾는다.
- * @param {HTMLElement} bodyEl
- * @param {Function}    onScaled  (finalFontSize: string) → void
- */
 function _autoScale(bodyEl, onScaled) {
   requestAnimationFrame(() => {
     const mainEl = bodyEl.querySelector('.reveal-note__main')
@@ -133,12 +218,10 @@ function _autoScale(bodyEl, onScaled) {
 
     const bodyH = bodyEl.clientHeight
     if (bodyH === 0) {
-      // 아직 레이아웃 미완성 — 한 프레임 더 기다림
       requestAnimationFrame(() => _autoScale(bodyEl, onScaled))
       return
     }
 
-    // 고정 요소(구분선 + 행동 안내)의 실제 높이 합산
     const fixedH = [...bodyEl.children]
       .filter(el => el !== mainEl)
       .reduce((sum, el) => {
@@ -148,17 +231,14 @@ function _autoScale(bodyEl, onScaled) {
           + (parseFloat(s.marginBottom) || 0)
       }, 0)
 
-    const targetH = bodyH - fixedH - 4   // 4px 여유
-
+    const targetH = bodyH - fixedH - 4
     if (targetH < 20) return
 
-    const MIN = 0.85   // rem — 너무 작아지지 않도록
-    const MAX = 6.0    // rem — 최대 크기 제한
-
+    const MIN = 0.85
+    const MAX = 6.0
     const containerW = mainEl.clientWidth
     const paraEls    = [...mainEl.querySelectorAll('.reveal-note__para')]
 
-    // 이진 탐색: 세로(높이) + 가로(줄바꿈 없음) 둘 다 만족하는 최대 fontSize
     mainEl.style.flex   = 'none'
     mainEl.style.height = 'auto'
 
@@ -166,21 +246,14 @@ function _autoScale(bodyEl, onScaled) {
     for (let i = 0; i < 16; i++) {
       const mid = (lo + hi) / 2
       mainEl.style.fontSize = `${mid}rem`
-
-      // ① 세로 제약: 전체 높이가 가용 공간 이하
       const heightOk = mainEl.scrollHeight <= targetH
-
-      // ② 가로 제약: nowrap 적용 후 가장 넓은 줄이 컨테이너 너비 이하
-      //    (= <br> 으로 나뉜 각 줄이 자연 너비에서 넘치지 않음)
       paraEls.forEach(p => { p.style.whiteSpace = 'nowrap' })
       const widthOk = mainEl.scrollWidth <= containerW
       paraEls.forEach(p => { p.style.whiteSpace = '' })
-
       if (heightOk && widthOk) lo = mid
       else                     hi = mid
     }
 
-    // 복원 후 최종 크기 적용
     mainEl.style.flex   = ''
     mainEl.style.height = ''
     const fs = `${lo.toFixed(2)}rem`
@@ -191,13 +264,6 @@ function _autoScale(bodyEl, onScaled) {
 
 // ── 메시지 렌더러 ─────────────────────────────────────────────
 
-/**
- * text 를 파싱해 bodyEl 안을 채운다.
- * - \n\n  → 문단 구분
- * - \n    → 줄 바꿈
- * - 마지막 문단에 "눈을 감으세요" → 행동 안내 스타일
- * - 숫자번 패턴 → 금색 강조
- */
 function _renderInto(container, text, teamColor) {
   container.innerHTML = ''
   if (!text.trim()) return
@@ -209,7 +275,6 @@ function _renderInto(container, text, teamColor) {
   const contentParas = hasAction ? paras.slice(0, -1) : paras
   const actionPara   = hasAction ? lastPara : null
 
-  // 본문 — flex:1 으로 카드 공간 채움, 수직 중앙
   const main = document.createElement('div')
   main.className = 'reveal-note__main'
   main.style.fontFamily = "'Noto Serif KR', serif"
@@ -221,15 +286,12 @@ function _renderInto(container, text, teamColor) {
     el.innerHTML = para.split('\n').map(_markup).join('<br>')
     main.appendChild(el)
   })
-
   container.appendChild(main)
 
-  // 행동 안내 — 항상 하단
   if (actionPara) {
     const hr = document.createElement('div')
     hr.className = 'reveal-note__divider'
     container.appendChild(hr)
-
     const el = document.createElement('div')
     el.className = 'reveal-note__action'
     el.innerHTML =
@@ -239,28 +301,18 @@ function _renderInto(container, text, teamColor) {
   }
 }
 
-/**
- * 자동 컬러 파싱 규칙 — 추가하려면 이 배열에만 넣으면 됨
- * cls 는 string | (matchedText) => string 모두 허용
- * 순서 중요: 더 구체적인 패턴을 앞에 배치
- */
 const _MARKUP_RULES = [
-  // 자리번호: 3번, 5번  (번째 제외)
   { re: /(\d+번)(?!째)/g,              cls: 'reveal-note__num'   },
-  // 카운트: 2명, 3쌍, 0개 — 숫자 크게 + 단위 작게 + 칩 배경
   { re: /\d+\s*[명쌍개]/g, render(m) {
       const n = m.match(/\d+/)[0]
       const u = m.match(/[명쌍개]/)[0]
       return `<b class="reveal-note__count"><span class="reveal-note__count-n">${n}</span><span class="reveal-note__count-u">${u}</span></b>`
     },
   },
-  // 긍정 답변
   { re: /(예)(?=[,.\s\n]|$)/gm,       cls: 'reveal-note__yes'   },
-  // 부정 답변
   { re: /(아니오)/g,                   cls: 'reveal-note__no'    },
 ]
 
-// 역할 이름 → 진영 CSS 클래스 매핑 (모듈 로드 시 한 번만 빌드)
 ;(() => {
   const nameToClass = {}
   const names = []
@@ -270,7 +322,6 @@ const _MARKUP_RULES = [
     names.push(role.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   }
   if (!names.length) return
-  // 긴 이름 우선 매칭 (부분 포함 방지)
   names.sort((a, b) => b.length - a.length)
   _MARKUP_RULES.push({
     re:  new RegExp(`(${names.join('|')})`, 'g'),
@@ -278,7 +329,6 @@ const _MARKUP_RULES = [
   })
 })()
 
-/** HTML 이스케이프 후 규칙 배열 기반 자동 파싱 */
 function _markup(text) {
   let s = text
     .replace(/&/g, '&amp;')
@@ -316,12 +366,13 @@ if (!document.getElementById('reveal-note-style')) {
   gap: 10px;
 }
 
-/* 상단 바 */
+/* ── 상단 바 ── */
 .reveal-note__top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  gap: 8px;
 }
 .reveal-note__role-badge {
   display: flex;
@@ -333,15 +384,113 @@ if (!document.getElementById('reveal-note-style')) {
   border: 1px solid var(--lead2);
   border-radius: 20px;
   padding: 3px 10px 3px 6px;
-}
-.reveal-note__edit-hint {
-  font-size: 0.58rem;
-  color: var(--text4);
-  letter-spacing: 0.04em;
-  transition: color 0.15s;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
-/* 메시지 카드 */
+/* 우측 컨트롤 묶음 */
+.reveal-note__top-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 폰트 슬라이더 */
+.reveal-note__font-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lead2);
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+}
+.reveal-note__font-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold2);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 4px rgba(212,168,40,0.4);
+  cursor: pointer;
+}
+.reveal-note__font-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold2);
+  border: 2px solid var(--surface);
+  cursor: pointer;
+}
+
+/* A− / A+ 폰트 버튼 */
+.reveal-note__font-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 8px;
+  border: 1px solid var(--lead2);
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, color 0.12s;
+}
+.reveal-note__font-btn:active {
+  background: var(--lead2);
+  color: var(--text);
+}
+
+/* ✏ 수정 / ↩ 완료 토글 버튼 */
+.reveal-note__edit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--lead2);
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.reveal-note__edit-toggle .rn-et-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.reveal-note__edit-toggle .rn-et-label {
+  letter-spacing: 0.02em;
+}
+/* 완료 상태 — 골드 강조 */
+.reveal-note__edit-toggle--done {
+  background: rgba(212,168,40,0.14);
+  border-color: var(--gold2);
+  color: var(--gold2);
+  box-shadow: 0 0 0 2px rgba(212,168,40,0.12);
+}
+.reveal-note__edit-toggle--done:active {
+  background: rgba(212,168,40,0.28);
+}
+
+/* ── 메시지 카드 ── */
 .reveal-note__card {
   flex: 1;
   min-height: 0;
@@ -368,18 +517,17 @@ if (!document.getElementById('reveal-note-style')) {
   flex-direction: column;
   overflow-y: auto;
 }
-/* 본문 래퍼 — JS 가 fontSize 를 동적 계산해 여기에 설정 */
 .reveal-note__main {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.4em;            /* 폰트 크기에 비례한 단락 간격 */
-  font-size: 1.4rem;     /* JS 오버라이드 전 기본값 */
+  gap: 0.4em;
+  font-size: 1.4rem;
 }
 .reveal-note__para {
   margin: 0;
-  font-size: 1em;        /* .reveal-note__main 에서 상속 */
+  font-size: 1em;
   line-height: 1.7;
   color: var(--text);
   word-break: break-word;
@@ -426,7 +574,6 @@ if (!document.getElementById('reveal-note-style')) {
   font-weight: 700;
   font-style: normal;
 }
-/* 역할 이름 — 진영별 */
 .reveal-note__role--townsfolk { color: var(--bl-light);  font-weight: 700; font-style: normal; }
 .reveal-note__role--outsider  { color: var(--tl-light);  font-weight: 700; font-style: normal; }
 .reveal-note__role--minion    { color: var(--rd-light);  font-weight: 700; font-style: normal; }
@@ -441,7 +588,7 @@ if (!document.getElementById('reveal-note-style')) {
   flex-shrink: 0;
 }
 
-/* 행동 안내 — 하단 고정 */
+/* 행동 안내 */
 .reveal-note__action {
   display: flex;
   align-items: flex-start;
@@ -461,14 +608,14 @@ if (!document.getElementById('reveal-note-style')) {
   word-break: keep-all;
 }
 
-/* textarea (edit 모드) — font-size 는 JS 가 _scaledFs 로 설정 */
+/* textarea (edit 모드) */
 .reveal-note__textarea {
   flex: 1;
   width: 100%;
   box-sizing: border-box;
   resize: none;
   font-family: 'Noto Sans KR', sans-serif;
-  font-size: 1.4rem;     /* JS 오버라이드 전 기본값 */
+  font-size: 1.4rem;
   line-height: 1.7;
   color: var(--text);
   background: transparent;

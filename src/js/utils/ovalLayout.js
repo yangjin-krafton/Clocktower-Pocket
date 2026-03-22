@@ -109,7 +109,20 @@ export function ovalSelfRotOffset(selfSeatId, total) {
  * @returns {SVGSVGElement}  생성된 SVG 요소
  */
 export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
-  const { rotOffset = -Math.PI / 2, innerR = 8, outerR = 30, slices = [], showNumbers = true } = opts
+  const {
+    rotOffset    = -Math.PI / 2,
+    innerR       = 8,
+    outerR       = 30,
+    slices       = [],
+    showNumbers  = true,
+    /**
+     * containerFill: true
+     *   - SVG 를 ovalEl 이 아닌 부모(패널/카드)에 붙임
+     *   - 부모 전체를 덮고, 부모 경계에서 잘림 (overflow:hidden)
+     *   - outerR 은 충분히 크게 (기본 160) 설정해 패널 가장자리까지 채움
+     */
+    containerFill = false,
+  } = opts
 
   // 파이 기하
   const cx        = 50
@@ -129,7 +142,9 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
   svg.setAttribute('preserveAspectRatio', 'none')
   svg.setAttribute('width',              '100%')
   svg.setAttribute('height',             '100%')
-  svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;overflow:visible;'
+  svg.style.cssText = containerFill
+    ? 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden;'
+    : 'position:absolute;left:0;top:0;pointer-events:none;overflow:visible;'
 
   // ── 골드 / 퍼플 교차 방사형 그라디언트 정의 ──
   const uid  = Math.random().toString(36).slice(2, 7)
@@ -213,7 +228,19 @@ export function drawOvalPieNumbers(ovalEl, total, opts = {}) {
     }
   }
 
-  // 슬롯보다 아래(z-order 낮음)에 삽입
-  ovalEl.insertBefore(svg, ovalEl.firstChild)
+  if (containerFill) {
+    // oval 이 아직 DOM 에 삽입되기 전일 수 있으므로 한 프레임 뒤에 부모를 확정
+    requestAnimationFrame(() => {
+      const target = ovalEl.parentElement ?? ovalEl
+      const pos = getComputedStyle(target).position
+      if (pos === 'static') target.style.position = 'relative'
+      target.style.overflow = 'hidden'
+      // 다른 자식들보다 아래에 삽입 (파이는 배경)
+      target.insertBefore(svg, target.firstChild)
+    })
+  } else {
+    // 기본: oval 안에 삽입 (슬롯보다 아래 z-order)
+    ovalEl.insertBefore(svg, ovalEl.firstChild)
+  }
   return svg
 }

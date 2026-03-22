@@ -242,6 +242,7 @@ export function createRoleNameLabel(role, slotPx) {
 export function buildOvalSlots(oval, players, slotPx, iconPx, {
   engine = null, rotOffset = -Math.PI / 2, selfSeatId = null,
   selectedIds = [], onSlotClick = null,
+  drawPie = true,   // false: 파이 배경 건너뜀 (containerFill 사용 시)
 } = {}) {
   const total       = players.length
   const monkPoisoned = !!(engine?.state?.players?.find(mp => mp.role === 'monk')?.isPoisoned)
@@ -289,5 +290,5 @@ export function buildOvalSlots(oval, players, slotPx, iconPx, {
   })
 
   // 파이 분할 벽 (슬롯 너머까지 연장, 자리번호 미표시)
-  drawOvalPieNumbers(oval, total, { rotOffset, outerR: 116, showNumbers: false })
+  if (drawPie) drawOvalPieNumbers(oval, total, { rotOffset, outerR: 116, showNumbers: false })
 }

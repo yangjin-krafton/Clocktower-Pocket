@@ -4,13 +4,9 @@
  * 플레이어 선택 UI: OvalSelectPanel 과 동일한 gl-seat-oval / gl-seat-slot 재사용
  */
 import { renderPhaseHeader }  from '../components/PhaseHeader.js'
-import { calcSlotMetrics }    from '../utils/ovalLayout.js'
-import { ovalSlotPos }        from '../utils/ovalLayout.js'
+import { calcSlotMetrics, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 import {
   createSeatOval,
-  createSeatSlot,
-  createRoleIconEl,
-  createRoleNameLabel,
   createSeatNumLabel,
   buildOvalSlots,
 } from '../utils/SeatWheel.js'
@@ -68,6 +64,7 @@ export class DayFlow {
       buildOvalSlots(oval, players, slotPx, iconPx, {
         engine: this.engine,
         selectedIds: current,
+        drawPie: false,   // containerFill 로 카드 전체에 그림
         onSlotClick: (p) => {
           if (p.status !== 'alive') return
           const isSelected = current.includes(p.id)
@@ -92,11 +89,19 @@ export class DayFlow {
     }
 
     rebuild()
+
+    // 파이 배경 — 카드(부모) 전체를 채우고 카드 경계에서 자동 클리핑
+    drawOvalPieNumbers(oval, players.length, { outerR: 160, showNumbers: false, containerFill: true })
+
     return oval
   }
 
   // ── 메인 렌더 ─────────────────────────────────────────────
   _render() {
+    // 슬롯 선택 시 스크롤 위치 유지
+    const scroller = document.scrollingElement || document.documentElement
+    const savedTop = scroller.scrollTop
+
     this.el.innerHTML = ''
     const state = this.engine.state
 
@@ -190,6 +195,9 @@ export class DayFlow {
       this.onStartNight && this.onStartNight()
     })
     this.el.appendChild(endDayBtn)
+
+    // 스크롤 위치 복원 (동기 — 브라우저 페인트 전에 적용)
+    scroller.scrollTop = savedTop
   }
 
   _execute(playerId) {

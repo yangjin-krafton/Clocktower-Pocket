@@ -33,6 +33,7 @@ export class GameEngine {
     this.slayerUsed = false
     this.butlerMasters = {} // { playerId: masterId }
     this.poisonedThisNight = null // 이번 밤 독약꾼 대상
+    this.undertakerTarget = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
   }
 
   // ─────────────────────────────────────
@@ -149,8 +150,8 @@ export class GameEngine {
         })
       }
       if (roleId === 'undertaker') {
-        // 전날 처형자가 있을 때만
-        return this.state.executedToday !== null
+        // 이번 밤 직전 처형자가 있을 때만
+        return this.undertakerTarget !== null
       }
       return activeRoleIds.has(roleId)
     })
@@ -163,6 +164,7 @@ export class GameEngine {
     this.state.round += 1
     this.state.phase = 'night'
     this.state.nominations = []
+    this.undertakerTarget = this.state.executedToday  // 장의사용: 밤 시작 전 저장
     this.state.executedToday = null
     this.monkProtect = null
     this.poisonedThisNight = null
@@ -524,8 +526,8 @@ export class GameEngine {
    * Undertaker 정보: 전날 처형자 역할
    */
   calcUndertakerInfo() {
-    if (!this.state.executedToday) return null
-    const p = this.getPlayer(this.state.executedToday)
+    if (!this.undertakerTarget) return null
+    const p = this.getPlayer(this.undertakerTarget)
     return p ? { playerId: p.id, roleId: p.role } : null
   }
 
@@ -662,6 +664,7 @@ export class GameEngine {
       slayerUsed:       this.slayerUsed,
       butlerMasters:    { ...this.butlerMasters },
       poisonedThisNight: this.poisonedThisNight,
+      undertakerTarget:  this.undertakerTarget,
     }
   }
 
@@ -680,6 +683,7 @@ export class GameEngine {
     this.slayerUsed        = data.slayerUsed ?? false
     this.butlerMasters     = data.butlerMasters || {}
     this.poisonedThisNight = data.poisonedThisNight ?? null
+    this.undertakerTarget  = data.undertakerTarget ?? null
     this.emit('stateChanged', this.state)
   }
 

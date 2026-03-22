@@ -33,7 +33,8 @@ export class GameEngine {
     this.slayerUsed = false
     this.butlerMasters = {} // { playerId: masterId }
     this.poisonedThisNight = null // 이번 밤 독약꾼 대상
-    this.undertakerTarget = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
+    this.undertakerTarget  = null  // 장의사용: 이번 밤 직전 처형된 플레이어 id
+    this.mayorBounceTarget = null  // 시장 튕김 대상 (호스트가 선택)
   }
 
   // ─────────────────────────────────────
@@ -163,9 +164,10 @@ export class GameEngine {
     this.state.nominations = []
     this.undertakerTarget = this.state.executedToday  // 장의사용: 밤 시작 전 저장
     this.state.executedToday = null
-    this.monkProtect = null
+    this.monkProtect       = null
     this.poisonedThisNight = null
-    this.pendingDeaths = []
+    this.mayorBounceTarget = null
+    this.pendingDeaths     = []
 
     // 이전 밤 독 초기화 (독약꾼 능력: 1밤만 지속)
     this.state.players.forEach(p => { p.isPoisoned = false })
@@ -223,7 +225,7 @@ export class GameEngine {
         } else if (target.role === 'soldier' && !target.isPoisoned) {
           // 군인 면역
           this._log('night', `군인 ${target.name}은(는) 임프 공격에 면역입니다.`)
-        } else if (target.role === 'mayor' && !target.isPoisoned) {
+        } else if (target.role === 'mayor' && !target.isPoisoned && !target.isDrunk) {
           // 시장 튕김 — 살아있는 다른 플레이어로 튕김
           this._handleMayorBounce(impKillAction.actorId, targetId)
         } else {
@@ -270,12 +272,23 @@ export class GameEngine {
     }
   }
 
+  /** 시장 튕김 대상 호스트 결정 기록 */
+  recordMayorBounce(targetId) {
+    this.mayorBounceTarget = targetId
+  }
+
   _handleMayorBounce(impId, mayorId) {
-    const alive = this.state.players.filter(
-      p => p.status === 'alive' && p.id !== mayorId && p.id !== impId
-    )
-    if (alive.length === 0) return
-    const bounced = alive[Math.floor(Math.random() * alive.length)]
+    const targetId = this.mayorBounceTarget
+    const bounced  = targetId ? this.getPlayer(targetId) : null
+    if (!bounced || bounced.status !== 'alive') {
+      this._log('night', '시장 튕김: 유효한 대상 없음, 아무도 사망하지 않습니다.')
+      return
+    }
+    // 군인에게 튕기면 면역 — 아무도 안 죽음
+    if (bounced.role === 'soldier' && !bounced.isPoisoned && !bounced.isDrunk) {
+      this._log('night', `시장 능력: 임프 공격이 군인 ${bounced.name}에게 튕겼지만 군인 면역으로 아무도 사망하지 않습니다.`)
+      return
+    }
     this.pendingDeaths.push(bounced.id)
     this._log('night', `시장 능력: 임프 공격이 ${bounced.name}에게 튕겼습니다.`)
   }
@@ -454,17 +467,25 @@ export class GameEngine {
     // (pendingDeaths는 _resolveNight에서 채워지므로 buildNightOrder로는 감지 불가)
     if (roleId === 'imp' && targetIds.length > 0 && targetIds[0] !== actorId) {
       const impTarget = this.getPlayer(targetIds[0])
-      if (
-        impTarget &&
-        impTarget.role === 'ravenkeeper' &&
-        impTarget.status === 'alive' &&
-        this.monkProtect !== impTarget.id &&
-        !(impTarget.role === 'soldier' && !impTarget.isPoisoned)
-      ) {
+      if (impTarget && impTarget.status === 'alive' && this.monkProtect !== impTarget.id) {
         const order = this.state.nightOrder
         const impIdx = order.indexOf('imp')
-        if (impIdx !== -1 && !order.includes('ravenkeeper')) {
+
+        // 까마귀 사육사가 사망 예정이면 nightOrder에 삽입
+        if (
+          impTarget.role === 'ravenkeeper' &&
+          !order.includes('ravenkeeper')
+        ) {
           order.splice(impIdx + 1, 0, 'ravenkeeper')
+        }
+
+        // 시장 튕김: 호스트가 튕길 대상을 선택하도록 스텝 삽입
+        if (
+          impTarget.role === 'mayor' &&
+          !impTarget.isPoisoned && !impTarget.isDrunk &&
+          !order.includes('mayor-bounce')
+        ) {
+          order.splice(impIdx + 1, 0, 'mayor-bounce')
         }
       }
     }
@@ -686,6 +707,7 @@ export class GameEngine {
       butlerMasters:    { ...this.butlerMasters },
       poisonedThisNight: this.poisonedThisNight,
       undertakerTarget:  this.undertakerTarget,
+      mayorBounceTarget: this.mayorBounceTarget,
     }
   }
 
@@ -704,7 +726,8 @@ export class GameEngine {
     this.slayerUsed        = data.slayerUsed ?? false
     this.butlerMasters     = data.butlerMasters || {}
     this.poisonedThisNight = data.poisonedThisNight ?? null
-    this.undertakerTarget  = data.undertakerTarget ?? null
+    this.undertakerTarget  = data.undertakerTarget  ?? null
+    this.mayorBounceTarget = data.mayorBounceTarget ?? null
     this.emit('stateChanged', this.state)
   }
 

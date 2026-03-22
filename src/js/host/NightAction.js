@@ -38,6 +38,8 @@ export class NightAction {
       this._showDemonInfo(actors)
     } else if (step === 'spy') {
       this._showSpyInfo(actors)
+    } else if (step === 'mayor-bounce') {
+      this._showMayorBounce()
     } else if (type === 'info') {
       this._showRoleInfo(step, actors)
     } else if (type === 'select') {
@@ -170,7 +172,42 @@ export class NightAction {
       engine:      this.engine,
       hostWarning: this._hostWarning(spyActor),
       onReveal:    () => ThemeManager.pushTemp('player'),
+      onBack:      () => { this._unmount = null },
       onNext:      () => { ThemeManager.popTemp(); this._done('spy') },
+    }))
+  }
+
+  // ── 시장 튕김 대상 선택 ──
+  _showMayorBounce() {
+    const state      = this.engine.state
+    const mayorId    = state.nightOrder && (() => {
+      const impAction = this.engine.nightActions
+        .filter(a => a.round === state.round && a.roleId === 'imp').pop()
+      return impAction?.targetIds?.[0] ?? null
+    })()
+    const impAction  = this.engine.nightActions
+      .filter(a => a.round === state.round && a.roleId === 'imp').pop()
+    const impId      = impAction?.actorId ?? null
+
+    // 시장·임프 제외 생존자 = 튕김 후보
+    const candidates = state.players.filter(
+      p => p.status === 'alive' && p.id !== mayorId && p.id !== impId
+    )
+
+    this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
+      title:      '시장 튕김',
+      roleIcon:   'mayor.png',
+      roleTeam:   'town',
+      ability:    '임프 공격이 시장을 노렸습니다. 공격이 튕길 대상을 선택하세요.\n군인을 선택하면 아무도 사망하지 않습니다.',
+      players:    candidates,
+      selfSeatId: null,
+      maxSelect:  1,
+      hostWarning: null,
+      engine:     this.engine,
+      onConfirm: (ids) => {
+        this.engine.recordMayorBounce(ids[0] ?? null)
+        this._done('mayor-bounce', ids)
+      },
     }))
   }
 

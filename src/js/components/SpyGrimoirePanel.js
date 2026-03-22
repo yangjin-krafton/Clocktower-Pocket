@@ -35,7 +35,7 @@ function shuffle(arr) {
 // ────────────────────────────────────────────────────────
 // 통합 스파이 그리모어 패널 (호스트 미리보기 + 설정)
 // ────────────────────────────────────────────────────────
-export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, onNext }) {
+export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, onNext, onBack }) {
   const total = players.length
 
   // ── 상태 ──
@@ -133,12 +133,25 @@ export function mountSpyGrimoirePanel({ players, engine, hostWarning, onReveal, 
       `<span>기억하고, 눈을 감으세요.</span>`
     pPanel.appendChild(actionBar)
 
-    // 다음 버튼
+    // 하단 버튼 행
+    const btnRow = document.createElement('div')
+    btnRow.style.cssText = 'display:flex;gap:8px;flex-shrink:0;'
+
+    if (onBack) {
+      const backBtn = document.createElement('button')
+      backBtn.className = 'btn oval-sel__back-btn'
+      backBtn.textContent = '← 되돌리기'
+      backBtn.addEventListener('click', () => { pOverlay.remove(); onBack() })
+      btnRow.appendChild(backBtn)
+    }
+
     const confirmBtn = document.createElement('button')
-    confirmBtn.className = 'reveal-note__next btn btn-primary'
+    confirmBtn.className = 'btn btn-primary panel-confirm-btn'
+    confirmBtn.style.flex = '1'
     confirmBtn.textContent = '[ 호스트 ] 다음 →'
     confirmBtn.addEventListener('click', () => { pOverlay.remove(); onNext?.() })
-    pPanel.appendChild(confirmBtn)
+    btnRow.appendChild(confirmBtn)
+    pPanel.appendChild(btnRow)
 
     pOverlay.appendChild(pPanel)
     document.body.appendChild(pOverlay)

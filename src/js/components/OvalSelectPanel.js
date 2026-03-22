@@ -22,7 +22,7 @@ export function mountOvalSelectPanel(data) {
   const {
     title, roleIcon = '🎯', roleTeam, ability,
     players = [], selfSeatId,
-    maxSelect = 1, onConfirm, hostWarning, engine,
+    maxSelect = 1, onConfirm, onBack, hostWarning, engine,
   } = data
 
   let selectedIds = []
@@ -146,7 +146,21 @@ export function mountOvalSelectPanel(data) {
   wrap.appendChild(oval)
   panel.appendChild(wrap)
 
-  // ── 확인 버튼 ──
+  // ── 하단 버튼 행 ──
+  const btnRow = document.createElement('div')
+  btnRow.className = 'oval-sel__btn-row'
+
+  if (onBack) {
+    const backBtn = document.createElement('button')
+    backBtn.className = 'btn oval-sel__back-btn'
+    backBtn.textContent = '← 되돌리기'
+    backBtn.addEventListener('click', () => {
+      overlay.remove()
+      onBack()
+    })
+    btnRow.appendChild(backBtn)
+  }
+
   const confirmBtn = document.createElement('button')
   confirmBtn.className = 'btn btn-primary panel-confirm-btn'
   confirmBtn.textContent = '✅ 확인'
@@ -155,7 +169,8 @@ export function mountOvalSelectPanel(data) {
     overlay.remove()
     onConfirm && onConfirm([...selectedIds])
   })
-  panel.appendChild(confirmBtn)
+  btnRow.appendChild(confirmBtn)
+  panel.appendChild(btnRow)
 
   overlay.appendChild(panel)
   document.body.appendChild(overlay)
@@ -254,6 +269,29 @@ if (!document.getElementById('oval-select-panel-style')) {
 .oval-sel__cnt-label { font-size: 0.68rem; color: var(--text4); }
 .oval-sel__cnt-check { font-size: 0.72rem; color: var(--gold2); font-weight: 600; }
 .oval-sel__cnt-num   { font-size: 0.62rem; color: var(--tl-base); }
+
+/* 하단 버튼 행 */
+.oval-sel__btn-row {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 100%;
+}
+.oval-sel__btn-row .panel-confirm-btn { flex: 1; }
+.oval-sel__back-btn {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1.5px solid var(--lead2);
+  color: var(--text3);
+  white-space: nowrap;
+  opacity: 0.75;
+}
+.oval-sel__back-btn:hover,
+.oval-sel__back-btn:active { opacity: 1; border-color: var(--text3); color: var(--text); }
 
 /* .panel-confirm-btn (theme.css): 확인 버튼 공통 스타일 */
   `

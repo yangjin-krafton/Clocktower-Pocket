@@ -143,11 +143,8 @@ export class GameEngine {
         return this.state.round === 1
       }
       if (roleId === 'ravenkeeper') {
-        // 이번 밤 사망자 중 까마귀 사육사가 있을 때만
-        return this.pendingDeaths.some(id => {
-          const p = this.getPlayer(id)
-          return p && p.role === 'ravenkeeper'
-        })
+        // 밤 시작 시점에는 항상 제외 — 임프 행동 기록(recordNightAction) 시 동적 삽입
+        return false
       }
       if (roleId === 'undertaker') {
         // 이번 밤 직전 처형자가 있을 때만
@@ -333,6 +330,11 @@ export class GameEngine {
         this.virginTriggered = true
         this._log('day', `처녀 능력 발동! ${nominator.name}이(가) 즉시 처형됩니다.`)
         this.killPlayer(nominatorId, 'virgin')
+        // 처녀 지목 처형은 그날의 공식 처형으로 처리 (추가 처형 불가)
+        const killed = this.getPlayer(nominatorId)
+        if (killed) killed.status = 'executed'
+        this.state.executedToday = nominatorId
+        this.emit('stateChanged', this.state)
         this.emit('virginTriggered', { nominatorId })
         return { virginTriggered: true }
       }
@@ -446,6 +448,25 @@ export class GameEngine {
     }
     if (roleId === 'butler' && targetIds.length > 0) {
       this.butlerMasters[actorId] = targetIds[0]
+    }
+
+    // 임프가 까마귀 사육사를 지목했을 때: 즉시 nightOrder에 삽입
+    // (pendingDeaths는 _resolveNight에서 채워지므로 buildNightOrder로는 감지 불가)
+    if (roleId === 'imp' && targetIds.length > 0 && targetIds[0] !== actorId) {
+      const impTarget = this.getPlayer(targetIds[0])
+      if (
+        impTarget &&
+        impTarget.role === 'ravenkeeper' &&
+        impTarget.status === 'alive' &&
+        this.monkProtect !== impTarget.id &&
+        !(impTarget.role === 'soldier' && !impTarget.isPoisoned)
+      ) {
+        const order = this.state.nightOrder
+        const impIdx = order.indexOf('imp')
+        if (impIdx !== -1 && !order.includes('ravenkeeper')) {
+          order.splice(impIdx + 1, 0, 'ravenkeeper')
+        }
+      }
     }
   }
 

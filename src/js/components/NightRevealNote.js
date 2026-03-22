@@ -25,7 +25,7 @@ let _globalScale = (() => {
 })()
 
 export function mountNightRevealNote(data) {
-  const { roleIcon, roleName, roleTeam, message, onNext } = data
+  const { roleIcon, roleName, roleTeam, message, onNext, onBack } = data
   const tc = TEAM_COLORS[roleTeam] || TEAM_COLORS.default
 
   const overlay = document.createElement('div')
@@ -194,7 +194,21 @@ export function mountNightRevealNote(data) {
   card.appendChild(textarea)
   panel.appendChild(card)
 
-  // ── 다음 버튼 ───────────────────────────────────────────────
+  // ── 하단 버튼 행 ────────────────────────────────────────────
+  const btnRow = document.createElement('div')
+  btnRow.className = 'reveal-note__btn-row'
+
+  if (onBack) {
+    const backBtn = document.createElement('button')
+    backBtn.className = 'reveal-note__back btn'
+    backBtn.textContent = '← 되돌리기'
+    backBtn.addEventListener('click', () => {
+      overlay.remove()
+      onBack()
+    })
+    btnRow.appendChild(backBtn)
+  }
+
   const nextBtn = document.createElement('button')
   nextBtn.className = 'reveal-note__next btn btn-primary'
   nextBtn.textContent = '[ 호스트 ] 다음 →'
@@ -202,7 +216,8 @@ export function mountNightRevealNote(data) {
     overlay.remove()
     onNext?.()
   })
-  panel.appendChild(nextBtn)
+  btnRow.appendChild(nextBtn)
+  panel.appendChild(btnRow)
 
   overlay.appendChild(panel)
   document.body.appendChild(overlay)
@@ -650,10 +665,37 @@ if (!document.getElementById('reveal-note-style')) {
   50%       { box-shadow: 0 0 18px rgba(220,38,38,0.45); }
 }
 
+/* 하단 버튼 행 */
+.reveal-note__btn-row {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 되돌리기 버튼 */
+.reveal-note__back {
+  flex-shrink: 0;
+  padding: 15px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 12px;
+  min-height: 52px;
+  background: var(--surface2);
+  border: 1.5px solid var(--lead2);
+  color: var(--text3);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+.reveal-note__back:hover,
+.reveal-note__back:active {
+  opacity: 1;
+  border-color: var(--text3);
+  color: var(--text);
+}
+
 /* 다음 버튼 */
 .reveal-note__next {
-  flex-shrink: 0;
-  width: 100%;
+  flex: 1;
   padding: 15px;
   font-size: 0.9rem;
   font-weight: 700;

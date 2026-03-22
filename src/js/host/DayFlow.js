@@ -1,6 +1,6 @@
 /**
  * H-06 DayFlow — 낮 진행 (심플 버전)
- * 처형 대상 선택 + 처단자 특수 능력 여부 확인
+ * 처형 대상 선택 + 처단자 특수 능력 + 처녀 지목 능력 처리
  * 플레이어 선택 UI: OvalSelectPanel 과 동일한 gl-seat-oval / gl-seat-slot 재사용
  */
 import { renderPhaseHeader }  from '../components/PhaseHeader.js'
@@ -20,6 +20,7 @@ export class DayFlow {
     this.el               = null
     this.executionTargetId = null
     this.slayerTargetId   = null
+    this.virginNominatorId = null  // 처녀를 지목한 사람
   }
 
   mount(container) {
@@ -182,6 +183,40 @@ export class DayFlow {
       this.el.appendChild(slayCard)
     }
 
+    // ─ 처녀 지목 ─
+    const virginPlayer = state.players.find(p => p.role === 'virgin' && p.status === 'alive')
+    if (virginPlayer && !this.engine.virginTriggered) {
+      const virginCard = document.createElement('div')
+      virginCard.className = 'card'
+      virginCard.innerHTML = `<div class="card-title">👼 처녀 지목</div>`
+
+      const virginLabel = document.createElement('div')
+      virginLabel.className = 'section-label'
+      virginLabel.textContent = `${virginPlayer.name}(${virginPlayer.id}번)을 지목한 플레이어 선택`
+      virginCard.appendChild(virginLabel)
+
+      // 처녀 본인 제외한 전체 플레이어가 지목자 후보
+      const nominatorCandidates = state.players.filter(p => p.id !== virginPlayer.id)
+      virginCard.appendChild(
+        this._buildOval(
+          nominatorCandidates,
+          this.virginNominatorId ? [this.virginNominatorId] : [],
+          (id) => { this.virginNominatorId = id; this._render() }
+        )
+      )
+
+      if (this.virginNominatorId) {
+        const nominator = this.engine.getPlayer(this.virginNominatorId)
+        const virginBtn = document.createElement('button')
+        virginBtn.className = 'btn btn-warning btn-full mt-8'
+        virginBtn.textContent = `👼 ${nominator?.name || this.virginNominatorId}번이 처녀 지목`
+        virginBtn.addEventListener('click', () => this._virginNominate(virginPlayer.id, this.virginNominatorId))
+        virginCard.appendChild(virginBtn)
+      }
+
+      this.el.appendChild(virginCard)
+    }
+
     // ─ 처형 없이 밤으로 ─
     const endDayBtn = document.createElement('button')
     endDayBtn.className = 'btn btn-full mt-12'
@@ -198,6 +233,33 @@ export class DayFlow {
 
     // 스크롤 위치 복원 (동기 — 브라우저 페인트 전에 적용)
     scroller.scrollTop = savedTop
+  }
+
+  _virginNominate(virginId, nominatorId) {
+    const result = this.engine.nominate(nominatorId, virginId)
+
+    this.onHistoryPush({
+      type: 'nomination', phase: 'day', round: this.engine.state.round,
+      actor: nominatorId, target: [virginId],
+      label: `👼 처녀 지목: ${nominatorId}번 → ${virginId}번`,
+      detail: result.virginTriggered ? `처녀 능력 발동! ${nominatorId}번 즉시 처형` : '발동 없음',
+      snapshot: this.engine.serialize(),
+    })
+
+    this.virginNominatorId = null
+
+    if (result.virginTriggered) {
+      // 처녀 능력 발동 = 그날의 유일한 처형 → 즉시 밤으로 전환
+      const winCheck = this.engine.checkWinCondition()
+      if (winCheck.gameOver) {
+        this.onGameOver && this.onGameOver(winCheck.winner, winCheck.reason)
+        return
+      }
+      this.onStartNight && this.onStartNight()
+      return
+    }
+
+    this._render()
   }
 
   _execute(playerId) {

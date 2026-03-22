@@ -103,6 +103,7 @@ export class NightAction {
       roleName: '미니언 공개',
       roleTeam: 'minion',
       message:  minionMsg,
+      onBack:   () => { ThemeManager.popTemp(); this._showMinionInfo(minions) },
       onNext:   () => { ThemeManager.popTemp(); this._done('minion-info') },
     }))
   }
@@ -153,6 +154,7 @@ export class NightAction {
       roleName: '임프 정보',
       roleTeam: 'demon',
       message:  demonMsg,
+      onBack:   () => { ThemeManager.popTemp(); this._showDemonInfoPanel() },
       onNext:   () => { ThemeManager.popTemp(); this._done('demon-info') },
     }))
   }
@@ -196,6 +198,7 @@ export class NightAction {
       roleName: role?.name || roleId,
       roleTeam: role?.team || null,
       message:  this._generateInfoMessage(roleId, realAccurate),
+      onBack:   () => { ThemeManager.popTemp(); this._showRoleInfo(roleId, actors) },
       onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
     }))
   }
@@ -215,6 +218,7 @@ export class NightAction {
       maxSelect:   2,
       hostWarning: this._hostWarning(actor),
       engine:      this.engine,
+      onBack:      () => { this._unmount = null },
       onConfirm: (ids) => {
         const affected = actor.isPoisoned || actor.isDrunk
         const value = affected
@@ -229,6 +233,7 @@ export class NightAction {
           roleName: role?.name || roleId,
           roleTeam: role?.team || null,
           message:  this._generateInfoMessage(roleId, value),
+          onBack:   () => { ThemeManager.popTemp(); this._showRoleInfoWithSeatSelect(roleId, actor) },
           onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
         }))
       },
@@ -363,6 +368,7 @@ export class NightAction {
       maxSelect:   role?.maxSelect || 1,
       hostWarning: this._hostWarning(actor),
       engine:      this.engine,
+      onBack:      () => { this._unmount = null },
       onConfirm: (ids) => {
         this.engine.recordNightAction(roleId, actor.id, ids)
 
@@ -375,6 +381,7 @@ export class NightAction {
             roleName: role?.name || roleId,
             roleTeam: role?.team || null,
             message:  msg,
+            onBack:   () => { ThemeManager.popTemp(); this._showRoleSelect(roleId, actors) },
             onNext:   () => { ThemeManager.popTemp(); this._done(roleId, ids) },
           }))
         } else {

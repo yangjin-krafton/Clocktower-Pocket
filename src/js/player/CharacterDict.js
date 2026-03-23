@@ -8,10 +8,10 @@
  */
 import { ROLES_TB } from '../data/roles-tb.js'
 
-const TEAM_LABEL  = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
-const TEAM_COLOR  = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)' }
-const GEM_CLASS   = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'gem-minion', demon: 'gem-demon' }
-const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
+const TEAM_LABEL  = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프', traveller: '여행자' }
+const TEAM_COLOR  = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)', traveller: 'var(--pu-light)' }
+const GEM_CLASS   = { townsfolk: 'gem-town', outsider: 'gem-outside', minion: 'gem-minion', demon: 'gem-demon', traveller: 'gem-traveller' }
+const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon', traveller: 'badge-traveller' }
 
 export class CharacterDict {
   constructor({ scriptRoles = null, onRoleClick = null, initialScenario = null } = {}) {
@@ -88,7 +88,7 @@ export class CharacterDict {
     }
 
     // ── 그리드: 항상 진영별 섹션으로 표시 ──
-    ;['townsfolk', 'outsider', 'minion', 'demon'].forEach(team => {
+    ;['townsfolk', 'outsider', 'minion', 'demon', 'traveller'].forEach(team => {
       const teamRoles = roles.filter(r => r.team === team)
       if (teamRoles.length === 0) return
 
@@ -281,6 +281,7 @@ if (!document.getElementById('dict-style')) {
 .dict__section-title--outsider  { color: var(--tl-light); }
 .dict__section-title--minion    { color: var(--rd-light); }
 .dict__section-title--demon     { color: var(--rd-light); opacity: 0.85; }
+.dict__section-title--traveller { color: var(--pu-light); }
 
 /* 그리드 */
 .dict__grid {
@@ -308,6 +309,7 @@ if (!document.getElementById('dict-style')) {
 .dict__token--outsider  { border-color: rgba(91,179,198,0.45); }
 .dict__token--minion    { border-color: rgba(110,27,31,0.45); }
 .dict__token--demon     { border-color: rgba(110,27,31,0.65); }
+.dict__token--traveller { border-color: rgba(144,128,204,0.45); }
 
 .dict__token-icon {
   width: 46px;

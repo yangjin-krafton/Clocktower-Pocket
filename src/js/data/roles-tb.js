@@ -142,6 +142,38 @@ export const ROLES_TB = [
     firstNight: true, otherNights: true, icon: 'imp.png', iconEmoji: '👿',
     nightType: 'select', maxSelect: 1
   },
+
+  // ── Travellers (5) ── 도감 전용, 인게임 미구현
+  {
+    id: 'scapegoat', name: '희생양', team: 'traveller',
+    ability: '플레이어가 처형으로 사망하면, 대신 당신이 처형될 수 있다. 그렇게 사망하면, 이야기꾼이 다른 플레이어의 투표권을 결정한다.',
+    firstNight: false, otherNights: false, icon: 'scapegoat.png', iconEmoji: '🐐',
+    nightType: null
+  },
+  {
+    id: 'gunslinger', name: '총잡이', team: 'traveller',
+    ability: '매일 투표 중, 투표한 인접 플레이어를 공개적으로 선택하여 즉사시킬 수 있다.',
+    firstNight: false, otherNights: false, icon: 'gunslinger.png', iconEmoji: '🔫',
+    nightType: null
+  },
+  {
+    id: 'beggar', name: '거지', team: 'traveller',
+    ability: '당신은 투표 토큰이 없다. 죽은 플레이어가 투표 토큰을 당신에게 줄 수 있다.',
+    firstNight: false, otherNights: false, icon: 'beggar.png', iconEmoji: '🫴',
+    nightType: null
+  },
+  {
+    id: 'bureaucrat', name: '관료', team: 'traveller',
+    ability: '매 밤, 플레이어 1명을 선택한다. 그 플레이어의 투표는 내일 3표로 계산된다.',
+    firstNight: true, otherNights: true, icon: 'bureaucrat.png', iconEmoji: '📋',
+    nightType: 'select', maxSelect: 1
+  },
+  {
+    id: 'thief', name: '도둑', team: 'traveller',
+    ability: '매 밤, 플레이어 1명을 선택한다. 그 플레이어의 투표는 내일 음수로 계산된다.',
+    firstNight: true, otherNights: true, icon: 'thief.png', iconEmoji: '🦹',
+    nightType: 'select', maxSelect: 1
+  },
 ]
 
 export const ROLES_BY_ID = Object.fromEntries(ROLES_TB.map(r => [r.id, r]))

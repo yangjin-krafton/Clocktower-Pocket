@@ -252,6 +252,7 @@ body {
 .badge-outside { background: rgba(91,179,198,0.18);  color: var(--tl-light);  border-color: rgba(91,179,198,0.45); }
 .badge-minion  { background: rgba(140,48,48,0.2);    color: var(--rd-light);  border-color: rgba(140,48,48,0.45); }
 .badge-demon   { background: rgba(140,48,48,0.25);   color: var(--rd-light);  border-color: rgba(140,48,48,0.55); }
+.badge-traveller { background: rgba(144,128,204,0.18); color: var(--pu-light); border-color: rgba(144,128,204,0.45); }
 .badge-good    { background: rgba(91,179,198,0.12);  color: var(--tl-light);  border-color: rgba(91,179,198,0.35); }
 .badge-evil    { background: rgba(140,48,48,0.18);   color: var(--rd-light);  border-color: rgba(140,48,48,0.4); }
 .badge-alive   { background: rgba(58,90,174,0.12);   color: var(--bl-light);  border-color: rgba(58,90,174,0.35); }

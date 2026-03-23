@@ -5,7 +5,10 @@
       "WebFetch(domain:wiki.bloodontheclocktower.com)",
       "Bash(cd:*)",
       "Bash(start http://localhost:3344)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep -E \"\\\\.\\(json|yml|yaml|toml|config\\)$\")",
+      "WebFetch(domain:script.google.com)",
+      "WebFetch(domain:script.googleusercontent.com)"
     ]
   }
 }

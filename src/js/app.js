@@ -4,6 +4,7 @@
  */
 import { GameSaveManager } from './GameSaveManager.js'
 import { ThemeManager }    from './ThemeManager.js'
+import { ScheduleCalendar } from './components/ScheduleCalendar.js'
 
 const content = document.getElementById('app-content')
 const tabBar = document.getElementById('tab-bar')
@@ -127,6 +128,8 @@ function showLanding() {
     <h1 class="landing__title">Clocktower Pocket</h1>
     <p class="landing__sub">Blood on the Clocktower 게임 도우미</p>
 
+    <div id="schedule-calendar-slot"></div>
+
     <div class="landing__cards">
       <button class="landing__card landing__card--host" id="btn-host">
         <span class="landing__card-icon">👑</span>
@@ -142,6 +145,11 @@ function showLanding() {
     </div>
   `
   content.appendChild(wrap)
+
+  // 일정 조율 캘린더
+  const calSlot = document.getElementById('schedule-calendar-slot')
+  const cal = new ScheduleCalendar()
+  cal.mount(calSlot)
 
   // 새 게임 버튼
   document.getElementById('btn-host').addEventListener('click', () => {

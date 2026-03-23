@@ -5,6 +5,7 @@
 import { GameSaveManager } from './GameSaveManager.js'
 import { ThemeManager }    from './ThemeManager.js'
 import { ScheduleCalendar } from './components/ScheduleCalendar.js'
+import { UpdatePopup } from './components/UpdatePopup.js'
 
 const content = document.getElementById('app-content')
 const tabBar = document.getElementById('tab-bar')
@@ -162,6 +163,9 @@ function showLanding() {
 
   // ── 저장된 게임 목록 ──
   renderSavedGames(wrap)
+
+  // ── 업데이트 팝업 ──
+  new UpdatePopup().show(document.getElementById('app'))
 }
 
 function renderSavedGames(container) {

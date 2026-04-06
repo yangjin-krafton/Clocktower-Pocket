@@ -20,6 +20,7 @@ export class ScheduleCalendar {
     this._detailDate = null     // 상세보기 중인 날짜
     this._name = localStorage.getItem(NAME_KEY) || ''
     this._dirty = false         // 선택이 변경되었는지 추적
+    this._toast = null           // 토스트 메시지
     this._computeWeekDates()
     this._loadCachedDates()
     this._injectStyles()
@@ -143,9 +144,22 @@ export class ScheduleCalendar {
 
   /* ── 등록 ── */
 
-  async _handleRegister() {
+  /** @param {boolean} join true=참여, false=취소 */
+  async _handleToggle(join) {
     const name = this._name.trim()
-    if (!name) { alert('이름을 입력해주세요'); return }
+    if (!name || !this._detailDate) return
+
+    // 이름 변경 감지
+    const prevName = localStorage.getItem(NAME_KEY)
+    if (prevName && prevName !== name) {
+      if (!confirm(`이름이 "${prevName}" → "${name}"(으)로 변경됩니다.\n기존 이름의 등록은 서버에 남아있습니다. 계속할까요?`)) return
+    }
+
+    if (join) {
+      this._selected.add(this._detailDate)
+    } else {
+      this._selected.delete(this._detailDate)
+    }
 
     this._submitting = true
     this._render()
@@ -158,10 +172,13 @@ export class ScheduleCalendar {
       })
       localStorage.setItem(NAME_KEY, name)
       this._saveCachedDates()
-      this._dirty = false
+      this._showToast(join ? '참여 등록!' : '참여 취소!')
       await this._fetchData()
     } catch (e) {
-      alert('등록 실패: ' + e.message)
+      // 실패 시 되돌리기
+      if (join) this._selected.delete(this._detailDate)
+      else this._selected.add(this._detailDate)
+      alert('처리 실패: ' + e.message)
     }
     this._submitting = false
     this._render()
@@ -172,14 +189,27 @@ export class ScheduleCalendar {
   _render() {
     if (!this.el) return
 
+    // 포커스 상태 보존
+    const activeInput = this.el.querySelector('[data-action="name"]')
+    const wasFocused = activeInput && document.activeElement === activeInput
+    const selStart = activeInput?.selectionStart
+    const selEnd = activeInput?.selectionEnd
+
     const isPast = (dateStr) => dateStr < this._today
 
-    let html = `<div class="sch-cal__header">
+    let html = ''
+
+    // 토스트 메시지
+    if (this._toast) {
+      html += `<div class="sch-cal__toast">${this._escHtml(this._toast)}</div>`
+    }
+
+    html += `<div class="sch-cal__header">
       <span class="sch-cal__title">📅 일정 조율</span>
     </div>`
 
     // 요일 헤더
-    html += '<div class="sch-cal__grid">'
+    html += `<div class="sch-cal__grid${this._loading ? ' sch-cal__grid--loading' : ''}">`
     html += '<div class="sch-cal__row sch-cal__row--header">'
     DAY_NAMES.forEach((name, i) => {
       const cls = i >= 5 ? ' sch-cal__day-name--weekend' : ''
@@ -206,50 +236,57 @@ export class ScheduleCalendar {
         if (selected) cls += ' sch-cal__cell--selected'
         if (dayIdx >= 5) cls += ' sch-cal__cell--weekend'
         if (count > 0) cls += ' sch-cal__cell--has-entries'
+        if (dateStr === this._detailDate) cls += ' sch-cal__cell--viewing'
 
         html += `<div class="${cls}" data-date="${dateStr}">
           <span class="sch-cal__cell-day">${this._dayNum(dateStr)}</span>
-          ${count > 0 ? `<span class="sch-cal__cell-count">${count}명</span>` : ''}
+          ${!this._loading && count > 0 ? `<span class="sch-cal__cell-count">${count}명</span>` : ''}
         </div>`
       }
       html += '</div>'
     }
     html += '</div>'
 
-    // 참가자 상세 (날짜 클릭 시)
-    if (this._detailDate) {
-      const names = this._getNamesByDate(this._detailDate)
-      html += `<div class="sch-cal__detail">
-        <div class="sch-cal__detail-header">
-          <span>${this._monthDay(this._detailDate)} 참가 가능</span>
-          <button class="sch-cal__detail-close" data-action="close-detail">✕</button>
-        </div>
-        ${names.length > 0
-          ? `<div class="sch-cal__detail-names">${names.map(n => `<span class="sch-cal__name-chip">${this._escHtml(n)}</span>`).join('')}</div>`
-          : '<div class="sch-cal__detail-empty">아직 등록된 참가자가 없습니다</div>'}
-      </div>`
-    }
-
-    // 등록 폼
-    const hasChanges = this._dirty
+    // 이름 입력 (항상 표시)
     html += `<div class="sch-cal__form">
       <input type="text" class="sch-cal__name-input" placeholder="이름 입력"
              value="${this._escHtml(this._name)}" data-action="name" />
-      <div class="sch-cal__form-row">
-        <span class="sch-cal__form-hint">${this._selected.size > 0
-          ? '선택: ' + [...this._selected].sort().map(d => this._monthDay(d)).join(', ')
-          : '위 캘린더에서 날짜를 탭하세요'}</span>
-        <button class="sch-cal__submit ${this._submitting ? 'sch-cal__submit--loading' : ''} ${hasChanges ? 'sch-cal__submit--dirty' : ''}"
-                data-action="register" ${this._submitting ? 'disabled' : ''}>
-          ${this._submitting ? '등록 중...' : hasChanges ? '변경 저장' : '등록'}
-        </button>
-      </div>
     </div>`
 
-    // 로딩/에러
-    if (this._loading) {
-      html += '<div class="sch-cal__status">불러오는 중...</div>'
-    } else if (this._error) {
+    // 날짜 상세 + 참여/취소
+    if (this._detailDate) {
+      const names = this._getNamesByDate(this._detailDate)
+      const isPastDate = this._detailDate < this._today
+      const myName = this._name.trim()
+      const isRegistered = this._selected.has(this._detailDate)
+
+      html += `<div class="sch-cal__detail">
+        <div class="sch-cal__detail-header">
+          <span>${this._monthDay(this._detailDate)} 참가 현황</span>
+          <button class="sch-cal__detail-close" data-action="close-detail">✕</button>
+        </div>
+        ${names.length > 0
+          ? `<div class="sch-cal__detail-names">${names.map(n => `<span class="sch-cal__name-chip${myName && n === myName ? ' sch-cal__name-chip--me' : ''}">${this._escHtml(n)}</span>`).join('')}</div>`
+          : '<div class="sch-cal__detail-empty">아직 등록된 참가자가 없습니다</div>'}
+        ${!isPastDate ? (myName
+          ? `<div class="sch-cal__action-row">
+              ${isRegistered
+                ? `<button class="sch-cal__action-btn sch-cal__action-btn--cancel" data-action="leave" ${this._submitting ? 'disabled' : ''}>
+                    ${this._submitting ? '처리 중...' : '참여 취소'}
+                  </button>`
+                : `<button class="sch-cal__action-btn sch-cal__action-btn--join" data-action="join" ${this._submitting ? 'disabled' : ''}>
+                    ${this._submitting ? '처리 중...' : '참여 가능'}
+                  </button>`}
+            </div>`
+          : '<div class="sch-cal__detail-hint">이름을 입력하면 참여할 수 있습니다</div>')
+        : ''}`
+      html += '</div>'
+    } else {
+      html += '<div class="sch-cal__hint">날짜를 눌러 참가 현황을 확인하세요</div>'
+    }
+
+    // 에러 (로딩은 그리드 오버레이로 표시)
+    if (this._error) {
       html += `<div class="sch-cal__status sch-cal__status--error">
         ${this._escHtml(this._error)}
         <button class="sch-cal__retry" data-action="retry">다시 시도</button>
@@ -258,23 +295,23 @@ export class ScheduleCalendar {
 
     this.el.innerHTML = html
     this._bindEvents()
+
+    // 포커스 복원
+    if (wasFocused) {
+      const newInput = this.el.querySelector('[data-action="name"]')
+      if (newInput) {
+        newInput.focus()
+        newInput.setSelectionRange(selStart, selEnd)
+      }
+    }
   }
 
   _bindEvents() {
-    // 날짜 셀 클릭
+    // 날짜 셀 클릭 → 상세 현황 보기
     this.el.querySelectorAll('.sch-cal__cell').forEach(cell => {
       cell.addEventListener('click', () => {
         const dateStr = cell.dataset.date
-        if (dateStr < this._today) return
-
-        if (this._selected.has(dateStr)) {
-          this._selected.delete(dateStr)
-        } else {
-          this._selected.add(dateStr)
-        }
-        this._dirty = true
-        this._saveCachedDates()
-        this._detailDate = dateStr
+        this._detailDate = this._detailDate === dateStr ? null : dateStr
         this._render()
       })
     })
@@ -282,15 +319,24 @@ export class ScheduleCalendar {
     // 이름 입력
     const nameInput = this.el.querySelector('[data-action="name"]')
     nameInput?.addEventListener('input', (e) => {
+      const hadName = this._name.trim().length > 0
       this._name = e.target.value
+      const hasName = this._name.trim().length > 0
+      // 이름 유무가 바뀔 때만 리렌더 (버튼 표시/숨김)
+      if (hadName !== hasName) this._render()
     })
     nameInput?.addEventListener('blur', () => {
       if (this._name.trim()) localStorage.setItem(NAME_KEY, this._name.trim())
     })
 
-    // 등록 버튼
-    this.el.querySelector('[data-action="register"]')?.addEventListener('click', () => {
-      this._handleRegister()
+    // 참여 가능 버튼
+    this.el.querySelector('[data-action="join"]')?.addEventListener('click', () => {
+      this._handleToggle(true)
+    })
+
+    // 참여 취소 버튼
+    this.el.querySelector('[data-action="leave"]')?.addEventListener('click', () => {
+      this._handleToggle(false)
     })
 
     // 상세 닫기
@@ -307,6 +353,15 @@ export class ScheduleCalendar {
 
   _escHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+
+  _showToast(msg) {
+    this._toast = msg
+    this._render()
+    setTimeout(() => {
+      this._toast = null
+      this._render()
+    }, 2200)
   }
 
   /* ── 스타일 ── */
@@ -389,11 +444,6 @@ export class ScheduleCalendar {
 
       .sch-cal__cell:active {
         transform: scale(0.95);
-      }
-
-      .sch-cal__cell--past {
-        opacity: 0.35;
-        cursor: default;
       }
 
       .sch-cal__cell--past:active {
@@ -524,9 +574,7 @@ export class ScheduleCalendar {
         color: var(--text4);
         flex: 1;
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        line-height: 1.4;
       }
 
       .sch-cal__submit {
@@ -580,6 +628,123 @@ export class ScheduleCalendar {
         cursor: pointer;
         margin-left: 8px;
         font-family: 'Noto Sans KR', sans-serif;
+      }
+
+      /* 토스트 */
+      .sch-cal__toast {
+        background: var(--tl-dark);
+        color: var(--tl-light);
+        text-align: center;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+        animation: sch-cal-toast-in 0.25s ease-out;
+      }
+
+      @keyframes sch-cal-toast-in {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* 로딩 오버레이 */
+      .sch-cal__grid--loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.4;
+      }
+
+      .sch-cal__grid--loading::after {
+        content: '불러오는 중...';
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: var(--text3);
+        background: transparent;
+      }
+
+      /* 지난 날짜 커서 */
+      .sch-cal__cell--past {
+        cursor: pointer;
+        opacity: 0.35;
+      }
+
+      .sch-cal__cell--past.sch-cal__cell--has-entries {
+        opacity: 0.5;
+      }
+
+      /* 선택된 날짜 (상세 보기 중) */
+      .sch-cal__cell--viewing {
+        outline: 2px solid var(--gold);
+        outline-offset: -2px;
+      }
+
+      /* 힌트 */
+      .sch-cal__hint {
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--text4);
+        padding: 8px 0;
+      }
+
+      .sch-cal__detail-hint {
+        font-size: 0.72rem;
+        color: var(--text4);
+        margin-top: 8px;
+      }
+
+      /* 참여/취소 액션 */
+      .sch-cal__action-row {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .sch-cal__action-btn {
+        flex: 1;
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 0.82rem;
+        font-family: 'Noto Sans KR', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s, opacity 0.15s;
+        border: none;
+      }
+
+      .sch-cal__action-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .sch-cal__action-btn--join {
+        background: var(--tl-dark);
+        color: var(--tl-light);
+        border: 1px solid var(--tl-base);
+      }
+
+      .sch-cal__action-btn--join:active:not(:disabled) {
+        background: var(--tl-base);
+      }
+
+      .sch-cal__action-btn--cancel {
+        background: var(--surface2);
+        color: var(--rd-light);
+        border: 1px solid var(--rd-light);
+      }
+
+      .sch-cal__action-btn--cancel:active:not(:disabled) {
+        background: rgba(110, 27, 31, 0.2);
+      }
+
+      /* 본인 칩 강조 */
+      .sch-cal__name-chip--me {
+        background: var(--tl-dark);
+        color: var(--tl-light);
       }
     `
     document.head.appendChild(style)

@@ -252,7 +252,20 @@ export class ScheduleCalendar {
       // 저장 완료 후 서버 데이터로 조용히 동기화
       const start = this._weekDates[0]
       const end = this._weekDates[13]
-      this._entries = await fetchSchedule(start, end)
+      const serverEntries = await fetchSchedule(start, end)
+      // 서버가 role을 지원하면 서버 데이터 사용, 아니면 로컬 유지
+      const hasRoles = serverEntries.some(e => e.role && e.role !== 'player')
+      if (hasRoles || serverEntries.length === 0) {
+        this._entries = serverEntries
+      } else {
+        // 구 GAS: 타인 데이터만 서버에서, 본인 role은 로컬 유지
+        this._entries = serverEntries.map(e => {
+          if (e.name === name && this._selected.has(e.date)) {
+            return { ...e, role: this._selected.get(e.date) }
+          }
+          return e
+        })
+      }
       this._showToast('저장 완료')
     } catch (e) {
       this._showToast('저장 실패 — 재시도합니다')

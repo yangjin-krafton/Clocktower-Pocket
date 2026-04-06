@@ -33,7 +33,15 @@ export async function registerDates({ name, entries, rangeStart, rangeEnd }) {
   const res = await fetch(PARTY_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'register', name, entries, rangeStart, rangeEnd }),
+    body: JSON.stringify({
+      action: 'register',
+      name,
+      entries,                                        // 신규 GAS: [{date, role}]
+      dates: (entries || []).map(e => e.date),         // 구형 GAS 호환: [date]
+      role: (entries || [])[0]?.role || 'player',      // 구형 GAS 호환: 단일 역할
+      rangeStart,
+      rangeEnd,
+    }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()

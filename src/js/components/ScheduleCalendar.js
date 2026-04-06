@@ -6,12 +6,13 @@ import { fetchSchedule, registerDates } from '../partyApi.js'
 
 const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일']
 const NAME_KEY  = 'ctp_party_name'
+const ROLE_KEY  = 'ctp_party_role'
 const DATES_KEY = 'ctp_party_dates'
 
 export class ScheduleCalendar {
   constructor() {
     this.el = null
-    this._entries = []          // {name, date}[]
+    this._entries = []          // {name, date, role}[]
     this._selected = new Set()  // 선택된 날짜 Set<'YYYY-MM-DD'>
     this._loading = false
     this._error = null
@@ -19,6 +20,7 @@ export class ScheduleCalendar {
     this._weekDates = []        // 2주치 날짜 배열
     this._detailDate = null     // 상세보기 중인 날짜
     this._name = localStorage.getItem(NAME_KEY) || ''
+    this._role = localStorage.getItem(ROLE_KEY) || 'player'  // 'host' | 'player'
     this._dirty = false         // 선택이 변경되었는지 추적
     this._toast = null           // 토스트 메시지
     this._computeWeekDates()
@@ -116,13 +118,21 @@ export class ScheduleCalendar {
     const myName = this._name.trim()
     if (!myName) return
     const serverDates = new Set()
+    let serverRole = null
     for (const e of this._entries) {
-      if (e.name === myName) serverDates.add(e.date)
+      if (e.name === myName) {
+        serverDates.add(e.date)
+        if (!serverRole) serverRole = e.role || 'player'
+      }
     }
     // 서버 데이터가 있으면 그걸로 대체 (최신 상태)
     if (serverDates.size > 0) {
       this._selected = serverDates
       this._saveCachedDates()
+      if (serverRole) {
+        this._role = serverRole
+        localStorage.setItem(ROLE_KEY, serverRole)
+      }
     }
   }
 
@@ -140,6 +150,23 @@ export class ScheduleCalendar {
       if (e.date === dateStr) names.add(e.name)
     }
     return [...names]
+  }
+
+  /** 해당 날짜에 호스트가 있는지 확인 */
+  _hasHostByDate(dateStr) {
+    for (const e of this._entries) {
+      if (e.date === dateStr && e.role === 'host') return true
+    }
+    return false
+  }
+
+  /** 해당 날짜의 참가자 목록을 role 정보 포함하여 반환 */
+  _getEntriesByDate(dateStr) {
+    const map = new Map()
+    for (const e of this._entries) {
+      if (e.date === dateStr) map.set(e.name, e.role || 'player')
+    }
+    return map // Map<name, role>
   }
 
   /* ── 등록 ── */
@@ -167,10 +194,12 @@ export class ScheduleCalendar {
       await registerDates({
         name,
         dates: [...this._selected].sort(),
+        role: this._role,
         rangeStart: this._weekDates[0],
         rangeEnd: this._weekDates[13],
       })
       localStorage.setItem(NAME_KEY, name)
+      localStorage.setItem(ROLE_KEY, this._role)
       this._saveCachedDates()
       this._showToast(join ? '참여 등록!' : '참여 취소!')
       await this._fetchData()
@@ -238,7 +267,10 @@ export class ScheduleCalendar {
         if (count > 0) cls += ' sch-cal__cell--has-entries'
         if (dateStr === this._detailDate) cls += ' sch-cal__cell--viewing'
 
+        const hasHost = !this._loading && this._hasHostByDate(dateStr)
+
         html += `<div class="${cls}" data-date="${dateStr}">
+          ${hasHost ? '<span class="sch-cal__cell-host">👑</span>' : ''}
           <span class="sch-cal__cell-day">${this._dayNum(dateStr)}</span>
           ${!this._loading && count > 0 ? `<span class="sch-cal__cell-count">${count}명</span>` : ''}
         </div>`
@@ -255,7 +287,7 @@ export class ScheduleCalendar {
 
     // 날짜 상세 + 참여/취소
     if (this._detailDate) {
-      const names = this._getNamesByDate(this._detailDate)
+      const entries = this._getEntriesByDate(this._detailDate)
       const isPastDate = this._detailDate < this._today
       const myName = this._name.trim()
       const isRegistered = this._selected.has(this._detailDate)
@@ -265,18 +297,28 @@ export class ScheduleCalendar {
           <span>${this._monthDay(this._detailDate)} 참가 현황</span>
           <button class="sch-cal__detail-close" data-action="close-detail">✕</button>
         </div>
-        ${names.length > 0
-          ? `<div class="sch-cal__detail-names">${names.map(n => `<span class="sch-cal__name-chip${myName && n === myName ? ' sch-cal__name-chip--me' : ''}">${this._escHtml(n)}</span>`).join('')}</div>`
+        ${entries.size > 0
+          ? `<div class="sch-cal__detail-names">${[...entries].map(([n, r]) => {
+              const me = myName && n === myName ? ' sch-cal__name-chip--me' : ''
+              const icon = r === 'host' ? '👑 ' : ''
+              return `<span class="sch-cal__name-chip${me}">${icon}${this._escHtml(n)}</span>`
+            }).join('')}</div>`
           : '<div class="sch-cal__detail-empty">아직 등록된 참가자가 없습니다</div>'}
         ${!isPastDate ? (myName
-          ? `<div class="sch-cal__action-row">
-              ${isRegistered
-                ? `<button class="sch-cal__action-btn sch-cal__action-btn--cancel" data-action="leave" ${this._submitting ? 'disabled' : ''}>
-                    ${this._submitting ? '처리 중...' : '참여 취소'}
-                  </button>`
-                : `<button class="sch-cal__action-btn sch-cal__action-btn--join" data-action="join" ${this._submitting ? 'disabled' : ''}>
-                    ${this._submitting ? '처리 중...' : '참여 가능'}
-                  </button>`}
+          ? `<div class="sch-cal__action-area">
+              <div class="sch-cal__role-toggle">
+                <button class="sch-cal__role-btn${this._role === 'host' ? ' sch-cal__role-btn--active' : ''}" data-role="host">👑 호스트</button>
+                <button class="sch-cal__role-btn${this._role === 'player' ? ' sch-cal__role-btn--active' : ''}" data-role="player">🎮 참가자</button>
+              </div>
+              <div class="sch-cal__action-row">
+                ${isRegistered
+                  ? `<button class="sch-cal__action-btn sch-cal__action-btn--cancel" data-action="leave" ${this._submitting ? 'disabled' : ''}>
+                      ${this._submitting ? '처리 중...' : '참여 취소'}
+                    </button>`
+                  : `<button class="sch-cal__action-btn sch-cal__action-btn--join" data-action="join" ${this._submitting ? 'disabled' : ''}>
+                      ${this._submitting ? '처리 중...' : '참여 가능'}
+                    </button>`}
+              </div>
             </div>`
           : '<div class="sch-cal__detail-hint">이름을 입력하면 참여할 수 있습니다</div>')
         : ''}`
@@ -327,6 +369,15 @@ export class ScheduleCalendar {
     })
     nameInput?.addEventListener('blur', () => {
       if (this._name.trim()) localStorage.setItem(NAME_KEY, this._name.trim())
+    })
+
+    // 역할 선택
+    this.el.querySelectorAll('.sch-cal__role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._role = btn.dataset.role
+        localStorage.setItem(ROLE_KEY, this._role)
+        this._render()
+      })
     })
 
     // 참여 가능 버튼
@@ -427,6 +478,7 @@ export class ScheduleCalendar {
 
       /* 날짜 셀 */
       .sch-cal__cell {
+        position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -697,9 +749,52 @@ export class ScheduleCalendar {
         margin-top: 8px;
       }
 
+      /* 호스트 뱃지 (캘린더 셀) */
+      .sch-cal__cell-host {
+        font-size: 0.55rem;
+        line-height: 1;
+        position: absolute;
+        top: 2px;
+        right: 2px;
+      }
+
+      /* 역할 선택 토글 */
+      .sch-cal__action-area {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sch-cal__role-toggle {
+        display: flex;
+        gap: 4px;
+        background: var(--surface);
+        border-radius: var(--radius-sm);
+        padding: 2px;
+        border: 1px solid var(--lead2);
+      }
+
+      .sch-cal__role-btn {
+        flex: 1;
+        padding: 5px 8px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text3);
+        font-size: 0.75rem;
+        font-family: 'Noto Sans KR', sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .sch-cal__role-btn--active {
+        background: var(--tl-dark);
+        color: var(--tl-light);
+      }
+
       /* 참여/취소 액션 */
       .sch-cal__action-row {
-        margin-top: 10px;
         display: flex;
         gap: 8px;
       }

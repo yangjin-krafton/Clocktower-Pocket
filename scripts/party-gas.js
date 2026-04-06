@@ -4,7 +4,7 @@
  * 사용법:
  * 1. Google Sheets에서 [확장 프로그램] → [Apps Script] 열기
  * 2. 이 코드를 붙여넣기
- * 3. 시트에 "Schedule" 이름의 시트 생성 (헤더: 이름 | 날짜 | 등록시간)
+ * 3. 시트에 "Schedule" 이름의 시트 생성 (헤더: 이름 | 날짜 | 등록시간 | 역할)
  * 4. [배포] → [새 배포] → 유형: 웹 앱
  *    - 실행 계정: 본인
  *    - 액세스 권한: 모든 사용자
@@ -48,7 +48,8 @@ function listSchedule(startDate, endDate) {
     if (startDate && date < startDate) continue;
     if (endDate && date > endDate) continue;
 
-    entries.push({ name: name, date: date });
+    var role = rows[i][3] || 'player';
+    entries.push({ name: name, date: date, role: role });
   }
 
   return jsonResponse({ entries: entries });
@@ -64,11 +65,12 @@ function registerDates(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Schedule');
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Schedule');
-    sheet.appendRow(['이름', '날짜', '등록시간']);
+    sheet.appendRow(['이름', '날짜', '등록시간', '역할']);
   }
 
   var name = (data.name || '').trim();
   var dates = data.dates || [];
+  var role = data.role || 'player';
   var rangeStart = data.rangeStart || '';
   var rangeEnd = data.rangeEnd || '';
   var now = new Date().toISOString();
@@ -94,7 +96,7 @@ function registerDates(data) {
 
   // 새 등록 추가
   for (var k = 0; k < dates.length; k++) {
-    sheet.appendRow([name, dates[k], now]);
+    sheet.appendRow([name, dates[k], now, role]);
   }
 
   return jsonResponse({ success: true, count: dates.length });

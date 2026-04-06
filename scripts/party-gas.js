@@ -12,6 +12,7 @@
  */
 
 function doGet(e) {
+  if (!e || !e.parameter) return jsonResponse({ error: 'no parameters' });
   var action = e.parameter.action;
 
   if (action === 'list') {
@@ -22,6 +23,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  if (!e || !e.postData) return jsonResponse({ error: 'no body' });
   var data = JSON.parse(e.postData.contents);
 
   if (data.action === 'register') {
@@ -69,11 +71,17 @@ function registerDates(data) {
   }
 
   var name = (data.name || '').trim();
-  var dates = data.dates || [];
-  var role = data.role || 'player';
+  var entries = data.entries || [];       // [{date, role}] — 신규 형식
+  var dates = data.dates || [];          // [date] — 구형 호환
+  var globalRole = data.role || 'player';
   var rangeStart = data.rangeStart || '';
   var rangeEnd = data.rangeEnd || '';
   var now = new Date().toISOString();
+
+  // 구형 dates 배열 → entries 형식으로 변환
+  if (entries.length === 0 && dates.length > 0) {
+    entries = dates.map(function(d) { return { date: d, role: globalRole }; });
+  }
 
   if (!name) {
     return jsonResponse({ success: false, error: '이름을 입력해주세요' });
@@ -94,12 +102,12 @@ function registerDates(data) {
     sheet.deleteRow(rowsToDelete[j]);
   }
 
-  // 새 등록 추가
-  for (var k = 0; k < dates.length; k++) {
-    sheet.appendRow([name, dates[k], now, role]);
+  // 새 등록 추가 (날짜별 역할)
+  for (var k = 0; k < entries.length; k++) {
+    sheet.appendRow([name, entries[k].date, now, entries[k].role || 'player']);
   }
 
-  return jsonResponse({ success: true, count: dates.length });
+  return jsonResponse({ success: true, count: entries.length });
 }
 
 /**

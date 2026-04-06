@@ -25,15 +25,15 @@ export async function fetchSchedule(startDate, endDate) {
  * 일정 등록 (이름 + 날짜 배열)
  * rangeStart/rangeEnd: 해당 범위 내 기존 등록을 모두 삭제 후 재등록
  * dates가 빈 배열이면 해당 범위 내 본인 등록 전체 삭제
- * @param {{name:string, dates:string[], role:string, rangeStart:string, rangeEnd:string}} params
+ * @param {{name:string, entries:Array<{date:string, role:string}>, rangeStart:string, rangeEnd:string}} params
  * @returns {Promise<{success:boolean}>}
  */
-export async function registerDates({ name, dates, role, rangeStart, rangeEnd }) {
+export async function registerDates({ name, entries, rangeStart, rangeEnd }) {
   if (!PARTY_API_URL) throw new Error('API URL이 설정되지 않았습니다')
   const res = await fetch(PARTY_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'register', name, dates, role: role || 'player', rangeStart, rangeEnd }),
+    body: JSON.stringify({ action: 'register', name, entries, rangeStart, rangeEnd }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()

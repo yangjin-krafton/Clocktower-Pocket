@@ -6,22 +6,20 @@ import { fetchSchedule, registerDates } from '../partyApi.js'
 
 const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일']
 const NAME_KEY  = 'ctp_party_name'
-const ROLE_KEY  = 'ctp_party_role'
 const DATES_KEY = 'ctp_party_dates'
 
 export class ScheduleCalendar {
   constructor() {
     this.el = null
     this._entries = []          // {name, date, role}[]
-    this._selected = new Set()  // 선택된 날짜 Set<'YYYY-MM-DD'>
+    this._selected = new Map()  // 등록된 날짜 Map<'YYYY-MM-DD', 'host'|'player'>
     this._loading = false
     this._error = null
-    this._submitting = false
+    this._saving = false        // 백그라운드 저장 중
+    this._saveTimer = null      // 디바운스 타이머
     this._weekDates = []        // 2주치 날짜 배열
     this._detailDate = null     // 상세보기 중인 날짜
     this._name = localStorage.getItem(NAME_KEY) || ''
-    this._role = localStorage.getItem(ROLE_KEY) || 'player'  // 'host' | 'player'
-    this._dirty = false         // 선택이 변경되었는지 추적
     this._toast = null           // 토스트 메시지
     this._computeWeekDates()
     this._loadCachedDates()
@@ -37,6 +35,13 @@ export class ScheduleCalendar {
   }
 
   unmount() {
+    // 보류 중인 저장이 있으면 즉시 실행
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer)
+      this._saveTimer = null
+      const name = this._name.trim()
+      if (name) this._doSave(name)
+    }
     this.el?.remove()
   }
 
@@ -81,15 +86,26 @@ export class ScheduleCalendar {
     try {
       const raw = localStorage.getItem(DATES_KEY)
       if (raw) {
-        const dates = JSON.parse(raw)
+        const parsed = JSON.parse(raw)
         const weekSet = new Set(this._weekDates)
-        dates.forEach(d => { if (weekSet.has(d)) this._selected.add(d) })
+        // 신규 형식: [[date, role], ...] 또는 구형 [date, ...]
+        if (Array.isArray(parsed)) {
+          parsed.forEach(item => {
+            if (Array.isArray(item)) {
+              const [d, r] = item
+              if (weekSet.has(d)) this._selected.set(d, r || 'player')
+            } else if (weekSet.has(item)) {
+              this._selected.set(item, 'player')
+            }
+          })
+        }
       }
     } catch {}
   }
 
   _saveCachedDates() {
-    localStorage.setItem(DATES_KEY, JSON.stringify([...this._selected].sort()))
+    const arr = [...this._selected.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+    localStorage.setItem(DATES_KEY, JSON.stringify(arr))
   }
 
   /* ── 데이터 ── */
@@ -109,7 +125,6 @@ export class ScheduleCalendar {
       this._entries = []
     }
     this._loading = false
-    this._dirty = false
     this._render()
   }
 
@@ -117,22 +132,14 @@ export class ScheduleCalendar {
   _syncMyDatesFromServer() {
     const myName = this._name.trim()
     if (!myName) return
-    const serverDates = new Set()
-    let serverRole = null
+    const serverMap = new Map()
     for (const e of this._entries) {
-      if (e.name === myName) {
-        serverDates.add(e.date)
-        if (!serverRole) serverRole = e.role || 'player'
-      }
+      if (e.name === myName) serverMap.set(e.date, e.role || 'player')
     }
     // 서버 데이터가 있으면 그걸로 대체 (최신 상태)
-    if (serverDates.size > 0) {
-      this._selected = serverDates
+    if (serverMap.size > 0) {
+      this._selected = serverMap
       this._saveCachedDates()
-      if (serverRole) {
-        this._role = serverRole
-        localStorage.setItem(ROLE_KEY, serverRole)
-      }
     }
   }
 
@@ -171,8 +178,8 @@ export class ScheduleCalendar {
 
   /* ── 등록 ── */
 
-  /** @param {boolean} join true=참여, false=취소 */
-  async _handleToggle(join) {
+  /** @param {'host'|'player'|'cancel'} action — 즉시 로컬 반영, 서버는 디바운스 */
+  _handleAction(action) {
     const name = this._name.trim()
     if (!name || !this._detailDate) return
 
@@ -182,34 +189,77 @@ export class ScheduleCalendar {
       if (!confirm(`이름이 "${prevName}" → "${name}"(으)로 변경됩니다.\n기존 이름의 등록은 서버에 남아있습니다. 계속할까요?`)) return
     }
 
-    if (join) {
-      this._selected.add(this._detailDate)
-    } else {
+    // 이미 같은 상태면 무시
+    const curRole = this._selected.get(this._detailDate)
+    if (action !== 'cancel' && curRole === action) return
+
+    // ① 로컬 즉시 반영
+    if (action === 'cancel') {
       this._selected.delete(this._detailDate)
+    } else {
+      this._selected.set(this._detailDate, action)
     }
 
-    this._submitting = true
+    // 로컬 entries도 낙관적으로 갱신 (UI에 바로 반영)
+    this._applyOptimistic(name, this._detailDate, action)
+
+    localStorage.setItem(NAME_KEY, name)
+    this._saveCachedDates()
+    this._render()
+
+    // ② 서버 저장은 디바운스 (마지막 상태만 전송)
+    this._scheduleSave(name)
+  }
+
+  /** 로컬 entries 배열을 낙관적으로 갱신 */
+  _applyOptimistic(name, dateStr, action) {
+    // 해당 name+date 제거
+    this._entries = this._entries.filter(e => !(e.name === name && e.date === dateStr))
+    // cancel이 아니면 새로 추가
+    if (action !== 'cancel') {
+      this._entries.push({ name, date: dateStr, role: action })
+    }
+  }
+
+  /** 디바운스: 마지막 조작 후 800ms 뒤 서버 저장 */
+  _scheduleSave(name) {
+    clearTimeout(this._saveTimer)
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null
+      this._doSave(name)
+    }, 800)
+  }
+
+  /** 백그라운드 서버 저장 */
+  async _doSave(name) {
+    if (this._saving) {
+      // 이미 저장 중이면 완료 후 재시도
+      this._scheduleSave(name)
+      return
+    }
+    this._saving = true
     this._render()
     try {
+      const entries = [...this._selected.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([date, role]) => ({ date, role }))
       await registerDates({
         name,
-        dates: [...this._selected].sort(),
-        role: this._role,
+        entries,
         rangeStart: this._weekDates[0],
         rangeEnd: this._weekDates[13],
       })
-      localStorage.setItem(NAME_KEY, name)
-      localStorage.setItem(ROLE_KEY, this._role)
-      this._saveCachedDates()
-      this._showToast(join ? '참여 등록!' : '참여 취소!')
-      await this._fetchData()
+      // 저장 완료 후 서버 데이터로 조용히 동기화
+      const start = this._weekDates[0]
+      const end = this._weekDates[13]
+      this._entries = await fetchSchedule(start, end)
+      this._showToast('저장 완료')
     } catch (e) {
-      // 실패 시 되돌리기
-      if (join) this._selected.delete(this._detailDate)
-      else this._selected.add(this._detailDate)
-      alert('처리 실패: ' + e.message)
+      this._showToast('저장 실패 — 재시도합니다')
+      // 1초 후 재시도
+      setTimeout(() => this._scheduleSave(name), 1000)
     }
-    this._submitting = false
+    this._saving = false
     this._render()
   }
 
@@ -235,6 +285,7 @@ export class ScheduleCalendar {
 
     html += `<div class="sch-cal__header">
       <span class="sch-cal__title">📅 일정 조율</span>
+      ${this._saving || this._saveTimer ? '<span class="sch-cal__saving">저장 중…</span>' : ''}
     </div>`
 
     // 요일 헤더
@@ -291,6 +342,7 @@ export class ScheduleCalendar {
       const isPastDate = this._detailDate < this._today
       const myName = this._name.trim()
       const isRegistered = this._selected.has(this._detailDate)
+      const myRole = this._selected.get(this._detailDate) || null
 
       html += `<div class="sch-cal__detail">
         <div class="sch-cal__detail-header">
@@ -305,20 +357,19 @@ export class ScheduleCalendar {
             }).join('')}</div>`
           : '<div class="sch-cal__detail-empty">아직 등록된 참가자가 없습니다</div>'}
         ${!isPastDate ? (myName
-          ? `<div class="sch-cal__action-area">
-              <div class="sch-cal__role-toggle">
-                <button class="sch-cal__role-btn${this._role === 'host' ? ' sch-cal__role-btn--active' : ''}" data-role="host">👑 호스트</button>
-                <button class="sch-cal__role-btn${this._role === 'player' ? ' sch-cal__role-btn--active' : ''}" data-role="player">🎮 참가자</button>
-              </div>
-              <div class="sch-cal__action-row">
-                ${isRegistered
-                  ? `<button class="sch-cal__action-btn sch-cal__action-btn--cancel" data-action="leave" ${this._submitting ? 'disabled' : ''}>
-                      ${this._submitting ? '처리 중...' : '참여 취소'}
-                    </button>`
-                  : `<button class="sch-cal__action-btn sch-cal__action-btn--join" data-action="join" ${this._submitting ? 'disabled' : ''}>
-                      ${this._submitting ? '처리 중...' : '참여 가능'}
-                    </button>`}
-              </div>
+          ? `<div class="sch-cal__action-row">
+              <button class="sch-cal__action-btn sch-cal__action-btn--host${myRole === 'host' ? ' sch-cal__action-btn--active' : ''}"
+                      data-action="host">
+                👑 호스트
+              </button>
+              <button class="sch-cal__action-btn sch-cal__action-btn--player${myRole === 'player' ? ' sch-cal__action-btn--active' : ''}"
+                      data-action="player">
+                🎮 참가자
+              </button>
+              ${isRegistered ? `<button class="sch-cal__action-btn sch-cal__action-btn--cancel"
+                      data-action="cancel">
+                취소
+              </button>` : ''}
             </div>`
           : '<div class="sch-cal__detail-hint">이름을 입력하면 참여할 수 있습니다</div>')
         : ''}`
@@ -371,23 +422,11 @@ export class ScheduleCalendar {
       if (this._name.trim()) localStorage.setItem(NAME_KEY, this._name.trim())
     })
 
-    // 역할 선택
-    this.el.querySelectorAll('.sch-cal__role-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this._role = btn.dataset.role
-        localStorage.setItem(ROLE_KEY, this._role)
-        this._render()
+    // 호스트 / 참가자 / 취소 버튼
+    ;['host', 'player', 'cancel'].forEach(action => {
+      this.el.querySelector(`[data-action="${action}"]`)?.addEventListener('click', () => {
+        this._handleAction(action)
       })
-    })
-
-    // 참여 가능 버튼
-    this.el.querySelector('[data-action="join"]')?.addEventListener('click', () => {
-      this._handleToggle(true)
-    })
-
-    // 참여 취소 버튼
-    this.el.querySelector('[data-action="leave"]')?.addEventListener('click', () => {
-      this._handleToggle(false)
     })
 
     // 상세 닫기
@@ -442,6 +481,17 @@ export class ScheduleCalendar {
         font-size: 1.05rem;
         font-weight: 700;
         color: var(--text);
+      }
+
+      .sch-cal__saving {
+        font-size: 0.68rem;
+        color: var(--text4);
+        animation: sch-cal-pulse 1.2s ease-in-out infinite;
+      }
+
+      @keyframes sch-cal-pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
       }
 
       /* 그리드 */
@@ -758,45 +808,11 @@ export class ScheduleCalendar {
         right: 2px;
       }
 
-      /* 역할 선택 토글 */
-      .sch-cal__action-area {
+      /* 참여 액션 버튼 행 */
+      .sch-cal__action-row {
         margin-top: 10px;
         display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .sch-cal__role-toggle {
-        display: flex;
-        gap: 4px;
-        background: var(--surface);
-        border-radius: var(--radius-sm);
-        padding: 2px;
-        border: 1px solid var(--lead2);
-      }
-
-      .sch-cal__role-btn {
-        flex: 1;
-        padding: 5px 8px;
-        border: none;
-        border-radius: var(--radius-sm);
-        background: transparent;
-        color: var(--text3);
-        font-size: 0.75rem;
-        font-family: 'Noto Sans KR', sans-serif;
-        cursor: pointer;
-        transition: background 0.15s, color 0.15s;
-      }
-
-      .sch-cal__role-btn--active {
-        background: var(--tl-dark);
-        color: var(--tl-light);
-      }
-
-      /* 참여/취소 액션 */
-      .sch-cal__action-row {
-        display: flex;
-        gap: 8px;
+        gap: 6px;
       }
 
       .sch-cal__action-btn {
@@ -816,24 +832,46 @@ export class ScheduleCalendar {
         cursor: default;
       }
 
-      .sch-cal__action-btn--join {
-        background: var(--tl-dark);
-        color: var(--tl-light);
-        border: 1px solid var(--tl-base);
+      .sch-cal__action-btn--host {
+        background: var(--surface2);
+        color: var(--gold2);
+        border: 1px solid var(--gold);
       }
 
-      .sch-cal__action-btn--join:active:not(:disabled) {
-        background: var(--tl-base);
+      .sch-cal__action-btn--host:active:not(:disabled) {
+        background: rgba(212, 168, 40, 0.15);
+      }
+
+      .sch-cal__action-btn--host.sch-cal__action-btn--active {
+        background: var(--gold);
+        color: #1a1a1a;
+        border-color: var(--gold2);
+      }
+
+      .sch-cal__action-btn--player {
+        background: var(--surface2);
+        color: var(--bl-light);
+        border: 1px solid var(--bl-light);
+      }
+
+      .sch-cal__action-btn--player:active:not(:disabled) {
+        background: rgba(46, 74, 143, 0.15);
+      }
+
+      .sch-cal__action-btn--player.sch-cal__action-btn--active {
+        background: var(--bl-dark);
+        color: var(--bl-light);
+        border-color: var(--bl-light);
       }
 
       .sch-cal__action-btn--cancel {
         background: var(--surface2);
         color: var(--rd-light);
-        border: 1px solid var(--rd-light);
+        border: 1px solid var(--lead2);
       }
 
       .sch-cal__action-btn--cancel:active:not(:disabled) {
-        background: rgba(110, 27, 31, 0.2);
+        background: rgba(110, 27, 31, 0.15);
       }
 
       /* 본인 칩 강조 */

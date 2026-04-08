@@ -18,6 +18,22 @@
 import { calcSlotMetrics, ovalSlotPos } from '../utils/ovalLayout.js'
 import { createSeatOval, createSeatNumLabel, buildOvalSlots } from '../utils/SeatWheel.js'
 
+/** 능력 텍스트 핵심 용어 염색 */
+function highlightAbility(text) {
+  if (!text) return ''
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/(\d+명)/g, '<b style="color:var(--gold2);">$1</b>')
+    .replace(/(3표|음수)/g, '<b style="color:var(--gold2);">$1</b>')
+    .replace(/(마을 주민)/g, '<b style="color:var(--bl-light);">$1</b>')
+    .replace(/(아웃사이더)/g, '<b style="color:var(--tl-light);">$1</b>')
+    .replace(/(미니언)/g, '<b style="color:var(--rd-light);">$1</b>')
+    .replace(/(임프|악 플레이어)/g, '<b style="color:var(--rd-light);">$1</b>')
+    .replace(/(사망|처치|처형|즉사|즉시)/g, '<b style="color:var(--rd-light);">$1</b>')
+    .replace(/(보호|면역)/g, '<b style="color:var(--tl-light);">$1</b>')
+    .replace(/(투표 토큰|투표권|투표)/g, '<b style="color:var(--gold2);">$1</b>')
+}
+
 export function mountOvalSelectPanel(data) {
   const {
     title, roleIcon = '🎯', roleTeam, ability,
@@ -65,7 +81,7 @@ export function mountOvalSelectPanel(data) {
   if (ability) {
     const abilityEl = document.createElement('div')
     abilityEl.className = 'oval-sel__ability'
-    abilityEl.textContent = ability
+    abilityEl.innerHTML = highlightAbility(ability)
     titleWrap.appendChild(abilityEl)
   }
   titleWrap.appendChild(hintEl)

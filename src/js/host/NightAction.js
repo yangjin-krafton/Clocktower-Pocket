@@ -340,22 +340,29 @@ export class NightAction {
       engine:      this.engine,
       onBack:      () => { this._unmount = null },
       onConfirm: (ids) => {
-        const affected = actor.isPoisoned || actor.isDrunk
-        const value = affected
-          ? this._calcFalseValue(roleId, ids)
-          : this._calcValueFromSelectedSeats(roleId, ids)
-        this.engine.recordNightAction(roleId, actor.id, ids, String(value))
+        const warning = this._validateInfoSelection(roleId, ids)
+        const proceed = () => {
+          const affected = actor.isPoisoned || actor.isDrunk
+          const value = affected
+            ? this._calcFalseValue(roleId, ids)
+            : this._calcValueFromSelectedSeats(roleId, ids)
+          this.engine.recordNightAction(roleId, actor.id, ids, String(value))
 
-        // NightRevealNote 직전에 플레이어 테마 전환
-        ThemeManager.pushTemp('player')
-        this._unmount = this._trackOverlay(() => mountNightRevealNote({
-          roleIcon: role?.icon || '?',
-          roleName: role?.name || roleId,
-          roleTeam: role?.team || null,
-          message:  this._generateInfoMessage(roleId, value),
-          onBack:   () => { ThemeManager.popTemp(); this._showRoleInfoWithSeatSelect(roleId, actor) },
-          onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
-        }))
+          ThemeManager.pushTemp('player')
+          this._unmount = this._trackOverlay(() => mountNightRevealNote({
+            roleIcon: role?.icon || '?',
+            roleName: role?.name || roleId,
+            roleTeam: role?.team || null,
+            message:  this._generateInfoMessage(roleId, value),
+            onBack:   () => { ThemeManager.popTemp(); this._showRoleInfoWithSeatSelect(roleId, actor) },
+            onNext:   () => { ThemeManager.popTemp(); this._done(roleId) },
+          }))
+        }
+        if (warning) {
+          this._showSelectionWarning(warning, () => this._showRoleInfoWithSeatSelect(roleId, actor), proceed)
+        } else {
+          proceed()
+        }
       },
     }))
   }
@@ -632,5 +639,59 @@ export class NightAction {
     const others = this.engine.state.players.filter(p => p.id !== excludeId && p.status === 'alive')
     if (others.length === 0) return null
     return others[Math.floor(Math.random() * others.length)]
+  }
+
+  /** 정보 역할 선택 검증 — 잘못된 선택 시 경고 메시지 반환 */
+  _validateInfoSelection(roleId, ids) {
+    const selected = ids.map(id => this.engine.getPlayer(id)).filter(Boolean)
+    const TF_ROLES = ['washerwoman','librarian','investigator','chef','empath','fortuneteller',
+      'undertaker','monk','ravenkeeper','virgin','slayer','soldier','mayor']
+    const OUT_ROLES = ['butler','drunk','recluse','saint']
+    const MIN_ROLES = ['poisoner','spy','scarletwoman','baron']
+
+    switch (roleId) {
+      case 'washerwoman': {
+        if (!selected.some(p => TF_ROLES.includes(p.role)))
+          return '선택한 2명 중 마을 주민이 없습니다.\n세탁부는 마을 주민 1명을 포함해야 합니다.'
+        return null
+      }
+      case 'librarian': {
+        const hasOut = selected.some(p => OUT_ROLES.includes(p.role))
+        if (hasOut) return null
+        const outsidersExist = this.engine.state.players.some(p => OUT_ROLES.includes(p.role) && p.status === 'alive')
+        if (outsidersExist)
+          return '선택한 2명 중 아웃사이더가 없습니다.\n사서는 아웃사이더 1명을 포함해야 합니다.'
+        return null  // 아웃사이더가 게임에 없으면 "없음" 정보가 정상
+      }
+      case 'investigator': {
+        if (!selected.some(p => MIN_ROLES.includes(p.role)))
+          return '선택한 2명 중 미니언이 없습니다.\n조사관은 미니언 1명을 포함해야 합니다.'
+        return null
+      }
+      default: return null
+    }
+  }
+
+  /** 선택 검증 경고 팝업 */
+  _showSelectionWarning(message, onBack, onProceed) {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.textAlign = 'center'
+    box.innerHTML = `
+      <div style="font-size:1.5rem;margin-bottom:8px;">⚠️</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:0.92rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">선택 확인</div>
+      <div style="font-size:0.82rem;color:var(--text2);line-height:1.6;margin-bottom:18px;white-space:pre-line;">${message}</div>
+      <div class="btn-grid-2">
+        <button class="btn btn-primary" id="vw-back">← 다시 선택</button>
+        <button class="btn" id="vw-proceed">이대로 진행</button>
+      </div>
+    `
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
+
+    box.querySelector('#vw-back').addEventListener('click', () => { overlay.remove(); onBack() })
+    box.querySelector('#vw-proceed').addEventListener('click', () => { overlay.remove(); onProceed() })
   }
 }

@@ -127,17 +127,6 @@ if (!document.getElementById('player-app-style')) {
   background: rgba(122,111,183,0.25);
 }
 
-/* ── 여행자 메모 ── */
-.traveller-add-btn {
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-  padding: 6px 12px; border-radius: 8px;
-  background: rgba(122,111,183,0.15); border: 1.5px dashed rgba(122,111,183,0.5);
-  color: var(--pu-light); font-size: 0.72rem; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
-}
-.traveller-add-btn:hover {
-  background: rgba(122,111,183,0.25); border-color: var(--pu-base);
-}
   `
   document.head.appendChild(s)
 }

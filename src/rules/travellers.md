@@ -51,7 +51,7 @@
 매일 첫 번째 [처형 투표](day.md)가 끝난 뒤, 방금 투표한 사람 1명을 죽일 수 있습니다.
 
 ### ![](../asset/new/Icon_beggar.png) [거지 (Beggar)](beggar.md)
-[투표](day.md) 토큰이 있어야만 투표할 수 있으며, 죽은 플레이어에게 토큰을 받으면 그 진영을 압니다.
+[투표](day.md) 토큰이 있어야만 투표할 수 있으며, 죽은 플레이어에게 토큰을 받으면 그 플레이어의 진영을 알게 됩니다.
 
 ### ![](../asset/new/Icon_bureaucrat.png) [관료 (Bureaucrat)](bureaucrat.md)
 [밤](night.md)마다 1명을 골라, 다음 날 그 사람의 표를 3표로 만듭니다.

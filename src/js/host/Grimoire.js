@@ -41,6 +41,7 @@ export class Grimoire {
     onSeatRoleAssign,
     onDrunkAsChange,
     onAutoAssign,
+    onAddTraveller,
   }) {
     this.engine              = engine
     this.getLobbyConfig      = getLobbyConfig     || (() => ({ playerCount: 7, seatRoles: [], roomCode: null }))
@@ -53,6 +54,7 @@ export class Grimoire {
     this.onSeatRoleAssign    = onSeatRoleAssign   || null
     this.onDrunkAsChange     = onDrunkAsChange    || null
     this.onAutoAssign        = onAutoAssign       || null
+    this.onAddTraveller      = onAddTraveller     || null
     this.el                       = null
     this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
     this._playerSectionCollapsed  = false  // 게임 중 플레이어 섹션 접힘 상태
@@ -237,6 +239,14 @@ export class Grimoire {
       toNightBtn.addEventListener('click', () => this.onStartNight?.())
       btnGrid.appendChild(toNightBtn)
     }
+    if (this.onAddTraveller) {
+      const travBtn = document.createElement('button')
+      travBtn.className = 'btn btn-grid-full btn-traveller'
+      travBtn.textContent = '🧳 여행자 추가'
+      travBtn.addEventListener('click', () => this.onAddTraveller())
+      btnGrid.appendChild(travBtn)
+    }
+
     this.el.appendChild(btnGrid)
 
     if (this.engine.logs.length > 0) {

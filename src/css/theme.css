@@ -208,6 +208,11 @@ body {
   background: rgba(212,168,40,0.08);
   color: var(--gold2);
 }
+.btn-traveller {
+  border-color: rgba(122,111,183,0.5);
+  background: rgba(122,111,183,0.1);
+  color: var(--pu-light);
+}
 .btn-full { width: 100%; }
 .btn-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn-grid-full { grid-column: 1 / -1; }
@@ -253,6 +258,16 @@ body {
 .badge-minion  { background: rgba(140,48,48,0.2);    color: var(--rd-light);  border-color: rgba(140,48,48,0.45); }
 .badge-demon   { background: rgba(140,48,48,0.25);   color: var(--rd-light);  border-color: rgba(140,48,48,0.55); }
 .badge-traveller { background: rgba(144,128,204,0.18); color: var(--pu-light); border-color: rgba(144,128,204,0.45); }
+
+/* ── 여행자 추가 버튼 (공통) ── */
+.traveller-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(122,111,183,0.15); border: 1.5px dashed rgba(122,111,183,0.5);
+  color: var(--pu-light); font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.traveller-add-btn:hover { background: rgba(122,111,183,0.25); border-color: var(--pu-base); }
 .badge-good    { background: rgba(91,179,198,0.12);  color: var(--tl-light);  border-color: rgba(91,179,198,0.35); }
 .badge-evil    { background: rgba(140,48,48,0.18);   color: var(--rd-light);  border-color: rgba(140,48,48,0.4); }
 .badge-alive   { background: rgba(58,90,174,0.12);   color: var(--bl-light);  border-color: rgba(58,90,174,0.35); }

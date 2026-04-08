@@ -13,18 +13,20 @@ import { applySlotStateMarks }               from './SlotMark.js'
 
 // ── 팀별 테두리 색 ──────────────────────────────────────────
 export const TEAM_BORDER = {
-  townsfolk: 'rgba(46,74,143,0.65)',
-  outsider:  'rgba(91,179,198,0.65)',
-  minion:    'rgba(140,40,50,0.65)',
-  demon:     'rgba(160,30,40,0.9)',
+  townsfolk:  'rgba(46,74,143,0.65)',
+  outsider:   'rgba(91,179,198,0.65)',
+  minion:     'rgba(140,40,50,0.65)',
+  demon:      'rgba(160,30,40,0.9)',
+  traveller:  'rgba(122,111,183,0.7)',
 }
 
 // ── 팀별 텍스트 색 (역할 이름 레이블용) ────────────────────
 export const TEAM_NAME_COLOR = {
-  townsfolk: 'var(--bl-light)',
-  outsider:  'var(--tl-light)',
-  minion:    'var(--rd-light)',
-  demon:     'var(--rd-light)',
+  townsfolk:  'var(--bl-light)',
+  outsider:   'var(--tl-light)',
+  minion:     'var(--rd-light)',
+  demon:      'var(--rd-light)',
+  traveller:  'var(--pu-light)',
 }
 
 // ── 타원 컨테이너 ────────────────────────────────────────────

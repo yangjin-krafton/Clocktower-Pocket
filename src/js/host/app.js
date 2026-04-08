@@ -1138,12 +1138,11 @@ export class HostApp {
 
   _showSeatLayout() {
     const state = engine.state
-    if (!state || state.phase === 'lobby') {
-      this.container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state__icon">🪑</div>
-          <div>게임 시작 후 이용 가능합니다</div>
-        </div>`
+    const inGame = state && state.phase !== 'lobby'
+
+    // 로비에서는 여행자 관리만 표시
+    if (!inGame) {
+      this._showSeatLayoutLobby()
       return
     }
 
@@ -1223,6 +1222,95 @@ export class HostApp {
   // ─────────────────────────────────────
   // 여행자 메모 (로컬 전용)
   // ─────────────────────────────────────
+
+  _showSeatLayoutLobby() {
+    const el = document.createElement('div')
+    el.style.cssText = 'padding:20px 16px;'
+
+    const header = document.createElement('div')
+    header.style.cssText = 'text-align:center;margin-bottom:16px;'
+    header.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:8px;">🧳</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1.1rem;font-weight:700;color:var(--pu-light);">여행자 관리</div>
+      <div style="font-size:0.72rem;color:var(--text4);margin-top:4px;">게임 시작 전후 언제든 여행자를 추가할 수 있습니다</div>
+    `
+    el.appendChild(header)
+
+    const travellers = this._getHostTravellers()
+
+    if (travellers.length > 0) {
+      travellers.forEach((t, idx) => {
+        const role = ROLES_BY_ID[t.roleId]
+        const alive = (t.status || 'alive') === 'alive'
+        const alignment = t.alignment || 'good'
+        const alignColor = alignment === 'evil' ? 'var(--rd-light)' : 'var(--bl-light)'
+        const alignLabel = alignment === 'evil' ? '악' : '선'
+
+        const row = document.createElement('div')
+        row.style.cssText = `
+          display:flex;align-items:center;gap:12px;
+          padding:12px 14px;margin-bottom:8px;border-radius:10px;
+          border:1.5px solid ${alive ? 'rgba(122,111,183,0.3)' : 'var(--lead2)'};
+          background:${alive ? 'rgba(122,111,183,0.06)' : 'var(--surface2)'};
+          ${alive ? '' : 'opacity:0.5;'}
+        `
+
+        const iconDiv = document.createElement('div')
+        iconDiv.style.cssText = 'width:40px;height:40px;border-radius:50%;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;'
+        if (role?.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/new/Icon_${role.icon}`
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+          iconDiv.appendChild(img)
+        } else {
+          iconDiv.style.fontSize = '1.3rem'
+          iconDiv.textContent = role?.iconEmoji || '🧳'
+        }
+        row.appendChild(iconDiv)
+
+        const info = document.createElement('div')
+        info.style.cssText = 'flex:1;min-width:0;'
+        info.innerHTML = `
+          <div style="font-weight:700;font-size:0.85rem;color:var(--pu-light);">${role?.name || '여행자'}</div>
+          <div style="font-size:0.65rem;color:var(--text4);margin-top:2px;">
+            <span style="color:${alignColor};">${alignLabel}</span>
+            · ${t.afterSeat || '?'}번 뒤
+            ${!alive ? ' · <span style="color:var(--rd-light);">추방됨</span>' : ''}
+          </div>
+        `
+        row.appendChild(info)
+
+        if (alive) {
+          const delBtn = document.createElement('button')
+          delBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0;'
+          delBtn.textContent = '✕'
+          delBtn.addEventListener('click', () => {
+            const all = this._getHostTravellers()
+            all.splice(idx, 1)
+            this._saveHostTravellers(all)
+            this._switchTab('seats')
+          })
+          row.appendChild(delBtn)
+        }
+
+        el.appendChild(row)
+      })
+    } else {
+      const empty = document.createElement('div')
+      empty.style.cssText = 'text-align:center;padding:20px;color:var(--text4);font-size:0.82rem;'
+      empty.textContent = '등록된 여행자가 없습니다'
+      el.appendChild(empty)
+    }
+
+    const addBtn = document.createElement('button')
+    addBtn.className = 'btn btn-traveller btn-full'
+    addBtn.style.marginTop = '12px'
+    addBtn.textContent = '🧳 여행자 추가'
+    addBtn.addEventListener('click', () => this._showHostTravellerPicker())
+    el.appendChild(addBtn)
+
+    this.container.appendChild(el)
+  }
 
   _getHostTravellers() {
     if (!this._lastRoomCode) return []

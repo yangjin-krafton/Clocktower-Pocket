@@ -346,6 +346,16 @@ export class Grimoire {
 
     // ── 4) 구성 상태 + 시작 버튼 ───────────────────────────────
     this._renderLobbyFooter(total, seats)
+
+    // ── 5) 여행자 추가 바로가기 ──────────────────────────────
+    if (this.onAddTraveller) {
+      const travBtn = document.createElement('button')
+      travBtn.className = 'btn btn-traveller btn-full'
+      travBtn.style.marginTop = '8px'
+      travBtn.textContent = '🧳 여행자 추가'
+      travBtn.addEventListener('click', () => this.onAddTraveller())
+      this.el.appendChild(travBtn)
+    }
   }
 
   _renderSeatWheel(total, seats) {

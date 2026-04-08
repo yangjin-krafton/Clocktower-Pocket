@@ -20,6 +20,7 @@ import { GameSaveManager }                      from '../GameSaveManager.js'
 import { ThemeManager }                         from '../ThemeManager.js'
 import { calcOvalLayout, ovalSlotPos } from '../utils/ovalLayout.js'
 import { createSeatOval, createSeatNumLabel, buildOvalSlots } from '../utils/SeatWheel.js'
+import { mountOvalSelectPanel } from '../components/OvalSelectPanel.js'
 
 
 const DEFAULT_PLAYER_COUNT = 7
@@ -317,6 +318,7 @@ export class HostApp {
         this._grimoire?.refresh()
       },
       onAddTraveller: () => this._switchTab('seats'),
+      getTravellers: () => this._getHostTravellers(),
       onAutoAssign: () => {
         this.seatRoles = this._autoRoles(this.pendingPlayerCount)
         // 주정뱅이가 있으면 drunkAs 자동 선택 (게임에 없는 마을 주민 중 랜덤)
@@ -646,7 +648,7 @@ export class HostApp {
             this.nightAction.processCurrentStep()
           } else {
             this.nightAction = null
-            this._handleStartDay()
+            this._processTravellerNightSteps(() => this._handleStartDay())
           }
         },
       })
@@ -824,6 +826,8 @@ export class HostApp {
       onStartNight: () => this._handleStartNight(),
       onGameOver:   (winner, reason) => this._showVictory(winner, reason),
       onHistoryPush: (entry) => this._history.push(entry),
+      getTravellers: () => this._getHostTravellers(),
+      saveTravellers: (t) => this._saveHostTravellers(t),
     })
     dayFlow.mount(this.container)
     this.currentScreen = dayFlow
@@ -1230,6 +1234,79 @@ export class HostApp {
   _saveHostTravellers(travellers) {
     if (!this._lastRoomCode) return
     try { localStorage.setItem(`ctp_host_travellers_${this._lastRoomCode}`, JSON.stringify(travellers)) } catch {}
+  }
+
+  /**
+   * 엔진 밤 스텝 완료 후, 여행자 밤 능력 처리 (관료/도둑)
+   * 모두 완료되면 onDone() 호출
+   */
+  _processTravellerNightSteps(onDone) {
+    const travellers = this._getHostTravellers()
+
+    // 매 밤 nightTarget 리셋
+    travellers.forEach(t => { t.nightTarget = null })
+    this._saveHostTravellers(travellers)
+
+    // 살아있는 밤 능력 여행자 필터 (관료: firstNight + otherNights, 도둑: 같음)
+    const nightTravellers = travellers
+      .map((t, idx) => ({ ...t, _idx: idx }))
+      .filter(t =>
+        (t.status || 'alive') === 'alive' &&
+        (t.roleId === 'bureaucrat' || t.roleId === 'thief')
+      )
+
+    if (nightTravellers.length === 0) {
+      onDone()
+      return
+    }
+
+    let i = 0
+    const processNext = () => {
+      if (i >= nightTravellers.length) {
+        onDone()
+        return
+      }
+      const trav = nightTravellers[i]
+      const role = ROLES_BY_ID[trav.roleId]
+
+      const unmount = mountOvalSelectPanel({
+        title:      `${role.name} (여행자)`,
+        roleIcon:   role.icon || '?',
+        roleTeam:   'traveller',
+        ability:    role.ability,
+        players:    engine.state.players,
+        selfSeatId: null,
+        maxSelect:  1,
+        engine,
+        onBack: () => {
+          // 스킵 (선택 안 함)
+          unmount()
+          i++
+          processNext()
+        },
+        onConfirm: (ids) => {
+          unmount()
+          // 저장
+          const all = this._getHostTravellers()
+          all[trav._idx].nightTarget = ids[0] || null
+          this._saveHostTravellers(all)
+
+          // 히스토리 기록
+          const targetLabel = ids.length > 0 ? `→ ${ids[0]}번` : ''
+          this._history.push({
+            type: 'night-action', phase: 'night', round: engine.state.round,
+            roleId: trav.roleId,
+            target: ids,
+            label: `${role.name}(여행자) ${targetLabel}`,
+            snapshot: engine.serialize(),
+          })
+
+          i++
+          processNext()
+        },
+      })
+    }
+    processNext()
   }
 
   _showHostTravellerPicker() {

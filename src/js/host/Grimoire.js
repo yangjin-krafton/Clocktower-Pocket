@@ -42,6 +42,7 @@ export class Grimoire {
     onDrunkAsChange,
     onAutoAssign,
     onAddTraveller,
+    getTravellers,
   }) {
     this.engine              = engine
     this.getLobbyConfig      = getLobbyConfig     || (() => ({ playerCount: 7, seatRoles: [], roomCode: null }))
@@ -55,6 +56,7 @@ export class Grimoire {
     this.onDrunkAsChange     = onDrunkAsChange    || null
     this.onAutoAssign        = onAutoAssign       || null
     this.onAddTraveller      = onAddTraveller     || null
+    this.getTravellers       = getTravellers      || (() => [])
     this.el                       = null
     this._selectedSeat            = null   // 로비에서 선택된 자리 인덱스 (0-based)
     this._playerSectionCollapsed  = false  // 게임 중 플레이어 섹션 접힘 상태
@@ -185,6 +187,30 @@ export class Grimoire {
       codeRow.appendChild(codeCard)
       codeRow.appendChild(linkBtn)
       this.el.appendChild(codeRow)
+    }
+
+    // 여행자 투표 수정 알림 (낮에만 표시)
+    if (state.phase === 'day') {
+      const travellers = this.getTravellers()
+      const mods = travellers.filter(t =>
+        (t.status || 'alive') === 'alive' && t.nightTarget &&
+        (t.roleId === 'bureaucrat' || t.roleId === 'thief')
+      )
+      if (mods.length > 0) {
+        const modCard = document.createElement('div')
+        modCard.className = 'card'
+        modCard.style.cssText = 'border-color:rgba(122,111,183,0.4);'
+        modCard.innerHTML = '<div class="card-title" style="color:var(--pu-light);">📊 투표 수정</div>'
+        mods.forEach(t => {
+          const role = ROLES_BY_ID[t.roleId]
+          const effect = t.roleId === 'bureaucrat' ? '3표' : '음수'
+          const el = document.createElement('div')
+          el.style.cssText = 'padding:6px 0;font-size:0.82rem;color:var(--text2);'
+          el.innerHTML = `${role?.iconEmoji || '🧳'} <strong>${role?.name}</strong> → ${t.nightTarget}번 투표 ${effect}`
+          modCard.appendChild(el)
+        })
+        this.el.appendChild(modCard)
+      }
     }
 
     if (state.phase === 'night') {

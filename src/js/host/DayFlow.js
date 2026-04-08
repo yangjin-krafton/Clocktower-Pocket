@@ -4,6 +4,7 @@
  * 플레이어 선택 UI: OvalSelectPanel 과 동일한 gl-seat-oval / gl-seat-slot 재사용
  */
 import { renderPhaseHeader }  from '../components/PhaseHeader.js'
+import { ROLES_BY_ID }        from '../data/roles-tb.js'
 import { calcSlotMetrics, ovalSlotPos, drawOvalPieNumbers } from '../utils/ovalLayout.js'
 import {
   createSeatOval,
@@ -12,15 +13,19 @@ import {
 } from '../utils/SeatWheel.js'
 
 export class DayFlow {
-  constructor({ engine, onStartNight, onGameOver, onHistoryPush }) {
+  constructor({ engine, onStartNight, onGameOver, onHistoryPush, getTravellers, saveTravellers }) {
     this.engine           = engine
     this.onStartNight     = onStartNight
     this.onGameOver       = onGameOver
     this.onHistoryPush    = onHistoryPush || (() => {})
+    this.getTravellers    = getTravellers || (() => [])
+    this.saveTravellers   = saveTravellers || (() => {})
     this.el               = null
     this.executionTargetId = null
     this.slayerTargetId   = null
     this.virginNominatorId = null  // 처녀를 지목한 사람
+    this.gunslingerTargetId = null
+    this.exileTargetIdx     = null  // 추방 대상 여행자 인덱스
   }
 
   mount(container) {
@@ -217,6 +222,9 @@ export class DayFlow {
       this.el.appendChild(virginCard)
     }
 
+    // ─ 여행자 카드들 ─
+    this._renderTravellerCards(state)
+
     // ─ 처형 없이 밤으로 ─
     const endDayBtn = document.createElement('button')
     endDayBtn.className = 'btn btn-full mt-12'
@@ -263,6 +271,62 @@ export class DayFlow {
   }
 
   _execute(playerId) {
+    // 희생양 개입 체크
+    const travellers = this.getTravellers()
+    const scapegoat = travellers.find(t =>
+      t.roleId === 'scapegoat' && (t.status || 'alive') === 'alive'
+    )
+    if (scapegoat) {
+      this._showScapegoatConfirm(playerId, travellers, scapegoat)
+      return
+    }
+    this._doExecute(playerId)
+  }
+
+  _showScapegoatConfirm(playerId, travellers, scapegoat) {
+    const overlay = document.createElement('div')
+    overlay.className = 'popup-overlay'
+    const box = document.createElement('div')
+    box.className = 'popup-box'
+    box.style.textAlign = 'center'
+    box.innerHTML = `
+      <div style="font-size:2rem;margin-bottom:8px;">🐐</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--pu-light);margin-bottom:8px;">희생양 능력</div>
+      <div style="font-size:0.78rem;color:var(--text2);margin-bottom:16px;line-height:1.5;">
+        ${playerId}번 대신 희생양이 처형될 수 있습니다.<br>희생양이 대신 죽으면 이야기꾼이 투표권을 결정합니다.
+      </div>
+      <div class="btn-grid-2">
+        <button class="btn" id="sg-original">원래대로 ${playerId}번 처형</button>
+        <button class="btn btn-traveller" id="sg-substitute">🐐 희생양 대신 처형</button>
+      </div>
+    `
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
+
+    box.querySelector('#sg-original').addEventListener('click', () => {
+      overlay.remove()
+      this._doExecute(playerId)
+    })
+    box.querySelector('#sg-substitute').addEventListener('click', () => {
+      overlay.remove()
+      // 희생양 추방 처리
+      const idx = travellers.indexOf(scapegoat)
+      if (idx >= 0) {
+        travellers[idx].status = 'exiled'
+        this.saveTravellers(travellers)
+      }
+      this.onHistoryPush({
+        type: 'scapegoat', phase: 'day', round: this.engine.state.round,
+        target: [playerId],
+        label: `🐐 희생양이 ${playerId}번 대신 처형됨`,
+        snapshot: this.engine.serialize(),
+      })
+      this.executionTargetId = null
+      this._render()
+    })
+  }
+
+  _doExecute(playerId) {
     const result = this.engine.execute(playerId)
 
     this.onHistoryPush({
@@ -278,6 +342,141 @@ export class DayFlow {
       return
     }
     this.onStartNight && this.onStartNight()
+  }
+
+  // ─────────────────────────────────────
+  // 여행자 카드들
+  // ─────────────────────────────────────
+
+  _renderTravellerCards(state) {
+    const travellers = this.getTravellers()
+    if (!travellers || travellers.length === 0) return
+
+    // ── 투표 수정 알림 (관료/도둑 nightTarget) ──
+    const voteModifiers = travellers.filter(t =>
+      (t.status || 'alive') === 'alive' &&
+      t.nightTarget &&
+      (t.roleId === 'bureaucrat' || t.roleId === 'thief')
+    )
+    if (voteModifiers.length > 0) {
+      const modCard = document.createElement('div')
+      modCard.className = 'card'
+      modCard.innerHTML = '<div class="card-title">📊 투표 수정 (여행자)</div>'
+      voteModifiers.forEach(t => {
+        const role = ROLES_BY_ID[t.roleId]
+        const effect = t.roleId === 'bureaucrat' ? '3표로 계산' : '음수로 계산'
+        const el = document.createElement('div')
+        el.style.cssText = 'padding:8px 12px;font-size:0.82rem;color:var(--text2);display:flex;align-items:center;gap:8px;'
+        el.innerHTML = `<span>${role?.iconEmoji || '🧳'}</span> <strong>${role?.name}</strong>: ${t.nightTarget}번 투표 ${effect}`
+        modCard.appendChild(el)
+      })
+      this.el.appendChild(modCard)
+    }
+
+    // ── 총잡이 (gunslinger) ──
+    const gunslinger = travellers.find(t =>
+      t.roleId === 'gunslinger' && (t.status || 'alive') === 'alive'
+    )
+    if (gunslinger) {
+      const gunCard = document.createElement('div')
+      gunCard.className = 'card'
+      gunCard.innerHTML = '<div class="card-title">🔫 총잡이 (여행자)</div>'
+
+      const gunLabel = document.createElement('div')
+      gunLabel.className = 'section-label'
+      gunLabel.textContent = '투표 중 인접 플레이어를 즉사시킬 수 있다'
+      gunCard.appendChild(gunLabel)
+
+      gunCard.appendChild(
+        this._buildOval(
+          state.players,
+          this.gunslingerTargetId ? [this.gunslingerTargetId] : [],
+          (id) => { this.gunslingerTargetId = id; this._render() }
+        )
+      )
+
+      if (this.gunslingerTargetId) {
+        const gunBtn = document.createElement('button')
+        gunBtn.className = 'btn btn-danger btn-full mt-8'
+        gunBtn.textContent = `🔫 ${this.gunslingerTargetId}번 즉사 실행`
+        gunBtn.addEventListener('click', () => {
+          this.engine.killPlayer(this.gunslingerTargetId, 'gunslinger')
+          this.onHistoryPush({
+            type: 'gunslinger', phase: 'day', round: state.round,
+            target: [this.gunslingerTargetId],
+            label: `🔫 총잡이: ${this.gunslingerTargetId}번 즉사`,
+            snapshot: this.engine.serialize(),
+          })
+          const winCheck = this.engine.checkWinCondition()
+          if (winCheck.gameOver) {
+            this.onGameOver && this.onGameOver(winCheck.winner, winCheck.reason)
+            return
+          }
+          this.gunslingerTargetId = null
+          this._render()
+        })
+        gunCard.appendChild(gunBtn)
+      }
+
+      this.el.appendChild(gunCard)
+    }
+
+    // ── 추방 (Exile) — 모든 여행자 대상 ──
+    const aliveTravellers = travellers
+      .map((t, idx) => ({ ...t, _idx: idx }))
+      .filter(t => (t.status || 'alive') === 'alive')
+
+    if (aliveTravellers.length > 0) {
+      const exileCard = document.createElement('div')
+      exileCard.className = 'card'
+      exileCard.innerHTML = '<div class="card-title">🚪 여행자 추방</div>'
+
+      const exileLabel = document.createElement('div')
+      exileLabel.className = 'section-label'
+      exileLabel.textContent = '추방은 처형과 별도 (처형 횟수 소모 안 함)'
+      exileCard.appendChild(exileLabel)
+
+      const exileGrid = document.createElement('div')
+      exileGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;'
+
+      aliveTravellers.forEach(t => {
+        const role = ROLES_BY_ID[t.roleId]
+        const btn = document.createElement('button')
+        const isSelected = this.exileTargetIdx === t._idx
+        btn.className = `btn${isSelected ? ' btn-danger' : ''}`
+        btn.style.cssText = 'font-size:0.78rem;padding:8px 14px;'
+        btn.textContent = `${role?.iconEmoji || '🧳'} ${role?.name || '여행자'}`
+        btn.addEventListener('click', () => {
+          this.exileTargetIdx = isSelected ? null : t._idx
+          this._render()
+        })
+        exileGrid.appendChild(btn)
+      })
+      exileCard.appendChild(exileGrid)
+
+      if (this.exileTargetIdx !== null) {
+        const target = travellers[this.exileTargetIdx]
+        const targetRole = ROLES_BY_ID[target?.roleId]
+        const exileBtn = document.createElement('button')
+        exileBtn.className = 'btn btn-danger btn-full mt-8'
+        exileBtn.textContent = `🚪 ${targetRole?.name || '여행자'} 추방 확정`
+        exileBtn.addEventListener('click', () => {
+          const all = this.getTravellers()
+          all[this.exileTargetIdx].status = 'exiled'
+          this.saveTravellers(all)
+          this.onHistoryPush({
+            type: 'exile', phase: 'day', round: state.round,
+            label: `🚪 ${targetRole?.name || '여행자'} 추방`,
+            snapshot: this.engine.serialize(),
+          })
+          this.exileTargetIdx = null
+          this._render()
+        })
+        exileCard.appendChild(exileBtn)
+      }
+
+      this.el.appendChild(exileCard)
+    }
   }
 }
 

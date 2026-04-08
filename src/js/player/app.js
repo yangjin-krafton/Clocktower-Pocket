@@ -126,6 +126,18 @@ if (!document.getElementById('player-app-style')) {
 .dict__modal-rules-btn:hover {
   background: rgba(122,111,183,0.25);
 }
+
+/* ── 여행자 메모 ── */
+.traveller-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(122,111,183,0.15); border: 1.5px dashed rgba(122,111,183,0.5);
+  color: var(--pu-light); font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.traveller-add-btn:hover {
+  background: rgba(122,111,183,0.25); border-color: var(--pu-base);
+}
   `
   document.head.appendChild(s)
 }
@@ -453,6 +465,22 @@ export class PlayerApp {
     try { localStorage.setItem(`ctp_sus_${this.session.code}`, JSON.stringify(sus)) } catch {}
   }
 
+  // ─────────────────────────────────────
+  // 여행자 메모 (로컬 전용)
+  // ─────────────────────────────────────
+
+  _getTravellers() {
+    if (!this.session) return []
+    try {
+      return JSON.parse(localStorage.getItem(`ctp_travellers_${this.session.code}`) || '[]')
+    } catch { return [] }
+  }
+
+  _saveTravellers(travellers) {
+    if (!this.session) return
+    try { localStorage.setItem(`ctp_travellers_${this.session.code}`, JSON.stringify(travellers)) } catch {}
+  }
+
   _showSeatLayout() {
     if (!this.session) {
       this.content.innerHTML = `
@@ -537,6 +565,19 @@ export class PlayerApp {
 
     const { playerCount, seatNum: mySeat, roleId } = this.session
     const myRole = ROLES_BY_ID[roleId]
+    const travellers = this._getTravellers()
+
+    // 위치 기반 정렬: 일반 좌석 사이에 여행자를 끼워넣기
+    const orderedSlots = []
+    for (let s = 1; s <= playerCount; s++) {
+      orderedSlots.push({ type: 'player', seatNum: s })
+      travellers.forEach((t, tIdx) => {
+        if ((t.afterSeat || playerCount) === s) {
+          orderedSlots.push({ type: 'traveller', tIdx, roleId: t.roleId })
+        }
+      })
+    }
+    const totalSlots = orderedSlots.length
 
     // 가용 공간 계산: page-content 기준
     // padding (12 + 68 = 80) + header (~36px) + sub (~30px) = 146px
@@ -548,13 +589,14 @@ export class PlayerApp {
     const ovalH   = Math.floor(ovalW * 1.5)
     const contentH = availH
 
-    const { slotPx, iconPx } = calcSlotMetrics(playerCount, ovalW)
+    const { slotPx, iconPx } = calcSlotMetrics(totalSlots, ovalW)
     const badgeFontPx = Math.max(10, Math.round(slotPx * 0.22))
     const badgeH      = Math.max(17, Math.round(slotPx * 0.25))
     const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
 
     // 내 자리가 6시 방향(하단 중앙)에 오도록 회전 오프셋 계산
-    const rotOffset = ovalSelfRotOffset(mySeat, playerCount)
+    const mySlotIndex = orderedSlots.findIndex(s => s.type === 'player' && s.seatNum === mySeat)
+    const rotOffset = ovalSelfRotOffset(mySlotIndex + 1, totalSlots)
 
     const MARKS = {
       evil:   { emoji: '❤️', border: 'rgba(200,40,40,0.7)'   },
@@ -564,17 +606,43 @@ export class PlayerApp {
       drunk:  { emoji: '🍺', border: 'rgba(180,120,60,0.7)'  },
     }
     const el = document.createElement('div')
-    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;`
+    el.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:${contentH}px;gap:8px;position:relative;`
+
+    // 여행자 추가 버튼 (좌측 상단)
+    const addTravBtn = document.createElement('button')
+    addTravBtn.className = 'traveller-add-btn'
+    addTravBtn.style.cssText = 'position:absolute;top:0;left:10px;z-index:10;'
+    addTravBtn.innerHTML = `<span>🧳</span> 여행자 추가`
+    addTravBtn.addEventListener('click', () => this._showTravellerPicker())
+    el.appendChild(addTravBtn)
 
     const oval = createSeatOval(`width:100%;max-width:min(100%,calc((100vh - 186px)*2/3));aspect-ratio:2/3;margin:0 auto;`)
     oval.id = 'player-seats-oval'
 
     const buildSlot = (i) => {
-      const seatNum    = i + 1
+      const entry     = orderedSlots[i]
+      const { x, y } = ovalSlotPos(i, totalSlots, rotOffset)
+
+      // ── 여행자 슬롯 ──
+      if (entry.type === 'traveller') {
+        const travRole = ROLES_BY_ID[entry.roleId]
+        const slot = createSeatSlot(x, y, slotPx, {
+          borderColor: 'rgba(122,111,183,0.7)',
+          borderWidth: 2,
+          borderStyle: 'solid',
+          background: 'rgba(122,111,183,0.08)',
+        })
+        slot.id = `pseat-t${entry.tIdx}`
+        slot.appendChild(createRoleIconEl(travRole, iconPx))
+        slot.addEventListener('click', () => this._showTravellerSlotMenu(entry.tIdx))
+        return slot
+      }
+
+      // ── 일반 슬롯 ──
+      const seatNum    = entry.seatNum
       const isOwn      = seatNum === mySeat
       const sus        = this._getSuspicions()
       const mark       = sus[seatNum] || null
-      const { x, y }   = ovalSlotPos(i, playerCount, rotOffset)
       const borderColor = isOwn
         ? (TEAM_BORDER[myRole?.team] || 'var(--lead2)')
         : (mark && MARKS[mark] ? MARKS[mark].border : 'var(--lead2)')
@@ -588,7 +656,6 @@ export class PlayerApp {
       })
       slot.id = `pseat-${seatNum}`
 
-      // 아이콘: 내 자리=역할 아이콘, 의심 표시=이모지, 미지=?
       if (isOwn) {
         slot.appendChild(createRoleIconEl(myRole, iconPx))
       } else if (mark && MARKS[mark]) {
@@ -608,10 +675,12 @@ export class PlayerApp {
       return slot
     }
 
-    for (let i = 0; i < playerCount; i++) {
-      const { x, y } = ovalSlotPos(i, playerCount, rotOffset)
+    for (let i = 0; i < totalSlots; i++) {
+      const { x, y } = ovalSlotPos(i, totalSlots, rotOffset)
       oval.appendChild(buildSlot(i))
-      oval.appendChild(createSeatNumLabel(x, y, slotPx, i + 1))
+      const entry = orderedSlots[i]
+      const label = entry.type === 'player' ? entry.seatNum : `T${entry.tIdx + 1}`
+      oval.appendChild(createSeatNumLabel(x, y, slotPx, label))
     }
     el.appendChild(oval)
 
@@ -674,6 +743,269 @@ export class PlayerApp {
   _refreshSeatSlot(seatNum, oval, MARKS) {
     // 전체 다시 그리기 대신 해당 슬롯만 교체
     this._switchTab('seats')
+  }
+
+  // ─────────────────────────────────────
+  // 여행자 추가/관리 UI
+  // ─────────────────────────────────────
+
+  _showTravellerPicker() {
+    document.getElementById('traveller-picker')?.remove()
+
+    const { playerCount } = this.session
+    const TRAVELLER_ROLES = Object.values(ROLES_BY_ID).filter(r => r.team === 'traveller')
+
+    const overlay = document.createElement('div')
+    overlay.id = 'traveller-picker'
+    overlay.className = 'dict__overlay'
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+
+    const modal = document.createElement('div')
+    modal.className = 'dict__modal'
+    modal.style.padding = '20px 16px'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'dict__modal-close'
+    closeBtn.textContent = '✕'
+    closeBtn.addEventListener('click', () => overlay.remove())
+    modal.appendChild(closeBtn)
+
+    // ── Step 1: 역할 선택 ──
+    const showRoleStep = () => {
+      while (modal.children.length > 1) modal.removeChild(modal.lastChild)
+
+      const title = document.createElement('div')
+      title.style.cssText = `
+        font-family:'Noto Serif KR',serif;font-size:1.1rem;font-weight:700;
+        color:var(--pu-light);text-align:center;margin-bottom:16px;
+      `
+      title.textContent = '🧳 여행자 추가'
+      modal.appendChild(title)
+
+      TRAVELLER_ROLES.forEach(role => {
+        const row = document.createElement('button')
+        row.style.cssText = `
+          display:flex;align-items:center;gap:12px;width:100%;
+          padding:12px 14px;margin-bottom:8px;
+          border-radius:10px;border:1.5px solid rgba(122,111,183,0.3);
+          background:rgba(122,111,183,0.06);cursor:pointer;
+          transition:all 0.15s;text-align:left;
+        `
+
+        const iconDiv = document.createElement('div')
+        iconDiv.style.cssText = `
+          width:44px;height:44px;border-radius:50%;
+          background:var(--surface2);overflow:hidden;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;
+        `
+        if (role.icon?.endsWith('.png')) {
+          const img = document.createElement('img')
+          img.src = `./asset/new/Icon_${role.icon}`
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+          iconDiv.appendChild(img)
+        } else {
+          iconDiv.style.fontSize = '1.5rem'
+          iconDiv.textContent = role.iconEmoji || '?'
+        }
+        row.appendChild(iconDiv)
+
+        const info = document.createElement('div')
+        info.style.cssText = 'flex:1;min-width:0;'
+        const nameEl = document.createElement('div')
+        nameEl.style.cssText = 'font-weight:700;font-size:0.9rem;color:var(--pu-light);'
+        nameEl.textContent = role.name
+        info.appendChild(nameEl)
+        const abilityEl = document.createElement('div')
+        abilityEl.style.cssText = 'font-size:0.68rem;color:var(--text3);line-height:1.4;margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;'
+        abilityEl.textContent = role.ability
+        info.appendChild(abilityEl)
+        row.appendChild(info)
+
+        row.addEventListener('click', () => showPositionStep(role))
+        modal.appendChild(row)
+      })
+    }
+
+    // ── Step 2: 위치 선택 (현재 원탁 상태 반영) ──
+    const showPositionStep = (role) => {
+      while (modal.children.length > 1) modal.removeChild(modal.lastChild)
+
+      const header = document.createElement('div')
+      header.style.cssText = 'text-align:center;margin-bottom:14px;'
+      header.innerHTML = `
+        <div style="font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:700;color:var(--pu-light);">
+          ${role.iconEmoji || '🧳'} ${role.name}
+        </div>
+        <div style="font-size:0.78rem;color:var(--text3);margin-top:4px;">어디에 앉나요?</div>
+      `
+      modal.appendChild(header)
+
+      // 현재 원탁 순서 (기존 여행자 포함) 구축
+      const curTravellers = this._getTravellers()
+      const circle = []
+      for (let s = 1; s <= playerCount; s++) {
+        circle.push({ type: 'player', seatNum: s, label: `${s}번` })
+        curTravellers.forEach((t, tIdx) => {
+          if ((t.afterSeat || playerCount) === s) {
+            const tRole = ROLES_BY_ID[t.roleId]
+            circle.push({ type: 'traveller', tIdx, label: `${tRole?.iconEmoji || '🧳'}${tRole?.name || '?'}` })
+          }
+        })
+      }
+
+      const grid = document.createElement('div')
+      grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;justify-content:center;'
+
+      for (let i = 0; i < circle.length; i++) {
+        const left  = circle[i]
+        const right = circle[(i + 1) % circle.length]
+
+        const btn = document.createElement('button')
+        btn.style.cssText = `
+          padding:10px 14px;border-radius:8px;
+          border:1.5px solid rgba(122,111,183,0.3);
+          background:rgba(122,111,183,0.06);cursor:pointer;
+          font-size:0.8rem;font-weight:600;color:var(--text2);
+          transition:all 0.15s;white-space:nowrap;
+        `
+        btn.textContent = `${left.label} — ${right.label} 사이`
+
+        btn.addEventListener('click', () => {
+          let afterSeat, insertIdx
+          if (left.type === 'player') {
+            afterSeat = left.seatNum
+            const firstSame = curTravellers.findIndex(t => (t.afterSeat || playerCount) === afterSeat)
+            insertIdx = firstSame >= 0 ? firstSame : curTravellers.length
+          } else {
+            afterSeat = curTravellers[left.tIdx].afterSeat || playerCount
+            insertIdx = left.tIdx + 1
+          }
+          curTravellers.splice(insertIdx, 0, { roleId: role.id, afterSeat })
+          this._saveTravellers(curTravellers)
+          overlay.remove()
+          this._switchTab('seats')
+        })
+        grid.appendChild(btn)
+      }
+      modal.appendChild(grid)
+
+      const backBtn = document.createElement('button')
+      backBtn.style.cssText = `
+        display:block;margin:14px auto 0;padding:8px 20px;
+        border-radius:8px;border:1px solid var(--lead2);
+        background:var(--surface2);cursor:pointer;
+        font-size:0.75rem;color:var(--text3);
+      `
+      backBtn.textContent = '← 역할 다시 선택'
+      backBtn.addEventListener('click', () => showRoleStep())
+      modal.appendChild(backBtn)
+    }
+
+    showRoleStep()
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('dict__overlay--visible'))
+  }
+
+  _showTravellerSlotMenu(travellerIndex) {
+    const travellers = this._getTravellers()
+    const traveller = travellers[travellerIndex]
+    if (!traveller) return
+
+    const role = ROLES_BY_ID[traveller.roleId]
+    if (!role) return
+
+    document.getElementById('traveller-menu')?.remove()
+
+    const overlay = document.createElement('div')
+    overlay.id = 'traveller-menu'
+    overlay.className = 'dict__overlay'
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+
+    const modal = document.createElement('div')
+    modal.className = 'dict__modal'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'dict__modal-close'
+    closeBtn.textContent = '✕'
+    closeBtn.addEventListener('click', () => overlay.remove())
+    modal.appendChild(closeBtn)
+
+    // 아이콘
+    const iconWrap = document.createElement('div')
+    iconWrap.className = 'dict__modal-icon'
+    if (role.icon?.endsWith('.png')) {
+      const img = document.createElement('img')
+      img.src = `./asset/new/Icon_${role.icon}`
+      img.alt = role.name
+      img.className = 'dict__modal-icon-img'
+      iconWrap.appendChild(img)
+    } else {
+      iconWrap.textContent = role.iconEmoji || '?'
+    }
+    modal.appendChild(iconWrap)
+
+    // 역할명
+    const nameEl = document.createElement('div')
+    nameEl.className = 'dict__modal-name'
+    nameEl.style.color = 'var(--pu-light)'
+    nameEl.textContent = role.name
+    modal.appendChild(nameEl)
+
+    // 여행자 배지
+    const badge = document.createElement('span')
+    badge.className = 'badge badge-traveller'
+    badge.textContent = '여행자'
+    modal.appendChild(badge)
+
+    // 위치 정보
+    const { playerCount } = this.session
+    const afterSeat = traveller.afterSeat || playerCount
+    const nextSeat = afterSeat < playerCount ? afterSeat + 1 : 1
+    const posInfo = document.createElement('div')
+    posInfo.style.cssText = 'font-size:0.72rem;color:var(--text3);text-align:center;margin-top:4px;'
+    posInfo.textContent = `📍 ${afterSeat}번 — ${nextSeat}번 사이`
+    modal.appendChild(posInfo)
+
+    // 능력 설명
+    if (role.ability) {
+      const abilityEl = document.createElement('div')
+      abilityEl.className = 'dict__modal-ability'
+      abilityEl.textContent = role.ability
+      modal.appendChild(abilityEl)
+    }
+
+    // 삭제 버튼
+    const delBtn = document.createElement('button')
+    delBtn.className = 'btn'
+    delBtn.style.cssText = `
+      width:100%;padding:11px 0;border-radius:8px;font-size:0.82rem;
+      margin-top:8px;background:rgba(200,40,40,0.15);
+      border:1px solid rgba(200,40,40,0.4);color:var(--rd-light);cursor:pointer;
+    `
+    delBtn.textContent = '🗑 여행자 제거'
+    delBtn.addEventListener('click', () => {
+      travellers.splice(travellerIndex, 1)
+      this._saveTravellers(travellers)
+      overlay.remove()
+      this._switchTab('seats')
+    })
+    modal.appendChild(delBtn)
+
+    // 규칙 바로가기
+    const rulesBtn = document.createElement('button')
+    rulesBtn.className = 'btn dict__modal-rules-btn'
+    rulesBtn.innerHTML = '📜 규칙에서 자세히 보기'
+    rulesBtn.addEventListener('click', () => {
+      overlay.remove()
+      this._openRule(role.id)
+    })
+    modal.appendChild(rulesBtn)
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('dict__overlay--visible'))
   }
 
   // ─────────────────────────────────────

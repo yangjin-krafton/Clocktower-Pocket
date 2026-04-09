@@ -189,29 +189,8 @@ export class Grimoire {
       this.el.appendChild(codeRow)
     }
 
-    // 여행자 투표 수정 알림 (낮에만 표시)
-    if (state.phase === 'day') {
-      const travellers = this.getTravellers()
-      const mods = travellers.filter(t =>
-        (t.status || 'alive') === 'alive' && t.nightTarget &&
-        (t.roleId === 'bureaucrat' || t.roleId === 'thief')
-      )
-      if (mods.length > 0) {
-        const modCard = document.createElement('div')
-        modCard.className = 'card'
-        modCard.style.cssText = 'border-color:rgba(122,111,183,0.4);'
-        modCard.innerHTML = '<div class="card-title" style="color:var(--pu-light);">📊 투표 수정</div>'
-        mods.forEach(t => {
-          const role = ROLES_BY_ID[t.roleId]
-          const effect = t.roleId === 'bureaucrat' ? '3표' : '음수'
-          const el = document.createElement('div')
-          el.style.cssText = 'padding:6px 0;font-size:0.82rem;color:var(--text2);'
-          el.innerHTML = `${role?.iconEmoji || '🧳'} <strong>${role?.name}</strong> → ${t.nightTarget}번 투표 ${effect}`
-          modCard.appendChild(el)
-        })
-        this.el.appendChild(modCard)
-      }
-    }
+    // 여행자 현황 카드
+    this._renderTravellerCard()
 
     if (state.phase === 'night') {
       const nightCard = document.createElement('div')
@@ -347,15 +326,8 @@ export class Grimoire {
     // ── 4) 구성 상태 + 시작 버튼 ───────────────────────────────
     this._renderLobbyFooter(total, seats)
 
-    // ── 5) 여행자 추가 바로가기 ──────────────────────────────
-    if (this.onAddTraveller) {
-      const travBtn = document.createElement('button')
-      travBtn.className = 'btn btn-traveller btn-full'
-      travBtn.style.marginTop = '8px'
-      travBtn.textContent = '🧳 여행자 추가'
-      travBtn.addEventListener('click', () => this.onAddTraveller())
-      this.el.appendChild(travBtn)
-    }
+    // ── 5) 여행자 현황 카드 ──────────────────────────────
+    this._renderTravellerCard()
   }
 
   _renderSeatWheel(total, seats) {
@@ -711,6 +683,102 @@ export class Grimoire {
       status.textContent = msg
       this.el.appendChild(status)
     }
+  }
+
+  // ─────────────────────────────────────
+  // 여행자 현황 카드 (로비 + 게임 공통)
+  // ─────────────────────────────────────
+
+  _renderTravellerCard() {
+    const travellers = this.getTravellers()
+    const hasTravellers = travellers.length > 0
+
+    // 여행자가 없으면 추가 버튼만 표시
+    if (!hasTravellers) {
+      if (this.onAddTraveller) {
+        const btn = document.createElement('button')
+        btn.className = 'btn btn-traveller btn-full'
+        btn.style.marginTop = '8px'
+        btn.textContent = '🧳 여행자 추가'
+        btn.addEventListener('click', () => this.onAddTraveller())
+        this.el.appendChild(btn)
+      }
+      return
+    }
+
+    const card = document.createElement('div')
+    card.className = 'card'
+    card.style.borderColor = 'rgba(122,111,183,0.35)'
+
+    const titleRow = document.createElement('div')
+    titleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;'
+    const titleEl = document.createElement('div')
+    titleEl.className = 'card-title'
+    titleEl.style.cssText = 'color:var(--pu-light);margin:0;'
+    titleEl.textContent = `🧳 여행자 (${travellers.length})`
+    titleRow.appendChild(titleEl)
+
+    if (this.onAddTraveller) {
+      const addBtn = document.createElement('button')
+      addBtn.style.cssText = 'background:none;border:1px dashed rgba(122,111,183,0.5);border-radius:6px;padding:3px 10px;color:var(--pu-light);font-size:0.65rem;cursor:pointer;'
+      addBtn.textContent = '+ 추가'
+      addBtn.addEventListener('click', () => this.onAddTraveller())
+      titleRow.appendChild(addBtn)
+    }
+    card.appendChild(titleRow)
+
+    travellers.forEach(t => {
+      const role = ROLES_BY_ID[t.roleId]
+      const alive = (t.status || 'alive') === 'alive'
+      const alignment = t.alignment || 'good'
+      const alignColor = alignment === 'evil' ? 'var(--rd-light)' : 'var(--bl-light)'
+      const alignLabel = alignment === 'evil' ? '악' : '선'
+
+      const row = document.createElement('div')
+      row.style.cssText = `
+        display:flex;align-items:center;gap:8px;
+        padding:6px 0;font-size:0.78rem;
+        ${alive ? '' : 'opacity:0.4;text-decoration:line-through;'}
+      `
+
+      // 아이콘
+      const icon = document.createElement('span')
+      icon.style.cssText = 'font-size:1rem;flex-shrink:0;'
+      icon.textContent = role?.iconEmoji || '🧳'
+      row.appendChild(icon)
+
+      // 이름 + 진영
+      const name = document.createElement('span')
+      name.style.cssText = 'font-weight:600;color:var(--pu-light);'
+      name.textContent = role?.name || '여행자'
+      row.appendChild(name)
+
+      const align = document.createElement('span')
+      align.style.cssText = `font-size:0.65rem;color:${alignColor};`
+      align.textContent = alignLabel
+      row.appendChild(align)
+
+      // 투표 수정 표시 (낮)
+      if (alive && t.nightTarget && (t.roleId === 'bureaucrat' || t.roleId === 'thief')) {
+        const mod = document.createElement('span')
+        mod.style.cssText = 'margin-left:auto;font-size:0.68rem;color:var(--gold2);font-weight:600;'
+        mod.textContent = t.roleId === 'bureaucrat'
+          ? `${t.nightTarget}번 3표`
+          : `${t.nightTarget}번 음수`
+        row.appendChild(mod)
+      }
+
+      if (!alive) {
+        const dead = document.createElement('span')
+        dead.style.cssText = 'margin-left:auto;font-size:0.62rem;color:var(--text4);'
+        dead.textContent = '추방'
+        row.appendChild(dead)
+      }
+
+      card.appendChild(row)
+    })
+
+    this.el.appendChild(card)
   }
 
   // ─────────────────────────────────────

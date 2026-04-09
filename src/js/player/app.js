@@ -151,7 +151,22 @@ export class PlayerApp {
       if (saved) {
         const parsed = JSON.parse(saved)
         const decoded = decodeRoomCode(parsed.code)
-        if (decoded && parsed.seatNum >= 1 && parsed.seatNum <= decoded.playerCount) {
+
+        if (parsed.isTraveller && decoded) {
+          // 여행자 세션 복원
+          this.session = {
+            code:        parsed.code,
+            seatNum:     null,
+            roleId:      parsed.roleId,
+            team:        'traveller',
+            playerCount: decoded.playerCount,
+            isTraveller: true,
+          }
+          const saves = GameSaveManager.listSaves().filter(s => s.mode === 'player')
+          const existingSave = saves.find(s => s.roomCode === parsed.code && s.isTraveller)
+          this.saveId = existingSave ? existingSave.id : GameSaveManager.createId()
+          if (!existingSave) this._savePlayerGame()
+        } else if (decoded && parsed.seatNum >= 1 && parsed.seatNum <= decoded.playerCount) {
           this.session = {
             code:        parsed.code,
             seatNum:     parsed.seatNum,
@@ -164,13 +179,11 @@ export class PlayerApp {
             ? (role.team === 'townsfolk' || role.team === 'outsider' ? 'good' : 'evil')
             : 'good'
 
-          // 저장된 게임 찾기 (방 코드 + 자리 번호로 매칭)
           const saves = GameSaveManager.listSaves().filter(s => s.mode === 'player')
           const existingSave = saves.find(s => s.roomCode === parsed.code && s.seatNum === parsed.seatNum)
           if (existingSave) {
             this.saveId = existingSave.id
           } else {
-            // 새 저장 ID 생성
             this.saveId = GameSaveManager.createId()
             this._savePlayerGame()
           }
@@ -300,6 +313,10 @@ export class PlayerApp {
         <button id="p-join-btn" class="btn btn-primary btn-full" style="padding:14px;font-size:0.95rem;margin-top:8px;display:none;">
           🎭 역할 확인하기
         </button>
+
+        <button id="p-traveller-btn" class="btn btn-traveller btn-full" style="padding:14px;font-size:0.95rem;margin-top:8px;display:none;">
+          🧳 여행자로 입장
+        </button>
       </div>
     `
     this.content.style.position = 'relative'
@@ -343,6 +360,7 @@ export class PlayerApp {
     const seatField   = el.querySelector('#seat-field')
     const seatGrid    = el.querySelector('#seat-grid')
     const joinBtn     = el.querySelector('#p-join-btn')
+    const travBtn     = el.querySelector('#p-traveller-btn')
 
     let decoded = null
     let selectedSeat = null
@@ -373,6 +391,7 @@ export class PlayerApp {
         decoded = null
         seatField.style.display = 'none'
         joinBtn.style.display = 'none'
+        travBtn.style.display = 'none'
         return
       }
       const result = decodeRoomCode(raw)
@@ -381,9 +400,11 @@ export class PlayerApp {
         decoded = null
         seatField.style.display = 'none'
         joinBtn.style.display = 'none'
+        travBtn.style.display = 'none'
       } else {
         decoded = result
         seatField.style.display = ''
+        travBtn.style.display = ''
         renderSeats()
         codeError.textContent = `✓ ${result.playerCount}인 게임 — 자리 번호를 선택하세요`
         codeError.style.color = 'var(--tl-light)'
@@ -416,9 +437,95 @@ export class PlayerApp {
       this._switchTab('seats')
     })
 
+    travBtn.addEventListener('click', () => {
+      if (!decoded) return
+      const rawCode = codeInput.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+      this._showTravellerJoinPicker(rawCode, decoded)
+    })
+
     // URL 코드 자동 시도
     if (urlCode) tryDecode()
     setTimeout(() => codeInput.focus(), 100)
+  }
+
+  _showTravellerJoinPicker(rawCode, decoded) {
+    const TRAVELLER_ROLES = Object.values(ROLES_BY_ID).filter(r => r.team === 'traveller')
+
+    const overlay = document.createElement('div')
+    overlay.className = 'dict__overlay'
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+
+    const modal = document.createElement('div')
+    modal.className = 'dict__modal'
+    modal.style.padding = '20px 16px'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'dict__modal-close'
+    closeBtn.textContent = '✕'
+    closeBtn.addEventListener('click', () => overlay.remove())
+    modal.appendChild(closeBtn)
+
+    const title = document.createElement('div')
+    title.style.cssText = `font-family:'Noto Serif KR',serif;font-size:1.1rem;font-weight:700;color:var(--pu-light);text-align:center;margin-bottom:16px;`
+    title.textContent = '🧳 여행자 역할 선택'
+    modal.appendChild(title)
+
+    TRAVELLER_ROLES.forEach(role => {
+      const row = document.createElement('button')
+      row.style.cssText = `
+        display:flex;align-items:center;gap:12px;width:100%;
+        padding:12px 14px;margin-bottom:8px;border-radius:10px;
+        border:1.5px solid rgba(122,111,183,0.3);background:rgba(122,111,183,0.06);
+        cursor:pointer;transition:all 0.15s;text-align:left;
+      `
+      const iconDiv = document.createElement('div')
+      iconDiv.style.cssText = 'width:44px;height:44px;border-radius:50%;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;'
+      if (role.icon?.endsWith('.png')) {
+        const img = document.createElement('img')
+        img.src = `./asset/new/Icon_${role.icon}`
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+        iconDiv.appendChild(img)
+      } else {
+        iconDiv.style.fontSize = '1.5rem'
+        iconDiv.textContent = role.iconEmoji || '?'
+      }
+      row.appendChild(iconDiv)
+
+      const info = document.createElement('div')
+      info.style.cssText = 'flex:1;min-width:0;'
+      const nameEl = document.createElement('div')
+      nameEl.style.cssText = 'font-weight:700;font-size:0.9rem;color:var(--pu-light);'
+      nameEl.textContent = role.name
+      info.appendChild(nameEl)
+      const abilityEl = document.createElement('div')
+      abilityEl.style.cssText = 'font-size:0.68rem;color:var(--text3);line-height:1.4;margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;'
+      abilityEl.textContent = role.ability
+      info.appendChild(abilityEl)
+      row.appendChild(info)
+
+      row.addEventListener('click', () => {
+        overlay.remove()
+        this.session = {
+          code: rawCode,
+          seatNum: null,
+          roleId: role.id,
+          team: 'traveller',
+          playerCount: decoded.playerCount,
+          isTraveller: true,
+        }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ code: rawCode, isTraveller: true, roleId: role.id })) } catch {}
+        this.saveId = GameSaveManager.createId()
+        this._savePlayerGame()
+        this._buildTabs()
+        this._switchTab('seats')
+      })
+
+      modal.appendChild(row)
+    })
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('dict__overlay--visible'))
   }
 
   // ─────────────────────────────────────
@@ -521,6 +628,7 @@ export class PlayerApp {
 
     const formattedCode = formatCode(this.session.code)
     const seatNum = this.session.seatNum
+    const isTraveller = !!this.session.isTraveller
 
     headerRow.appendChild(makeTopCard({
       flex: '1 1 auto',
@@ -530,12 +638,25 @@ export class PlayerApp {
       onCopy: () => copyRoomCode(this.session.code),
     }))
 
-    headerRow.appendChild(makeTopCard({
-      flex: '0 0 auto',
-      mainHtml: `<div style="font-size:0.62rem;color:var(--text4);margin-bottom:1px;">자리</div><div style="font-size:1rem;font-weight:800;color:var(--text2);line-height:1;">${seatNum}번</div>`,
-      hintText: '내 번호',
-      onCopy: null,
-    }))
+    if (isTraveller) {
+      const travRole = ROLES_BY_ID[this.session.roleId]
+      const roleCard = makeTopCard({
+        flex: '0 0 auto',
+        mainHtml: `<div style="font-size:1rem;line-height:1;">${travRole?.iconEmoji || '🧳'}</div><div style="font-size:0.75rem;font-weight:700;color:var(--pu-light);line-height:1;">${travRole?.name || '여행자'}</div>`,
+        hintText: '탭=역할 보기',
+        onCopy: null,
+      })
+      roleCard.style.cursor = 'pointer'
+      roleCard.addEventListener('click', () => this._showMyRoleModal())
+      headerRow.appendChild(roleCard)
+    } else {
+      headerRow.appendChild(makeTopCard({
+        flex: '0 0 auto',
+        mainHtml: `<div style="font-size:0.62rem;color:var(--text4);margin-bottom:1px;">자리</div><div style="font-size:1rem;font-weight:800;color:var(--text2);line-height:1;">${seatNum}번</div>`,
+        hintText: '내 번호',
+        onCopy: null,
+      }))
+    }
 
     headerRow.appendChild(makeTopCard({
       flex: '0 0 auto',
@@ -552,8 +673,8 @@ export class PlayerApp {
     sub.textContent = `다른 자리를 탭해 표시 추가`
     this.content.appendChild(sub)
 
-    const { playerCount, seatNum: mySeat, roleId } = this.session
-    const myRole = ROLES_BY_ID[roleId]
+    const { playerCount, seatNum: mySeat, roleId, isTraveller: isTravellerSession } = this.session
+    const myRole = isTravellerSession ? null : ROLES_BY_ID[roleId]
     const travellers = this._getTravellers()
 
     // 위치 기반 정렬: 일반 좌석 사이에 여행자를 끼워넣기
@@ -584,8 +705,10 @@ export class PlayerApp {
     const badgeMinW   = Math.max(18, Math.round(slotPx * 0.38))
 
     // 내 자리가 6시 방향(하단 중앙)에 오도록 회전 오프셋 계산
-    const mySlotIndex = orderedSlots.findIndex(s => s.type === 'player' && s.seatNum === mySeat)
-    const rotOffset = ovalSelfRotOffset(mySlotIndex + 1, totalSlots)
+    const mySlotIndex = mySeat ? orderedSlots.findIndex(s => s.type === 'player' && s.seatNum === mySeat) : -1
+    const rotOffset = mySlotIndex >= 0
+      ? ovalSelfRotOffset(mySlotIndex + 1, totalSlots)
+      : -Math.PI / 2  // 여행자: 12시 방향 기본
 
     const MARKS = {
       evil:   { emoji: '❤️', border: 'rgba(200,40,40,0.7)'   },
@@ -1005,9 +1128,9 @@ export class PlayerApp {
     const role = ROLES_BY_ID[this.session.roleId]
     if (!role) return
 
-    const TEAM_COLOR = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)' }
-    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프' }
-    const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon' }
+    const TEAM_COLOR = { townsfolk: 'var(--bl-light)', outsider: 'var(--tl-light)', minion: 'var(--rd-light)', demon: 'var(--rd-light)', traveller: 'var(--pu-light)' }
+    const TEAM_LABEL = { townsfolk: '마을 주민', outsider: '아웃사이더', minion: '미니언', demon: '임프', traveller: '여행자' }
+    const BADGE_CLASS = { townsfolk: 'badge-town', outsider: 'badge-outside', minion: 'badge-minion', demon: 'badge-demon', traveller: 'badge-traveller' }
 
     // 역할 카드를 오버레이로 표시 (CharacterDict와 동일한 UI)
     const overlay = document.createElement('div')
@@ -1130,12 +1253,14 @@ export class PlayerApp {
         roomCode: this.session.code,
         seatNum: this.session.seatNum,
         roleId: this.session.roleId,
+        isTraveller: this.session.isTraveller || false,
       },
       code: this.session.code,
       seatNum: this.session.seatNum,
       roleId: this.session.roleId,
       team: this.session.team,
       playerCount: this.session.playerCount,
+      isTraveller: this.session.isTraveller || false,
     }
 
     GameSaveManager.save(this.saveId, saveData)

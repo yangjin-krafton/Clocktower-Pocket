@@ -6,7 +6,7 @@
 
 const SEEN_KEY = 'ctp_update_seen'
 const SEEN_TIME_KEY = 'ctp_update_seen_at'
-const CURRENT_VERSION = 'v0.2'
+const CURRENT_VERSION = 'v0.3'
 const RESHOW_INTERVAL_MS = 24 * 60 * 60 * 1000 // 1일
 
 export class UpdatePopup {

@@ -11,15 +11,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
 :root {
-  --bg:       #0b0a18;
-  --surface:  #14122a;
-  --surface2: #1c1a36;
-  --lead:     #0a0916;
-  --lead2:    #1a183a;
+  --bg:       #111113;
+  --surface:  #1a1a1e;
+  --surface2: #222226;
+  --lead:     #0d0d0f;
+  --lead2:    #2a2a30;
 
-  --pu-base:  #9080CC;
-  --pu-light: #B8B0E0;
-  --pu-dark:  #6A5FA0;
+  --pu-base:  #908A98;
+  --pu-light: #B8B4BE;
+  --pu-dark:  #605C68;
 
   --tl-base:  #5BB3C6;
   --tl-light: #96D4E2;
@@ -36,10 +36,10 @@
   --gold:  #d4a828;
   --gold2: #f0cc60;
 
-  --text:  #F4F1FF;
-  --text2: #CCC7EC;
-  --text3: #A89FD4;
-  --text4: #807898;
+  --text:  #EAEAEE;
+  --text2: #B8B8C0;
+  --text3: #888890;
+  --text4: #606068;
 
   --town:    #2E4A8F;
   --outside: #5BB3C6;
@@ -67,7 +67,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 0;
-  background: radial-gradient(ellipse at 50% 0%, #1a1848 0%, #070510 60%);
+  background: radial-gradient(ellipse at 50% 0%, #1e1e22 0%, #0a0a0c 60%);
   min-height: 100vh;
   min-height: 100dvh; /* 동적 뷰포트 높이 (모바일 주소창 대응) */
   overflow-x: hidden;
@@ -83,7 +83,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 0 1px #3a3570, 0 0 40px rgba(122,111,183,0.15);
+  box-shadow: 0 0 0 1px #333338, 0 0 40px rgba(100,100,110,0.1);
 }
 
 /* ── 헤더 ── */
@@ -102,11 +102,11 @@ body {
   height: 1px;
   background: linear-gradient(90deg,
     transparent,
-    var(--bl-dark)  12%,
-    var(--pu-base)  30%,
-    var(--tl-base)  50%,
-    var(--pu-base)  70%,
-    var(--rd-dark)  88%,
+    #383840  12%,
+    #68686E  30%,
+    #888890  50%,
+    #68686E  70%,
+    #383840  88%,
     transparent
   );
 }
@@ -145,11 +145,11 @@ body {
   height: 2px;
   background: linear-gradient(90deg,
     transparent,
-    var(--bl-dark)  12%,
-    var(--pu-base)  30%,
-    var(--tl-base)  50%,
-    var(--pu-base)  70%,
-    var(--rd-dark)  88%,
+    #383840  12%,
+    #68686E  30%,
+    #888890  50%,
+    #68686E  70%,
+    #383840  88%,
     transparent
   );
 }
@@ -409,77 +409,77 @@ body {
 /* ── 카운트다운 스타일은 LobbyBanner.js 내부에서 관리 ── */
 
 /* ══════════════════════════════════════════════
-   테마: 호스트 (어두운 갈색 — warm brown)
+   테마: 호스트 (다크 레드 — dark red)
    ══════════════════════════════════════════════ */
 [data-theme="host"] {
-  --bg:       #110e08;
-  --surface:  #1c1810;
-  --surface2: #262014;
-  --lead:     #0e0c06;
-  --lead2:    #2a2418;
+  --bg:       #140a0a;
+  --surface:  #1e1010;
+  --surface2: #2a1616;
+  --lead:     #100808;
+  --lead2:    #321a1a;
 
-  --pu-base:  #B09060;
-  --pu-light: #D0B888;
-  --pu-dark:  #806840;
+  --pu-base:  #B06060;
+  --pu-light: #D09090;
+  --pu-dark:  #804040;
 
-  --text:     #F5F0E8;
-  --text2:    #D4C8B0;
-  --text3:    #A89878;
-  --text4:    #7A6E58;
+  --text:     #F5EAEA;
+  --text2:    #D4B8B8;
+  --text3:    #A88080;
+  --text4:    #7A5858;
 }
 [data-theme="host"] body {
-  background: radial-gradient(ellipse at 50% 0%, #2a2010 0%, #080604 60%);
+  background: radial-gradient(ellipse at 50% 0%, #2a1010 0%, #080404 60%);
 }
 [data-theme="host"] .app {
-  box-shadow: 0 0 0 1px #3a3020, 0 0 40px rgba(176,144,96,0.1);
+  box-shadow: 0 0 0 1px #3a2020, 0 0 40px rgba(160,60,60,0.12);
 }
 [data-theme="host"] .page-header::after,
 [data-theme="host"] .tab-bar::before {
   background: linear-gradient(90deg,
     transparent,
-    #4a3818  12%,
-    #B09060  30%,
-    #D4A828  50%,
-    #B09060  70%,
-    #4a3818  88%,
+    #3a1818  12%,
+    #8C3030  30%,
+    #C04040  50%,
+    #8C3030  70%,
+    #3a1818  88%,
     transparent
   );
 }
 
 /* ══════════════════════════════════════════════
-   테마: 참가자 (어두운 보라 — deep purple)
+   테마: 참가자 (다크 옐로우 — dark yellow/amber)
    ══════════════════════════════════════════════ */
 [data-theme="player"] {
-  --bg:       #0a0818;
-  --surface:  #12102a;
-  --surface2: #1a1636;
-  --lead:     #08061a;
-  --lead2:    #18143a;
+  --bg:       #12100a;
+  --surface:  #1c1a10;
+  --surface2: #262216;
+  --lead:     #0e0c08;
+  --lead2:    #302a18;
 
-  --pu-base:  #8878C8;
-  --pu-light: #B0A8E0;
-  --pu-dark:  #5C509C;
+  --pu-base:  #B0A060;
+  --pu-light: #D0C488;
+  --pu-dark:  #807040;
 
-  --text:     #F0EDFF;
-  --text2:    #C8C0E8;
-  --text3:    #9C90C8;
-  --text4:    #746898;
+  --text:     #F5F0E0;
+  --text2:    #D4C8A8;
+  --text3:    #A89868;
+  --text4:    #7A6E48;
 }
 [data-theme="player"] body {
-  background: radial-gradient(ellipse at 50% 0%, #1a1448 0%, #060410 60%);
+  background: radial-gradient(ellipse at 50% 0%, #2a2210 0%, #080604 60%);
 }
 [data-theme="player"] .app {
-  box-shadow: 0 0 0 1px #302870, 0 0 40px rgba(136,120,200,0.15);
+  box-shadow: 0 0 0 1px #3a3018, 0 0 40px rgba(176,160,96,0.12);
 }
 [data-theme="player"] .page-header::after,
 [data-theme="player"] .tab-bar::before {
   background: linear-gradient(90deg,
     transparent,
-    #2a2060  12%,
-    #8878C8  30%,
-    #B0A8E0  50%,
-    #8878C8  70%,
-    #2a2060  88%,
+    #3a2c10  12%,
+    #B0A060  30%,
+    #D4B428  50%,
+    #B0A060  70%,
+    #3a2c10  88%,
     transparent
   );
 }

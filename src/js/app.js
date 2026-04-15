@@ -120,6 +120,17 @@ function showLanding() {
 
   content.innerHTML = ''
 
+  // ── 랜딩 배경 히어로 이미지 (10장 중 랜덤)
+  const heroIdx = String(Math.floor(Math.random() * 10)).padStart(2, '0')
+  const heroEl = document.createElement('div')
+  heroEl.className = 'landing-hero'
+  heroEl.innerHTML = `
+    <img class="landing-hero__img" src="asset/generated/landing/landing_${heroIdx}.webp"
+         alt="" loading="eager" onerror="this.parentElement.style.display='none'">
+    <div class="landing-hero__fade"></div>
+  `
+  content.appendChild(heroEl)
+
   const wrap = document.createElement('div')
   wrap.className = 'landing'
 

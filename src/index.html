@@ -9,6 +9,31 @@
 <link rel="stylesheet" href="css/effects.css?v=0.3">
 <link rel="stylesheet" href="css/seat-slot.css?v=0.3">
 <style>
+  /* ── 랜딩 히어로 배경 ── */
+  .landing-hero {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .landing-hero__img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    max-height: 420px;
+    opacity: 0.35;
+  }
+  .landing-hero__fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: linear-gradient(to bottom, transparent 0%, var(--bg) 100%);
+  }
+
   /* ── 랜딩 화면 ── */
   .landing {
     display: flex;
@@ -16,6 +41,8 @@
     align-items: center;
     padding: 40px 20px 32px;
     gap: 6px;
+    position: relative;
+    z-index: 1;
   }
   .landing__logo {
     font-size: clamp(2.4rem, 7vw, 3.2rem);

@@ -37,7 +37,7 @@ export function renderSelectPanel(data) {
   const iconSpan = document.createElement('span')
   iconSpan.className = 'select-panel__icon'
   // PNG 이미지면 img 태그로, 아니면 emoji로 표시
-  if (roleIcon && roleIcon.endsWith('.png')) {
+  if (roleIcon && roleIcon.endsWith('.webp')) {
     const img = document.createElement('img')
     img.src = `./asset/new/Icon_${roleIcon}`
     img.alt = title
@@ -96,7 +96,7 @@ export function renderSelectPanel(data) {
       const gemDiv = document.createElement('div')
       gemDiv.className = 'select-panel__gem'
       // PNG 이미지면 img 태그로, 아니면 emoji로 표시
-      if (role?.icon && role.icon.endsWith('.png')) {
+      if (role?.icon && role.icon.endsWith('.webp')) {
         const img = document.createElement('img')
         img.src = `./asset/new/Icon_${role.icon}`
         img.alt = role.name

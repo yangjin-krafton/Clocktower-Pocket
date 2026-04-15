@@ -55,7 +55,7 @@ export function mountOvalSelectPanel(data) {
 
   const iconEl = document.createElement('span')
   iconEl.className = 'oval-sel__icon'
-  if (roleIcon && roleIcon.endsWith('.png')) {
+  if (roleIcon && roleIcon.endsWith('.webp')) {
     const img = document.createElement('img')
     img.src = `./asset/new/Icon_${roleIcon}`
     img.alt = title

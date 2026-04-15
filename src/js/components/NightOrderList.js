@@ -69,7 +69,7 @@ export function renderNightOrderList(data, onStepClick = null) {
     const iconSpan = document.createElement('span')
     iconSpan.className = 'night-order__icon'
     // PNG 이미지면 img 태그로, 아니면 emoji로 표시
-    if (icon && icon.endsWith('.png')) {
+    if (icon && icon.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${icon}`
       img.alt = name

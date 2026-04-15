@@ -1,4 +1,6 @@
-﻿# Blood on the Clocktower ![](../asset/new/Logo_trouble_brewing.png)
+﻿# Blood on the Clocktower ![](../asset/new/Logo_trouble_brewing.webp)
+
+![](../asset/generated/1x1/index_page.webp)
 
 **Trouble Brewing** 에디션 기준 규칙서입니다.
 
@@ -6,12 +8,16 @@
 
 ## 게임 목표
 
-![](../asset/new/Generic_townsfolk.png) **선 팀** — 임프를 낮에 처형하면 승리합니다.
-![](../asset/new/Icon_imp.png) **악 팀** — 마을 생존자가 2명 이하가 될 때까지 버티면 승리합니다.
+![](  ../asset/generated/2x1/index_s1_goal.webp)
+
+![](../asset/new/Generic_townsfolk.webp) **선 팀** — 임프를 낮에 처형하면 승리합니다.
+![](../asset/new/Icon_imp.webp) **악 팀** — 마을 생존자가 2명 이하가 될 때까지 버티면 승리합니다.
 
 ---
 
 ## 목차
+
+![](  ../asset/generated/2x1/index_s2_toc.webp)
 
 - [역할 분류](roles.md) — 마을 주민·아웃사이더·미니언·임프
 - [여행자 규칙](travellers.md) — 합류·이탈·추방·Trouble Brewing 여행자 5명
@@ -24,25 +30,27 @@
 
 ## 한눈에 보는 진행 흐름
 
+![](  ../asset/generated/2x1/index_s3_flow.webp)
+
 ### 셋업 (게임 시작 전)
 
 1. 플레이어 수에 맞는 **역할 토큰**을 준비합니다 (아래 인원 구성표 참조).
 2. 이야기꾼이 마을 주민, 아웃사이더, 미니언, 임프를 선택합니다.
 3. 셋업 능력이 있는 역할을 먼저 처리합니다:
-   - ![](../asset/new/Icon_baron.png) **남작**: 마을 주민 -2, 아웃사이더 +2
-   - ![](../asset/new/Icon_drunk.png) **주정뱅이**: 마을 주민 토큰 1개를 주정뱅이로 표시 (본인은 해당 마을 주민이라고 믿음)
+   - ![](../asset/new/Icon_baron.webp) **남작**: 마을 주민 -2, 아웃사이더 +2
+   - ![](../asset/new/Icon_drunk.webp) **주정뱅이**: 마을 주민 토큰 1개를 주정뱅이로 표시 (본인은 해당 마을 주민이라고 믿음)
 4. 토큰을 섞어서 플레이어에게 **무작위로 배분**합니다.
 5. 플레이어는 자신의 역할을 확인하고 **비밀로 유지**합니다.
 6. 필요하다면 [여행자](travellers.md)는 게임 도중 합류하거나 중간에 이탈할 수 있습니다.
 
 ### 바로 가기
 
-- ![](../asset/new/Generic_traveller.png) [여행자 규칙](travellers.md)
-- ![](../asset/new/Icon_scapegoat.png) [희생양](scapegoat.md)
-- ![](../asset/new/Icon_gunslinger.png) [총잡이](gunslinger.md)
-- ![](../asset/new/Icon_beggar.png) [거지](beggar.md)
-- ![](../asset/new/Icon_bureaucrat.png) [관료](bureaucrat.md)
-- ![](../asset/new/Icon_thief.png) [도둑](thief.md)
+- ![](../asset/new/Generic_traveller.webp) [여행자 규칙](travellers.md)
+- ![](../asset/new/Icon_scapegoat.webp) [희생양](scapegoat.md)
+- ![](../asset/new/Icon_gunslinger.webp) [총잡이](gunslinger.md)
+- ![](../asset/new/Icon_beggar.webp) [거지](beggar.md)
+- ![](../asset/new/Icon_bureaucrat.webp) [관료](bureaucrat.md)
+- ![](../asset/new/Icon_thief.webp) [도둑](thief.md)
 
 ### 게임 흐름
 
@@ -57,14 +65,16 @@
 |---|---|
 | 임프가 처형됨 | **선 팀** 승리 |
 | 생존자 2명 이하 | **악 팀** 승리 |
-| ![](../asset/new/Icon_saint.png) 성자가 처형됨 | **악 팀** 승리 |
-| ![](../asset/new/Icon_mayor.png) 시장 + 생존자 3명 + 처형 없는 낮 | **선 팀** 승리 |
+| ![](../asset/new/Icon_saint.webp) 성자가 처형됨 | **악 팀** 승리 |
+| ![](../asset/new/Icon_mayor.webp) 시장 + 생존자 3명 + 처형 없는 낮 | **선 팀** 승리 |
 
 ---
 
 ## 인원 구성표
 
-| 인원 | ![](../asset/new/Generic_townsfolk.png) 마을 주민 | ![](../asset/new/Generic_outsider.png) 아웃사이더 | ![](../asset/new/Generic_minion.png) 미니언 | ![](../asset/new/Generic_demon.png) 임프 |
+![](  ../asset/generated/2x1/index_s4_composition.webp)
+
+| 인원 | ![](../asset/new/Generic_townsfolk.webp) 마을 주민 | ![](../asset/new/Generic_outsider.webp) 아웃사이더 | ![](../asset/new/Generic_minion.webp) 미니언 | ![](../asset/new/Generic_demon.webp) 임프 |
 |------|------|------|------|------|
 | 5명  | 3 | 0 | 1 | 1 |
 | 6명  | 3 | 1 | 1 | 1 |
@@ -78,11 +88,11 @@
 | 14명 | 9 | 1 | 3 | 1 |
 | 15명 | 9 | 2 | 3 | 1 |
 
-![](../asset/new/Icon_baron.png) **남작**이 있으면 아웃사이더 +2, 마을 주민 -2.
+![](../asset/new/Icon_baron.webp) **남작**이 있으면 아웃사이더 +2, 마을 주민 -2.
 
 ### 남작 적용 시 인원 구성표
 
-| 인원 | ![](../asset/new/Generic_townsfolk.png) 마을 주민 | ![](../asset/new/Generic_outsider.png) 아웃사이더 | ![](../asset/new/Generic_minion.png) 미니언 | ![](../asset/new/Generic_demon.png) 임프 |
+| 인원 | ![](../asset/new/Generic_townsfolk.webp) 마을 주민 | ![](../asset/new/Generic_outsider.webp) 아웃사이더 | ![](../asset/new/Generic_minion.webp) 미니언 | ![](../asset/new/Generic_demon.webp) 임프 |
 |------|------|------|------|------|
 | 5명  | 1 | 2 | 1 | 1 |
 | 6명  | 1 | 3 | 1 | 1 |
@@ -104,6 +114,8 @@
 ---
 
 ## 핵심 규칙 요약
+
+![](  ../asset/generated/2x1/index_s5_core_rules.webp)
 
 ### 능력 작동 원칙
 

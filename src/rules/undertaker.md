@@ -1,16 +1,22 @@
-﻿# ![](../asset/new/Icon_undertaker.png) 장의사 (Undertaker)
+﻿# ![](../asset/new/Icon_undertaker.webp) 장의사 (Undertaker)
 
-**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
+![](../asset/generated/1x1/undertaker_page.webp)
+
+**진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/undertaker_s1_ability.webp)
 
 **매일 밤**, **전날 처형된 플레이어**의 실제 역할을 안다.
 
 ---
 
 ## 플레이 가이드
+
+![](  ../asset/generated/2x1/undertaker_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -20,15 +26,15 @@
 
 ### 중요한 규칙
 
-- **처형만 조사**: ![](../asset/death.png) 밤에 죽은 사람은 **조사 안 됩니다**.
+- **처형만 조사**: ![](../asset/death.webp) 밤에 죽은 사람은 **조사 안 됩니다**.
 - **처형 없으면 정보 없음**: 그날 처형이 없었다면 정보를 받지 않습니다.
-- **진짜 역할**: ![](../asset/new/Icon_drunk.png) 술꾼라도 **원래 역할**을 봅니다.
+- **진짜 역할**: ![](../asset/new/Icon_drunk.webp) 술꾼라도 **원래 역할**을 봅니다.
 
 ### 주의할 점
 
-- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
-- ![](../asset/new/Icon_spy.png) **스파이**: 다른 역할로 등록될 수 있습니다.
+- ![](../asset/new/Icon_drunk.webp) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.webp) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
+- ![](../asset/new/Icon_spy.webp) **스파이**: 다른 역할로 등록될 수 있습니다.
 - **처형 타이밍**: 처형은 낮 종료 시에 발생합니다 → [낮 규칙](day.md)
 
 ### 전략 팁
@@ -42,9 +48,11 @@
 
 ## 상호작용
 
-- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 술꾼의 **진짜 Townsfolk 역할**을 봅니다.
-- ![](../asset/new/Icon_spy.png) **스파이**: 다른 역할로 등록되어 틀린 정보를 줄 수 있습니다.
-- ![](../asset/new/Icon_recluse.png) **은둔자**: 다른 역할로 등록될 수 있습니다.
+![](  ../asset/generated/2x1/undertaker_s3_inter.webp)
+
+- ![](../asset/new/Icon_drunk.webp) **주정뱅이**: 술꾼의 **진짜 Townsfolk 역할**을 봅니다.
+- ![](../asset/new/Icon_spy.webp) **스파이**: 다른 역할로 등록되어 틀린 정보를 줄 수 있습니다.
+- ![](../asset/new/Icon_recluse.webp) **은둔자**: 다른 역할로 등록될 수 있습니다.
 
 ---
 

@@ -1,29 +1,37 @@
-﻿# ![](../asset/new/Icon_baron.png) 남작 (Baron)
+﻿# ![](../asset/new/Icon_baron.webp) 남작 (Baron)
 
-**진영**: ![](../asset/new/Generic_minion.png) 미니언 (악 팀)
+![](../asset/generated/1x1/baron_page.webp)
+
+**진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---
 
 ## 능력
 
+![](  ../asset/generated/2x1/baron_s1_ability.webp)
+
 > **"추가 아웃사이더가 게임에 존재한다. [+2 아웃사이더]"**
 
-게임 시작 시 ![](../asset/new/Generic_outsider.png) **아웃사이더 토큰 2개**가 추가되고,
-대신 ![](../asset/new/Generic_townsfolk.png) **마을 주민 토큰 2개**가 제거된다.
+게임 시작 시 ![](../asset/new/Generic_outsider.webp) **아웃사이더 토큰 2개**가 추가되고,
+대신 ![](../asset/new/Generic_townsfolk.webp) **마을 주민 토큰 2개**가 제거된다.
 
 ---
 
 ## 작동 방식
 
+![](  ../asset/generated/2x1/baron_s2_mechanism.webp)
+
 - 이야기꾼이 게임 **셋업 단계**에서 마을 주민 토큰 2개를 제거하고 아웃사이더 토큰 2개로 교체합니다.
 - 추가되는 아웃사이더는 **항상 마을 주민을 대체**합니다 (다른 유형은 대체하지 않음).
 - 이 변경은 **영구적**입니다 — 남작이 사망해도 아웃사이더 수는 원래대로 돌아가지 않습니다.
 - 남작의 능력은 게임 시작 전에 이미 적용되므로, **밤 행동은 없습니다**.
-- ![](../asset/new/Icon_drunk.png) 주정뱅이가 추가되는 경우, 주정뱅이의 별도 셋업 규칙도 따릅니다.
+- ![](../asset/new/Icon_drunk.webp) 주정뱅이가 추가되는 경우, 주정뱅이의 별도 셋업 규칙도 따릅니다.
 
 ---
 
 ## 셋업 예시
+
+![](  ../asset/generated/2x1/baron_s3_setup.webp)
 
 ### 7인 게임
 
@@ -50,18 +58,22 @@
 
 ## 아웃사이더 증가 효과
 
+![](  ../asset/generated/2x1/baron_s4_outsider_effect.webp)
+
 아웃사이더가 늘어나면 선 팀이 약해집니다:
 
-- ![](../asset/new/Icon_butler.png) **집사**: 주인이 투표하지 않으면 투표 불가 — 투표권 제약
-- ![](../asset/new/Icon_drunk.png) **주정뱅이**: 자신이 주정뱅이인지 모른 채 능력이 오작동
-- ![](../asset/new/Icon_recluse.png) **은둔자**: 악 팀이나 임프로 등록될 수 있어 조사를 왜곡
-- ![](../asset/new/Icon_saint.png) **성자**: 처형당하면 **선 팀 즉시 패배** — 매우 위험
+- ![](../asset/new/Icon_butler.webp) **집사**: 주인이 투표하지 않으면 투표 불가 — 투표권 제약
+- ![](../asset/new/Icon_drunk.webp) **주정뱅이**: 자신이 주정뱅이인지 모른 채 능력이 오작동
+- ![](../asset/new/Icon_recluse.webp) **은둔자**: 악 팀이나 임프로 등록될 수 있어 조사를 왜곡
+- ![](../asset/new/Icon_saint.webp) **성자**: 처형당하면 **선 팀 즉시 패배** — 매우 위험
 
 → 마을 주민(정보 역할)이 줄고 아웃사이더가 늘어나, 선 팀의 정보력과 능력이 크게 약해집니다.
 
 ---
 
 ## 플레이 가이드 (악 팀)
+
+![](  ../asset/generated/2x1/baron_s5_evil_guide.webp)
 
 ### 핵심 전략
 
@@ -70,7 +82,7 @@
 1. **대담하게 플레이**: 능력이 이미 적용됐으므로 죽음을 두려워할 필요가 없습니다. 과감한 행동과 공격적인 지명으로 혼란을 만드세요.
 2. **마을 주민 역할 사칭**: 이미 게임에 있는 마을 주민과 같은 역할을 주장하면, 진짜 마을 주민의 신뢰를 깎을 수 있습니다.
 3. **아웃사이더 사칭**: 자신이 아웃사이더라고 주장하면, 실제 아웃사이더 수에 혼란을 일으킵니다.
-4. **성자 처형 유도**: ![](../asset/new/Icon_saint.png) 성자가 있다면 처형하도록 유도하세요 — 선 팀 즉시 패배!
+4. **성자 처형 유도**: ![](../asset/new/Icon_saint.webp) 성자가 있다면 처형하도록 유도하세요 — 선 팀 즉시 패배!
 5. **일찍 처형당하기**: 일찍 죽으면 "무고한 사람"으로 신뢰를 얻어, 죽은 뒤에도 정보를 수집하고 임프를 도울 수 있습니다.
 6. **바론이 없다고 위장**: 악 팀원 2명이 아웃사이더를 사칭하면, "남작이 없는데 아웃사이더가 많다"는 혼란을 줄 수 있습니다.
 7. **진짜 아웃사이더에게 의심 전가**: 실제 아웃사이더를 공격해서 선 팀이 자기 팀원을 의심하게 만드세요.
@@ -78,28 +90,30 @@
 ### 주의할 점
 
 - 아웃사이더 수가 예상보다 많으면 남작 존재가 드러날 수 있습니다.
-- ![](../asset/new/Icon_librarian.png) 사서가 아웃사이더를 확인하면 남작을 추론할 수 있습니다.
+- ![](../asset/new/Icon_librarian.webp) 사서가 아웃사이더를 확인하면 남작을 추론할 수 있습니다.
 - 임프가 자결(Starpass)하면 남작이 새 임프가 될 수 있으므로, 후반을 대비하세요.
 
 ---
 
 ## 플레이 가이드 (선 팀)
 
+![](  ../asset/generated/2x1/baron_s6_good_guide.webp)
+
 ### 남작 탐지 방법
 
 1. **아웃사이더 수 세기**: 예상보다 아웃사이더가 많으면 남작이 있다는 뜻입니다.
 2. **정보 역할 활용**:
-   - ![](../asset/new/Icon_librarian.png) **사서**: 아웃사이더를 직접 확인
-   - ![](../asset/new/Icon_investigator.png) **조사관**: 미니언을 조사하면 남작을 특정할 수 있음
-   - ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 죽을 때 역할 확인
-   - ![](../asset/new/Icon_undertaker.png) **장의사**: 처형자 역할 확인
-3. **다른 미니언 부재 확인**: 남작이 있으면 ![](../asset/new/Icon_poisoner.png) 독살자, ![](../asset/new/Icon_spy.png) 스파이, ![](../asset/new/Icon_scarletwoman.png) 진홍의 여인이 적습니다 (미니언 슬롯을 남작이 차지하므로).
+   - ![](../asset/new/Icon_librarian.webp) **사서**: 아웃사이더를 직접 확인
+   - ![](../asset/new/Icon_investigator.webp) **조사관**: 미니언을 조사하면 남작을 특정할 수 있음
+   - ![](../asset/new/Icon_ravenkeeper.webp) **까마귀 사육사**: 죽을 때 역할 확인
+   - ![](../asset/new/Icon_undertaker.webp) **장의사**: 처형자 역할 확인
+3. **다른 미니언 부재 확인**: 남작이 있으면 ![](../asset/new/Icon_poisoner.webp) 독살자, ![](../asset/new/Icon_spy.webp) 스파이, ![](../asset/new/Icon_scarletwoman.webp) 진홍의 여인이 적습니다 (미니언 슬롯을 남작이 차지하므로).
 
 ### 남작 대응 전략
 
 1. **아웃사이더 보호**: 아웃사이더의 주장이 신뢰할 만하면 살려두세요 — 확인된 선 팀입니다.
 2. **의심스러우면 빠르게 제거**: 남작이 있는지 불확실하면, 아웃사이더를 사칭하는 플레이어를 빠르게 처형하는 것도 방법입니다.
-3. **주정뱅이 탐색**: 아웃사이더 수가 정확히 맞지 않으면 ![](../asset/new/Icon_drunk.png) 주정뱅이가 숨어있을 수 있습니다.
+3. **주정뱅이 탐색**: 아웃사이더 수가 정확히 맞지 않으면 ![](../asset/new/Icon_drunk.webp) 주정뱅이가 숨어있을 수 있습니다.
 4. **처형 우선순위**: 남작 자체를 처형하는 것보다 **임프나 독살자**를 찾는 게 더 중요합니다. 남작의 능력은 이미 적용됐으므로 처형해도 효과가 되돌려지지 않습니다.
 
 ### 행동 패턴 읽기
@@ -112,32 +126,38 @@
 
 ## 블러프 권장
 
+![](  ../asset/generated/2x1/baron_s7_bluff.webp)
+
 남작은 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/new/Icon_empath.png) **공감인**: 거짓 숫자로 선 팀의 추리를 방해
-- ![](../asset/new/Icon_chef.png) **요리사**: 악 쌍 수 정보로 신뢰 획득 후 오도
-- ![](../asset/new/Icon_undertaker.png) **장의사**: 처형 결과를 거짓으로 보고
-- ![](../asset/new/Icon_monk.png) **수도사**: "보호했는데 아무도 안 죽었다"로 위장
-- ![](../asset/new/Icon_butler.png) **집사** / ![](../asset/new/Icon_recluse.png) **은둔자**: 아웃사이더로 위장
+- ![](../asset/new/Icon_empath.webp) **공감인**: 거짓 숫자로 선 팀의 추리를 방해
+- ![](../asset/new/Icon_chef.webp) **요리사**: 악 쌍 수 정보로 신뢰 획득 후 오도
+- ![](../asset/new/Icon_undertaker.webp) **장의사**: 처형 결과를 거짓으로 보고
+- ![](../asset/new/Icon_monk.webp) **수도사**: "보호했는데 아무도 안 죽었다"로 위장
+- ![](../asset/new/Icon_butler.webp) **집사** / ![](../asset/new/Icon_recluse.webp) **은둔자**: 아웃사이더로 위장
 
 ---
 
 ## 상호작용
 
+![](  ../asset/generated/2x1/baron_s8_inter.webp)
+
 | 역할 | 상호작용 |
 |---|---|
-| ![](../asset/new/Icon_librarian.png) **사서** | 아웃사이더 수 증가를 통해 남작 존재를 추론 가능 |
-| ![](../asset/new/Icon_investigator.png) **조사관** | 남작을 미니언으로 직접 탐지 가능 |
-| ![](../asset/new/Icon_drunk.png) **주정뱅이** | 남작이 추가한 아웃사이더에 포함될 수 있음 (별도 셋업 규칙 적용) |
-| ![](../asset/new/Icon_saint.png) **성자** | 남작이 추가한 성자가 처형되면 선 팀 즉시 패배 |
-| ![](../asset/new/Icon_recluse.png) **은둔자** | 조사 왜곡으로 남작 탐지를 방해 |
-| ![](../asset/new/Icon_imp.png) **임프** | 자결(Starpass) 시 남작이 새 임프로 승계 가능 |
-| ![](../asset/new/Icon_poisoner.png) **독살자** | 남작이 미니언 슬롯을 차지하므로 독살자가 없을 가능성 |
-| ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인** | 같은 이유로 진홍의 여인이 없을 가능성 |
+| ![](../asset/new/Icon_librarian.webp) **사서** | 아웃사이더 수 증가를 통해 남작 존재를 추론 가능 |
+| ![](../asset/new/Icon_investigator.webp) **조사관** | 남작을 미니언으로 직접 탐지 가능 |
+| ![](../asset/new/Icon_drunk.webp) **주정뱅이** | 남작이 추가한 아웃사이더에 포함될 수 있음 (별도 셋업 규칙 적용) |
+| ![](../asset/new/Icon_saint.webp) **성자** | 남작이 추가한 성자가 처형되면 선 팀 즉시 패배 |
+| ![](../asset/new/Icon_recluse.webp) **은둔자** | 조사 왜곡으로 남작 탐지를 방해 |
+| ![](../asset/new/Icon_imp.webp) **임프** | 자결(Starpass) 시 남작이 새 임프로 승계 가능 |
+| ![](../asset/new/Icon_poisoner.webp) **독살자** | 남작이 미니언 슬롯을 차지하므로 독살자가 없을 가능성 |
+| ![](../asset/new/Icon_scarletwoman.webp) **진홍의 여인** | 같은 이유로 진홍의 여인이 없을 가능성 |
 
 ---
 
 ## 악 팀 협력
+
+![](  ../asset/generated/2x1/baron_s9_coop.webp)
 
 - **첫날 밤**: 임프와 다른 미니언을 서로 확인합니다.
 - **아웃사이더 파악**: 누가 아웃사이더인지 추론해서 악용하세요.
@@ -147,6 +167,8 @@
 ---
 
 ## 인원표 — 남작 영향
+
+![](  ../asset/generated/2x1/baron_s10_table.webp)
 
 | 인원 | 기본 구성 (마을/아웃/미니언/임프) | 남작 시 (마을/아웃/미니언/임프) |
 |---|---|---|

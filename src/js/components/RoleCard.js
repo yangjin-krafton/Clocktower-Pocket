@@ -29,7 +29,7 @@ export function renderRoleCard(role, opts = {}) {
   gem.className = `role-card__gem gem ${gemClass[role.team] || 'gem-town'}`
 
   // PNG 이미지면 img 태그로, 아니면 emoji로 표시
-  if (role.icon && role.icon.endsWith('.png')) {
+  if (role.icon && role.icon.endsWith('.webp')) {
     const img = document.createElement('img')
     img.src = `./asset/new/Icon_${role.icon}`
     img.alt = role.name

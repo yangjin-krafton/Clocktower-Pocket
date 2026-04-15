@@ -43,10 +43,10 @@ export function mountNightRevealNote(data) {
   // 역할 배지
   const roleBadge = document.createElement('div')
   roleBadge.className = 'reveal-note__role-badge'
-  if (roleIcon && roleIcon.endsWith('.png')) {
+  if (roleIcon && roleIcon.endsWith('.webp')) {
     roleBadge.innerHTML = `
       <div style="position:relative;width:18px;height:18px;flex-shrink:0;">
-        <img src="./asset/token.png" style="position:absolute;inset:0;width:100%;height:100%;" alt="">
+        <img src="./asset/token.webp" style="position:absolute;inset:0;width:100%;height:100%;" alt="">
         <img src="./asset/new/Icon_${roleIcon}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="">
       </div>
       <span style="color:${tc.color}">${roleName}</span>

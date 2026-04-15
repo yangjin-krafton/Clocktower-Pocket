@@ -1,10 +1,14 @@
-﻿# ![](../asset/new/Icon_chef.png) 요리사 (Chef)
+﻿# ![](../asset/new/Icon_chef.webp) 요리사 (Chef)
 
-**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
+![](../asset/generated/1x1/chef_page.webp)
+
+**진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/chef_s1_ability.webp)
 
 > **"게임 시작 시, 서로 이웃한 악 플레이어 쌍이 몇 개인지 안다."**
 
@@ -14,6 +18,8 @@
 ---
 
 ## 작동 방식
+
+![](  ../asset/generated/2x1/chef_s2_mechanism.webp)
 
 ### "이웃한 쌍"이란?
 - 좌석 배치에서 **바로 옆에 앉은** 두 악 플레이어가 1쌍입니다.
@@ -29,6 +35,8 @@
 ---
 
 ## 예시
+
+![](  ../asset/generated/2x1/chef_s3_examples.webp)
 
 ### 예시 1: 0쌍
 ```
@@ -65,6 +73,8 @@
 
 ## 이웃 쌍 해석 가이드
 
+![](  ../asset/generated/2x1/chef_s4_interpret.webp)
+
 | 쌍 수 | 의미 | 추론 |
 |---|---|---|
 | **0** | 모든 악이 흩어져 있음 | 악 사이사이에 선이 끼어있음. 한 명을 찾으면 양옆은 선일 가능성 높음 |
@@ -76,10 +86,12 @@
 
 ## 플레이 가이드 (선 팀 — 요리사 본인)
 
+![](  ../asset/generated/2x1/chef_s5_guide.webp)
+
 ### 핵심 전략
 
 1. **좌석 배치 기억하기**: 누가 어디 앉았는지 반드시 메모하세요. 요리사의 정보는 좌석 위치와 직접 연결됩니다.
-2. **다른 정보 역할과 교차 검증**: ![](../asset/new/Icon_empath.png) 공감인, ![](../asset/new/Icon_fortuneteller.png) 점쟁이의 정보와 합치면 악 팀 위치를 크게 좁힐 수 있습니다.
+2. **다른 정보 역할과 교차 검증**: ![](../asset/new/Icon_empath.webp) 공감인, ![](../asset/new/Icon_fortuneteller.webp) 점쟁이의 정보와 합치면 악 팀 위치를 크게 좁힐 수 있습니다.
 3. **후반 활용**: 생존자가 줄어들수록 요리사의 첫날 정보가 더 강력해집니다. 초반에는 범위가 넓지만 후반에는 결정적 단서가 됩니다.
 
 ### 결과별 전략
@@ -94,13 +106,15 @@
 
 ### 주의할 점
 
-- ![](../asset/new/Icon_spy.png) **스파이**가 선으로 등록되면 쌍 수가 실제보다 **줄어듭니다**.
-- ![](../asset/new/Icon_recluse.png) **은둔자**가 악으로 등록되면 쌍 수가 **늘어납니다**.
+- ![](../asset/new/Icon_spy.webp) **스파이**가 선으로 등록되면 쌍 수가 실제보다 **줄어듭니다**.
+- ![](../asset/new/Icon_recluse.webp) **은둔자**가 악으로 등록되면 쌍 수가 **늘어납니다**.
 - 스파이와 은둔자를 빨리 밝혀내면 요리사 정보의 정확도가 올라갑니다.
 
 ---
 
 ## 블러프 가이드 (악 팀이 요리사를 사칭할 때)
+
+![](  ../asset/generated/2x1/chef_s6_bluff.webp)
 
 ### 왜 요리사 사칭이 좋은가
 - 첫째 밤에만 정보를 받으므로, 밤 행동이 계속 필요한 다른 역할보다 사칭하기 쉽습니다.
@@ -117,19 +131,23 @@
 
 ## 상호작용
 
+![](  ../asset/generated/2x1/chef_s7_inter.webp)
+
 | 역할 | 상호작용 |
 |---|---|
-| ![](../asset/new/Icon_spy.png) **스파이** | 선으로 등록되면 이웃 쌍 수 감소 (이야기꾼 재량) |
-| ![](../asset/new/Icon_recluse.png) **은둔자** | 악으로 등록되면 이웃 쌍 수 증가 (이야기꾼 재량) |
-| ![](../asset/new/Icon_drunk.png) **주정뱅이** | 요리사가 실제로 주정뱅이라면 잘못된 숫자를 받음 |
-| ![](../asset/new/Icon_poisoner.png) **독살자** | 첫째 밤에 중독되면 잘못된 숫자를 받음 |
-| ![](../asset/new/Icon_empath.png) **공감인** | 양옆 악 수 정보와 교차 확인 가능 — 매우 강력한 조합 |
-| ![](../asset/new/Icon_investigator.png) **조사관** | 미니언 위치 정보와 조합하면 악 팀 좌석 특정 가능 |
-| ![](../asset/new/Icon_baron.png) **남작** | 남작 자체는 쌍 수에 영향 없음 (미니언이므로 악 팀으로 집계) |
+| ![](../asset/new/Icon_spy.webp) **스파이** | 선으로 등록되면 이웃 쌍 수 감소 (이야기꾼 재량) |
+| ![](../asset/new/Icon_recluse.webp) **은둔자** | 악으로 등록되면 이웃 쌍 수 증가 (이야기꾼 재량) |
+| ![](../asset/new/Icon_drunk.webp) **주정뱅이** | 요리사가 실제로 주정뱅이라면 잘못된 숫자를 받음 |
+| ![](../asset/new/Icon_poisoner.webp) **독살자** | 첫째 밤에 중독되면 잘못된 숫자를 받음 |
+| ![](../asset/new/Icon_empath.webp) **공감인** | 양옆 악 수 정보와 교차 확인 가능 — 매우 강력한 조합 |
+| ![](../asset/new/Icon_investigator.webp) **조사관** | 미니언 위치 정보와 조합하면 악 팀 좌석 특정 가능 |
+| ![](../asset/new/Icon_baron.webp) **남작** | 남작 자체는 쌍 수에 영향 없음 (미니언이므로 악 팀으로 집계) |
 
 ---
 
 ## 자주 묻는 질문
+
+![](  ../asset/generated/2x1/chef_s8_faq.webp)
 
 **Q: 죽은 플레이어도 쌍에 포함되나요?**
 A: 요리사의 능력은 첫째 밤에만 작동하므로, 그 시점에는 모두 살아있습니다.

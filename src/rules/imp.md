@@ -1,17 +1,23 @@
-﻿# ![](../asset/new/Icon_imp.png) 임프 (Imp)
+﻿# ![](../asset/new/Icon_imp.webp) 임프 (Imp)
 
-**진영**: ![](../asset/new/Generic_demon.png) 임프 (악 팀)
+![](../asset/generated/1x1/imp_page.webp)
+
+**진영**: ![](../asset/new/Generic_demon.webp) 임프 (악 팀)
 
 ---
 
 ## 능력
 
+![](  ../asset/generated/2x1/imp_s1_ability.webp)
+
 **매일 밤** (첫날 밤 제외) 1명을 죽인다.
-**자신을 죽이면** 살아있는 ![](../asset/new/Generic_minion.png) 미니언 1명이 **새 임프**가 된다.
+**자신을 죽이면** 살아있는 ![](../asset/new/Generic_minion.webp) 미니언 1명이 **새 임프**가 된다.
 
 ---
 
 ## 플레이 가이드 (악 팀)
+
+![](  ../asset/generated/2x1/imp_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -22,17 +28,17 @@
 ### 공격 대상 우선순위
 
 1. **강력한 정보형**
-   - ![](../asset/new/Icon_fortuneteller.png) **점쟁이**: 당신을 찾을 수 있음
-   - ![](../asset/new/Icon_empath.png) **공감인**: 악 위치를 파악함
-   - ![](../asset/new/Icon_undertaker.png) **장의사**: 처형 결과로 악을 찾음
+   - ![](../asset/new/Icon_fortuneteller.webp) **점쟁이**: 당신을 찾을 수 있음
+   - ![](../asset/new/Icon_empath.webp) **공감인**: 악 위치를 파악함
+   - ![](../asset/new/Icon_undertaker.webp) **장의사**: 처형 결과로 악을 찾음
 
 2. **위협적인 역할**
-   - ![](../asset/new/Icon_slayer.png) **처단자**: 당신을 즉시 죽일 수 있음
-   - ![](../asset/new/Icon_virgin.png) **처녀**: 능력 사용 전에 제거
+   - ![](../asset/new/Icon_slayer.webp) **처단자**: 당신을 즉시 죽일 수 있음
+   - ![](../asset/new/Icon_virgin.webp) **처녀**: 능력 사용 전에 제거
 
 3. **공격 불가**
-   - ![](../asset/new/Icon_soldier.png) **군인**: 공격해도 안 죽음
-   - ![](../asset/new/Icon_monk.png) **수도사 보호 대상**: 보호받으면 안 죽음
+   - ![](../asset/new/Icon_soldier.webp) **군인**: 공격해도 안 죽음
+   - ![](../asset/new/Icon_monk.webp) **수도사 보호 대상**: 보호받으면 안 죽음
 
 ### 자살 승계 (Star Pass)
 
@@ -66,13 +72,15 @@
 
 ## 블러프 권장
 
+![](  ../asset/generated/2x1/imp_s3_bluff.webp)
+
 임프는 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/new/Icon_empath.png) **공감인**: 거짓 정보로 선 팀을 혼란시킴
-- ![](../asset/new/Icon_fortuneteller.png) **점쟁이**: 거짓 임프 조사로 의심 전환
-- ![](../asset/new/Icon_undertaker.png) **장의사**: 처형 결과 거짓말
-- ![](../asset/new/Icon_monk.png) **수도사**: 보호 실패 변명 가능
-- ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지
+- ![](../asset/new/Icon_empath.webp) **공감인**: 거짓 정보로 선 팀을 혼란시킴
+- ![](../asset/new/Icon_fortuneteller.webp) **점쟁이**: 거짓 임프 조사로 의심 전환
+- ![](../asset/new/Icon_undertaker.webp) **장의사**: 처형 결과 거짓말
+- ![](../asset/new/Icon_monk.webp) **수도사**: 보호 실패 변명 가능
+- ![](../asset/new/Icon_ravenkeeper.webp) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지
 
 ### 블러프 주의사항
 
@@ -84,38 +92,46 @@
 
 ## 상호작용
 
-- ![](../asset/new/Icon_soldier.png) **군인**: 공격해도 죽지 않습니다.
-- ![](../asset/new/Icon_monk.png) **수도사**: 보호받은 대상은 죽지 않습니다.
-- ![](../asset/new/Icon_mayor.png) **시장**: 공격이 다른 사람에게 튕길 수 있습니다.
-- ![](../asset/new/Icon_slayer.png) **처단자**: 당신을 즉시 죽일 수 있습니다.
-- ![](../asset/new/Icon_fortuneteller.png) **점쟁이**: 당신을 찾을 수 있습니다.
-- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 당신이 죽으면 승계할 수 있습니다.
+![](  ../asset/generated/2x1/imp_s4_inter.webp)
+
+- ![](../asset/new/Icon_soldier.webp) **군인**: 공격해도 죽지 않습니다.
+- ![](../asset/new/Icon_monk.webp) **수도사**: 보호받은 대상은 죽지 않습니다.
+- ![](../asset/new/Icon_mayor.webp) **시장**: 공격이 다른 사람에게 튕길 수 있습니다.
+- ![](../asset/new/Icon_slayer.webp) **처단자**: 당신을 즉시 죽일 수 있습니다.
+- ![](../asset/new/Icon_fortuneteller.webp) **점쟁이**: 당신을 찾을 수 있습니다.
+- ![](../asset/new/Icon_scarletwoman.webp) **진홍의 여인**: 당신이 죽으면 승계할 수 있습니다.
 
 ---
 
 ## 블러프 3개 (첫날 밤 정보)
+
+![](  ../asset/generated/2x1/imp_s5_bluffs.webp)
 
 첫날 밤, 임프는 미니언 정보와 함께 **이야기꾼이 선택한 선 캐릭터 3개**를 받습니다.
 
 - 3개 모두 **현재 판에 없는** 타운스폴크 또는 아웃사이더
 - 이야기꾼이 직접 고르며 임프는 선택할 수 없음
 - 이 3개 중 하나인 척 **안전하게 블러핑** 가능 (해당 역할이 실제로 없음을 알기 때문)
-- ![](../asset/new/Icon_spy.png) **스파이**가 있으면 이야기꾼 재량으로 게임 내 역할도 거짓으로 줄 수 있음
+- ![](../asset/new/Icon_spy.webp) **스파이**가 있으면 이야기꾼 재량으로 게임 내 역할도 거짓으로 줄 수 있음
 
 ---
 
 ## 악 팀 협력
 
+![](  ../asset/generated/2x1/imp_s6_coop.webp)
+
 - **첫날 밤**: 미니언들을 확인합니다.
 - **정보 공유**: 미니언과 블러프를 조율하세요.
-- ![](../asset/new/Icon_poisoner.png) **독약꾼**: 어떤 역할을 중독할지 조율하세요.
-- ![](../asset/new/Icon_spy.png) **스파이**: 모든 역할 정보를 공유받으세요.
-- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 5명 이상에서 죽으면 승계됩니다.
-- ![](../asset/new/Icon_baron.png) **남작**: 아웃사이더가 늘어나 선 팀이 약합니다.
+- ![](../asset/new/Icon_poisoner.webp) **독약꾼**: 어떤 역할을 중독할지 조율하세요.
+- ![](../asset/new/Icon_spy.webp) **스파이**: 모든 역할 정보를 공유받으세요.
+- ![](../asset/new/Icon_scarletwoman.webp) **진홍의 여인**: 5명 이상에서 죽으면 승계됩니다.
+- ![](../asset/new/Icon_baron.webp) **남작**: 아웃사이더가 늘어나 선 팀이 약합니다.
 
 ---
 
 ## 승리 조건
+
+![](  ../asset/generated/2x1/imp_s7_victory.webp)
 
 악 팀은 다음 조건에서 승리합니다:
 

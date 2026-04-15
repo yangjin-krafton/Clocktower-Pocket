@@ -20,8 +20,8 @@ export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, initial
   hdr.className = 'bluff-sel__hdr'
   hdr.innerHTML = `
     <div class="bluff-sel__hdr-icon">
-      <img class="bluff-sel__token-bg"   src="./asset/token.png" alt="">
-      <img class="bluff-sel__token-icon-hdr" src="./asset/new/Icon_imp.png" alt="임프">
+      <img class="bluff-sel__token-bg"   src="./asset/token.webp" alt="">
+      <img class="bluff-sel__token-icon-hdr" src="./asset/new/Icon_imp.webp" alt="임프">
     </div>
     <div class="bluff-sel__hdr-text">
       <div class="bluff-sel__title">블러프 3개 선택</div>
@@ -57,7 +57,7 @@ export function mountBluffSelectPanel({ pool = [], drunkAsRoleId = null, initial
       const isDrunkAs = drunkAsRoleId && role.id === drunkAsRoleId
       card.innerHTML = `
         <div class="bluff-sel__card-token">
-          <img class="bluff-sel__token-bg" src="./asset/token.png" alt="">
+          <img class="bluff-sel__token-bg" src="./asset/token.webp" alt="">
           <img class="bluff-sel__token-icon" src="./asset/new/Icon_${role.icon}" alt="${role.name}" loading="lazy">
           ${isSelected ? '<div class="bluff-sel__check">✓</div>' : ''}
         </div>

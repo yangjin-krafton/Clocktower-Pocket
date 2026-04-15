@@ -1,10 +1,14 @@
-﻿# ![](../asset/new/Icon_butler.png) 집사 (Butler)
+﻿# ![](../asset/new/Icon_butler.webp) 집사 (Butler)
 
-**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
+![](../asset/generated/1x1/butler_page.webp)
+
+**진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/butler_s1_ability.webp)
 
 > **"매일 밤, 자신 이외의 플레이어 1명을 선택한다: 다음 날, 그 플레이어가 투표할 때만 당신도 투표할 수 있다."**
 
@@ -14,6 +18,8 @@
 ---
 
 ## 작동 방식
+
+![](  ../asset/generated/2x1/butler_s2_mechanism.webp)
 
 ### 주인 선택
 - **매일 밤** 이야기꾼이 집사를 깨우고, 집사는 자신 이외의 플레이어 1명을 지목합니다.
@@ -39,6 +45,8 @@
 
 ## 이야기꾼 운영 가이드
 
+![](  ../asset/generated/2x1/butler_s3_storyteller.webp)
+
 1. 매일 밤 집사를 깨웁니다.
 2. 집사가 플레이어 1명을 지목합니다.
 3. 해당 플레이어에게 **MASTER** 리마인더 토큰을 놓습니다.
@@ -47,6 +55,8 @@
 ---
 
 ## 예시
+
+![](  ../asset/generated/2x1/butler_s4_examples.webp)
 
 ### 예시 1: 기본 작동
 집사가 3번 자리를 주인으로 선택했습니다. 투표 시 3번이 손을 들면 집사도 들 수 있습니다. 3번이 손을 내리고 있으면 집사는 투표할 수 없습니다.
@@ -60,6 +70,8 @@
 ---
 
 ## 플레이 가이드 (선 팀 — 집사 본인)
+
+![](  ../asset/generated/2x1/butler_s5_guide.webp)
 
 ### 주인 선택 전략
 
@@ -83,6 +95,8 @@
 
 ## 블러프 가이드 (악 팀이 집사를 사칭할 때)
 
+![](  ../asset/generated/2x1/butler_s6_bluff.webp)
+
 ### 왜 집사 사칭이 좋은가
 
 - "아무도 집사를 의심하지 않는다" — 위협적이지 않은 역할이라 블러프하기 좋습니다.
@@ -100,18 +114,22 @@
 
 ## 상호작용
 
+![](  ../asset/generated/2x1/butler_s7_inter.webp)
+
 | 역할 | 상호작용 |
 |---|---|
-| ![](../asset/new/Icon_poisoner.png) **독살자** | 집사가 중독되면 투표 제약이 풀릴 수 있음 (이야기꾼 재량) |
-| ![](../asset/new/Icon_drunk.png) **주정뱅이** | 집사가 실제로 주정뱅이라면 투표 제약 없음 (능력이 작동하지 않으므로) |
-| ![](../asset/new/Icon_spy.png) **스파이** | 스파이가 집사의 주인 선택을 알 수 있음 |
-| ![](../asset/new/Icon_imp.png) **임프** | 주인이 임프면 의도적으로 투표를 안 해 집사의 투표권 봉쇄 가능 |
-| ![](../asset/new/Icon_baron.png) **남작** | 남작으로 인해 집사가 추가로 게임에 등장할 수 있음 |
-| ![](../asset/new/Icon_slayer.png) **학살자** | 집사의 학살자 선언은 투표와 무관하게 자유롭게 가능 |
+| ![](../asset/new/Icon_poisoner.webp) **독살자** | 집사가 중독되면 투표 제약이 풀릴 수 있음 (이야기꾼 재량) |
+| ![](../asset/new/Icon_drunk.webp) **주정뱅이** | 집사가 실제로 주정뱅이라면 투표 제약 없음 (능력이 작동하지 않으므로) |
+| ![](../asset/new/Icon_spy.webp) **스파이** | 스파이가 집사의 주인 선택을 알 수 있음 |
+| ![](../asset/new/Icon_imp.webp) **임프** | 주인이 임프면 의도적으로 투표를 안 해 집사의 투표권 봉쇄 가능 |
+| ![](../asset/new/Icon_baron.webp) **남작** | 남작으로 인해 집사가 추가로 게임에 등장할 수 있음 |
+| ![](../asset/new/Icon_slayer.webp) **학살자** | 집사의 학살자 선언은 투표와 무관하게 자유롭게 가능 |
 
 ---
 
 ## 자주 묻는 질문
+
+![](  ../asset/generated/2x1/butler_s8_faq.webp)
 
 **Q: 투표 순서가 중요한가요?**
 A: 아닙니다. 주인이 이미 투표했든, 아직 손을 들고 있든, 손이 올라가 있기만 하면 집사도 투표할 수 있습니다.

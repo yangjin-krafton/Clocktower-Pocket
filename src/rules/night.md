@@ -1,11 +1,15 @@
 ﻿# 밤 진행
 
+![](../asset/generated/1x1/night_page.webp)
+
 낮 처형이 끝나면 밤이 시작됩니다.
 이야기꾼(호스트)이 **밤 순서**에 따라 각 역할을 처리합니다.
 
 ---
 
 ## 밤 기본 규칙
+
+![](  ../asset/generated/2x1/night_s1_rules.webp)
 
 - 모든 플레이어는 **눈을 감고** 이야기꾼의 신호를 기다립니다.
 - 해당 역할 플레이어가 신호 받으면 **손짓으로 대상을 선택**합니다.
@@ -24,14 +28,16 @@
 
 ## 첫째 밤 순서
 
+![](  ../asset/generated/2x1/night_s2_first.webp)
+
 첫째 밤은 게임의 기초 정보가 확립되는 중요한 밤입니다.
 
 ### 1. 미니언 정보
-![](../asset/new/Generic_minion.png) [미니언](minion.md)들이 눈을 뜨고 **서로와 임프**를 확인합니다.
+![](../asset/new/Generic_minion.webp) [미니언](minion.md)들이 눈을 뜨고 **서로와 임프**를 확인합니다.
 → 미니언끼리 서로 누구인지, 임프가 누구인지 알게 됩니다.
 
 ### 2. 임프 정보
-![](../asset/new/Icon_imp.png) [임프](demon.md)가 **미니언들**을 확인합니다.
+![](../asset/new/Icon_imp.webp) [임프](demon.md)가 **미니언들**을 확인합니다.
 이야기꾼이 스크립트 내 미사용 선 역할 **3개를 블러프**용으로 제시합니다.
 → 임프는 이 3개 역할을 자신의 역할로 사칭할 수 있습니다 (게임에 없는 역할이므로 누구도 반박 불가).
 
@@ -39,47 +45,51 @@
 
 | 순서 | 역할 | 행동 |
 |---|---|---|
-| 1 | ![](../asset/new/Icon_poisoner.png) [독살자](minion.md) | 중독 대상 선택 |
-| 2 | ![](../asset/new/Icon_washerwoman.png) [세탁부](townsfolk.md) | 마을 주민 포함 두 플레이어 + 역할 제시 |
-| 3 | ![](../asset/new/Icon_librarian.png) [사서](townsfolk.md) | 아웃사이더 포함 두 플레이어 + 역할 제시 |
-| 4 | ![](../asset/new/Icon_investigator.png) [조사관](townsfolk.md) | 미니언 포함 두 플레이어 + 역할 제시 |
-| 5 | ![](../asset/new/Icon_chef.png) [요리사](townsfolk.md) | 이웃한 악 쌍의 수 제시 |
-| 6 | ![](../asset/new/Icon_empath.png) [공감인](townsfolk.md) | 양옆 악 수 제시 |
-| 7 | ![](../asset/new/Icon_fortuneteller.png) [점쟁이](townsfolk.md) | 2명 선택 → 임프 여부 제시 |
-| 8 | ![](../asset/new/Icon_butler.png) [집사](outsider.md) | 주인 선택 |
-| 9 | ![](../asset/new/Icon_spy.png) [스파이](minion.md) | 그리모어 열람 |
+| 1 | ![](../asset/new/Icon_poisoner.webp) [독살자](minion.md) | 중독 대상 선택 |
+| 2 | ![](../asset/new/Icon_washerwoman.webp) [세탁부](townsfolk.md) | 마을 주민 포함 두 플레이어 + 역할 제시 |
+| 3 | ![](../asset/new/Icon_librarian.webp) [사서](townsfolk.md) | 아웃사이더 포함 두 플레이어 + 역할 제시 |
+| 4 | ![](../asset/new/Icon_investigator.webp) [조사관](townsfolk.md) | 미니언 포함 두 플레이어 + 역할 제시 |
+| 5 | ![](../asset/new/Icon_chef.webp) [요리사](townsfolk.md) | 이웃한 악 쌍의 수 제시 |
+| 6 | ![](../asset/new/Icon_empath.webp) [공감인](townsfolk.md) | 양옆 악 수 제시 |
+| 7 | ![](../asset/new/Icon_fortuneteller.webp) [점쟁이](townsfolk.md) | 2명 선택 → 임프 여부 제시 |
+| 8 | ![](../asset/new/Icon_butler.webp) [집사](outsider.md) | 주인 선택 |
+| 9 | ![](../asset/new/Icon_spy.webp) [스파이](minion.md) | 그리모어 열람 |
 
 ---
 
 ## 반복 밤 순서
 
+![](  ../asset/generated/2x1/night_s3_repeat.webp)
+
 둘째 밤부터는 다음 순서로 진행됩니다.
 
 | 순서 | 역할 | 행동 |
 |---|---|---|
-| 1 | ![](../asset/new/Icon_poisoner.png) [독살자](minion.md) | 중독 대상 선택 (이전 밤 중독은 해제) |
-| 2 | ![](../asset/new/Icon_monk.png) [수도사](townsfolk.md) | 보호 대상 선택 (자신 제외) |
-| 3 | ![](../asset/new/Icon_imp.png) [임프](demon.md) | 공격 대상 선택 |
-| 4 | ![](../asset/new/Icon_ravenkeeper.png) [까마귀 사육사](townsfolk.md) | 이번 밤 사망 시 → 1명의 역할 확인 |
-| 5 | ![](../asset/new/Icon_undertaker.png) [장의사](townsfolk.md) | 전날 처형자의 역할 확인 |
-| 6 | ![](../asset/new/Icon_empath.png) [공감인](townsfolk.md) | 양옆 악 수 제시 |
-| 7 | ![](../asset/new/Icon_fortuneteller.png) [점쟁이](townsfolk.md) | 2명 선택 → 임프 여부 제시 |
-| 8 | ![](../asset/new/Icon_butler.png) [집사](outsider.md) | 주인 선택 (매 밤 변경 가능) |
-| 9 | ![](../asset/new/Icon_spy.png) [스파이](minion.md) | 그리모어 열람 |
+| 1 | ![](../asset/new/Icon_poisoner.webp) [독살자](minion.md) | 중독 대상 선택 (이전 밤 중독은 해제) |
+| 2 | ![](../asset/new/Icon_monk.webp) [수도사](townsfolk.md) | 보호 대상 선택 (자신 제외) |
+| 3 | ![](../asset/new/Icon_imp.webp) [임프](demon.md) | 공격 대상 선택 |
+| 4 | ![](../asset/new/Icon_ravenkeeper.webp) [까마귀 사육사](townsfolk.md) | 이번 밤 사망 시 → 1명의 역할 확인 |
+| 5 | ![](../asset/new/Icon_undertaker.webp) [장의사](townsfolk.md) | 전날 처형자의 역할 확인 |
+| 6 | ![](../asset/new/Icon_empath.webp) [공감인](townsfolk.md) | 양옆 악 수 제시 |
+| 7 | ![](../asset/new/Icon_fortuneteller.webp) [점쟁이](townsfolk.md) | 2명 선택 → 임프 여부 제시 |
+| 8 | ![](../asset/new/Icon_butler.webp) [집사](outsider.md) | 주인 선택 (매 밤 변경 가능) |
+| 9 | ![](../asset/new/Icon_spy.webp) [스파이](minion.md) | 그리모어 열람 |
 
 ---
 
 ## 밤 처리 특수 규칙
+
+![](  ../asset/generated/2x1/night_s4_special.webp)
 
 ### 임프 공격
 
 | 상황 | 결과 |
 |---|---|
 | 일반 공격 | 대상 사망 (다음 아침 공개) |
-| ![](../asset/new/Icon_monk.png) 수도사 보호 대상 | 공격 무효 — 대상 생존 |
-| ![](../asset/new/Icon_soldier.png) 군인 공격 | 공격 무효 — 군인 면역 |
-| ![](../asset/new/Icon_mayor.png) 시장 공격 | 다른 플레이어에게 튕김 (이야기꾼 재량) |
-| **임프 자결** | 임프 사망 → ![](../asset/new/Icon_scarletwoman.png) 진홍의 여인 승계 (5명 이상) 또는 미니언 중 랜덤 승계 |
+| ![](../asset/new/Icon_monk.webp) 수도사 보호 대상 | 공격 무효 — 대상 생존 |
+| ![](../asset/new/Icon_soldier.webp) 군인 공격 | 공격 무효 — 군인 면역 |
+| ![](../asset/new/Icon_mayor.webp) 시장 공격 | 다른 플레이어에게 튕김 (이야기꾼 재량) |
+| **임프 자결** | 임프 사망 → ![](../asset/new/Icon_scarletwoman.webp) 진홍의 여인 승계 (5명 이상) 또는 미니언 중 랜덤 승계 |
 
 ### 독살자 중독
 
@@ -95,6 +105,8 @@
 ---
 
 ## 밤 진행 요약
+
+![](  ../asset/generated/2x1/night_s5_summary.webp)
 
 ```
 모든 플레이어 눈 감기

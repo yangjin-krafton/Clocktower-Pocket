@@ -1,8 +1,12 @@
-# ![](../asset/demon-head2.png) 앱 사용법
+# ![](../asset/demon-head2.webp) 앱 사용법
+
+![](  ../asset/generated/1x1/app_page.webp)
 
 ---
 
 ## 호스트 (이야기꾼)
+
+![](  ../asset/generated/2x1/app_s1_host.webp)
 
 ### 방 만들기
 - 앱 실행 후 **호스트 모드**를 선택하세요.
@@ -15,12 +19,14 @@
 
 ### 게임 진행
 - 밤 순서에 따라 각 역할을 처리하세요 → [밤 진행](night.md)
-- 플레이어 칩을 탭하면 ![](../asset/death.png) 사망·![](../asset/reminder.png) 중독·취함 처리가 가능합니다.
+- 플레이어 칩을 탭하면 ![](../asset/death.webp) 사망·![](../asset/reminder.webp) 중독·취함 처리가 가능합니다.
 - 그리모어에서 모든 역할·상태를 한눈에 확인할 수 있습니다.
 
 ---
 
 ## 참가자
+
+![](  ../asset/generated/2x1/app_s2_player.webp)
 
 ### 참가하기
 - 방 코드를 입력해 참가하세요.
@@ -34,7 +40,7 @@
 
 **플레이어**
 다른 참가자 상태와 메모를 기록하세요.
-![](../asset/life.png) 생존 / ![](../asset/shroud.png) 사망 여부도 여기서 확인됩니다.
+![](../asset/life.webp) 생존 / ![](../asset/shroud.webp) 사망 여부도 여기서 확인됩니다.
 
 **시그널**
 이모지로 다른 플레이어에게 조용히 신호를 보낼 수 있습니다.

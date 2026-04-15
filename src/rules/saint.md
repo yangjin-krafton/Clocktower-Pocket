@@ -1,16 +1,22 @@
-﻿# ![](../asset/new/Icon_saint.png) 성자 (Saint)
+﻿# ![](../asset/new/Icon_saint.webp) 성자 (Saint)
 
-**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
+![](../asset/generated/1x1/saint_page.webp)
+
+**진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/saint_s1_ability.webp)
 
 ⚠️ **당신이 처형되면 선 팀이 즉시 패배한다.**
 
 ---
 
 ## 플레이 가이드
+
+![](  ../asset/generated/2x1/saint_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -41,6 +47,8 @@
 
 ## 블러프 대응
 
+![](  ../asset/generated/2x1/saint_s3_bluff.webp)
+
 ### 진짜 성인이라면
 - 구체적으로 설명하세요.
 - 다른 정보와 교차 검증하세요.
@@ -55,9 +63,11 @@
 
 ## 상호작용
 
+![](  ../asset/generated/2x1/saint_s4_inter.webp)
+
 - **모든 플레이어**: 당신을 처형하면 안 됩니다!
-- ![](../asset/new/Icon_slayer.png) **처단자**: 학살자 능력으로 죽어도 패배 조건이 **아닙니다** (처형만 패배).
-- ![](../asset/new/Icon_imp.png) **임프**: 밤에 죽는 것은 괜찮습니다.
+- ![](../asset/new/Icon_slayer.webp) **처단자**: 학살자 능력으로 죽어도 패배 조건이 **아닙니다** (처형만 패배).
+- ![](../asset/new/Icon_imp.webp) **임프**: 밤에 죽는 것은 괜찮습니다.
 
 ---
 

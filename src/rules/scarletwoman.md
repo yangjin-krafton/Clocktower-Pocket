@@ -1,17 +1,23 @@
-﻿# ![](../asset/new/Icon_scarletwoman.png) 진홍의 여인 (Scarlet Woman)
+﻿# ![](../asset/new/Icon_scarletwoman.webp) 진홍의 여인 (Scarlet Woman)
 
-**진영**: ![](../asset/new/Generic_minion.png) 미니언 (악 팀)
+![](../asset/generated/1x1/scarletwoman_page.webp)
+
+**진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---
 
 ## 능력
 
-**생존자 5명 이상**일 때 ![](../asset/new/Icon_imp.png) 임프가 죽으면,
+![](  ../asset/generated/2x1/scarletwoman_s1_ability.webp)
+
+**생존자 5명 이상**일 때 ![](../asset/new/Icon_imp.webp) 임프가 죽으면,
 당신이 **새 임프**이 된다.
 
 ---
 
 ## 플레이 가이드 (악 팀)
+
+![](  ../asset/generated/2x1/scarletwoman_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -30,7 +36,7 @@
 
 ### 승계 후
 
-- **당신이 임프**: 이제 당신이 ![](../asset/new/Icon_imp.png) 임프입니다.
+- **당신이 임프**: 이제 당신이 ![](../asset/new/Icon_imp.webp) 임프입니다.
 - **밤 공격**: 다음 밤부터 공격할 수 있습니다.
 - **승리 조건**: 임프로서 악 팀 승리를 이끄세요.
 - **블러프 인계**: 기존 임프가 받은 블러프 3개를 **그대로 인계**받습니다. 새 블러프는 추가 지급되지 않습니다.
@@ -53,6 +59,8 @@
 
 ## 블러프 인계 규칙
 
+![](  ../asset/generated/2x1/scarletwoman_s3_bluff_rules.webp)
+
 승계 시 블러프는 **새로 지급되지 않습니다.**
 
 | 항목 | 내용 |
@@ -67,16 +75,20 @@
 
 ## 블러프 권장
 
+![](  ../asset/generated/2x1/scarletwoman_s4_bluff.webp)
+
 스칼렛 우먼은 다음 역할을 사칭하기 좋습니다:
 
-- ![](../asset/new/Icon_empath.png) **공감인**: 정보를 주면서 신뢰를 얻으세요.
-- ![](../asset/new/Icon_butler.png) **집사**: 투표 제약으로 의심을 피하세요.
-- ![](../asset/new/Icon_recluse.png) **은둔자**: 조사에 악으로 걸려도 변명 가능.
-- ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지 가능.
+- ![](../asset/new/Icon_empath.webp) **공감인**: 정보를 주면서 신뢰를 얻으세요.
+- ![](../asset/new/Icon_butler.webp) **집사**: 투표 제약으로 의심을 피하세요.
+- ![](../asset/new/Icon_recluse.webp) **은둔자**: 조사에 악으로 걸려도 변명 가능.
+- ![](../asset/new/Icon_ravenkeeper.webp) **까마귀 사육사**: 밤에 안 죽으면 블러프 유지 가능.
 
 ---
 
 ## 승계 예시
+
+![](  ../asset/generated/2x1/scarletwoman_s5_examples.webp)
 
 ### 승계 성공
 - 생존자 **6명**, 임프 처형 → 스칼렛 우먼이 새 임프
@@ -90,13 +102,17 @@
 
 ## 상호작용
 
-- ![](../asset/new/Icon_imp.png) **임프**: 임프가 죽으면 당신이 승계합니다.
-- ![](../asset/new/Icon_slayer.png) **처단자**: 학살자가 임프를 죽여도 승계됩니다.
-- ![](../asset/new/Icon_mayor.png) **시장**: 최종 3인 전에 승계하세요.
+![](  ../asset/generated/2x1/scarletwoman_s6_inter.webp)
+
+- ![](../asset/new/Icon_imp.webp) **임프**: 임프가 죽으면 당신이 승계합니다.
+- ![](../asset/new/Icon_slayer.webp) **처단자**: 학살자가 임프를 죽여도 승계됩니다.
+- ![](../asset/new/Icon_mayor.webp) **시장**: 최종 3인 전에 승계하세요.
 
 ---
 
 ## 악 팀 협력
+
+![](  ../asset/generated/2x1/scarletwoman_s7_coop.webp)
 
 - **첫날 밤**: 임프와 다른 미니언을 확인합니다.
 - **생존 계획**: 임프와 함께 최종까지 살아남을 계획을 세우세요.

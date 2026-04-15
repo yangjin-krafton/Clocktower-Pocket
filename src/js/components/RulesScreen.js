@@ -252,6 +252,11 @@ export class RulesScreen {
         result.push(`<ul class="rules-ul">${items.join('')}</ul>`)
         continue
       }
+      // 삽화 이미지 전용 줄 (generated/ 삽화는 블록 렌더링)
+      if (/^!\[.*\]\(.*generated\//.test(line.trim())) {
+        result.push(`<div class="rules-illust-wrap">${this._inline(line)}</div>`)
+        i++; continue
+      }
       // 빈 줄
       if (line.trim() === '') {
         result.push('<div class="rules-spacer"></div>')
@@ -330,21 +335,27 @@ export class RulesScreen {
 
     // ![alt](src) → 인라인 이미지 (링크보다 먼저 처리)
     // MD 파일은 src/rules/ 에 있으므로, ../asset/ 형태 경로를 앱 루트 기준으로 보정
-    s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
+    s = s.replace(/!\[([^\]]*)\]\(\s*([^)]+?)\s*\)/g, (_, alt, src) => {
       // ../asset/... → asset/... (MD는 src/rules/ 위치, 앱 루트는 src/)
       const resolved = src.replace(/^(?:\.\.\/)+/, '')
 
-      // 역할 아이콘: token.png 배경 위에 아이콘 오버레이
-      if (/\/icons\//.test(resolved)) {
+      // ── 삽화: generated/ 하위 이미지 → 블록 배너로 렌더링
+      if (/\/generated\//.test(resolved)) {
+        const ratio = /\/1x1\//.test(resolved) ? 'rules-illust--1x1' : 'rules-illust--2x1'
+        return `<img class="rules-illust ${ratio}" src="${resolved}" alt="${alt}" loading="lazy">`
+      }
+
+      // ── 역할 아이콘: token.webp 배경 위에 아이콘 오버레이
+      if (/\/new\/Icon_/.test(resolved) || /\/new\/Generic_/.test(resolved)) {
         return `<span class="rules-token-wrap" title="${alt}">`
-          + `<img class="rules-token-bg" src="asset/token.png" alt="">`
+          + `<img class="rules-token-bg" src="asset/token.webp" alt="">`
           + `<img class="rules-token-icon" src="${resolved}" alt="${alt}" loading="lazy">`
           + `</span>`
       }
 
-      // 에디션 배지 / 상태 토큰
+      // ── 에디션 배지 / 상태 토큰
       const cls = /\/editions\//.test(resolved) ? 'rules-icon rules-icon--badge'
-                : /\/(life|death|vote|reminder|shroud|token)\.png/.test(resolved) ? 'rules-icon rules-icon--token'
+                : /\/(life|death|vote|reminder|shroud|token)\.webp/.test(resolved) ? 'rules-icon rules-icon--token'
                 : 'rules-icon'
       return `<img class="${cls}" src="${resolved}" alt="${alt}" loading="lazy">`
     })
@@ -443,7 +454,27 @@ if (!document.getElementById('rules-screen-style')) {
   font-size: 0.82rem;
 }
 
-/* ── 역할 토큰 (token.png 배경 + 아이콘 오버레이) ── */
+/* ── 삽화 (generated 이미지) ── */
+.rules-illust {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  margin: 6px 0 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.rules-illust--1x1 {
+  max-width: 280px;
+  aspect-ratio: 1 / 1;
+  margin-left: auto;
+  margin-right: auto;
+}
+.rules-illust--2x1 {
+  max-width: 100%;
+  aspect-ratio: 2 / 1;
+}
+
+/* ── 역할 토큰 (token.webp 배경 + 아이콘 오버레이) ── */
 .rules-token-wrap {
   position: relative;
   display: inline-block;

@@ -104,7 +104,7 @@ export class NightAction {
 
     ThemeManager.pushTemp('player')
     this._unmount = this._trackOverlay(() => mountNightRevealNote({
-      roleIcon: 'minion.png',
+      roleIcon: 'minion.webp',
       roleName: '미니언 공개',
       roleTeam: 'minion',
       message:  minionMsg,
@@ -237,7 +237,7 @@ export class NightAction {
 
     ThemeManager.pushTemp('player')
     this._unmount = this._trackOverlay(() => mountNightRevealNote({
-      roleIcon: 'imp.png',
+      roleIcon: 'imp.webp',
       roleName: prevRole ? `새 임프 (${prevRoleName} 승계)` : '임프 정보',
       roleTeam: 'demon',
       message:  demonMsg,
@@ -276,7 +276,7 @@ export class NightAction {
 
     this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
       title:     '시장 — 공격 튕김',
-      roleIcon:  'mayor.png',
+      roleIcon:  'mayor.webp',
       roleTeam:  'town',
       ability:   '임프 공격이 시장을 노렸습니다. 튕길 대상을 선택하거나, 시장 생존으로 진행하세요. 군인 선택 시 아무도 사망하지 않습니다.',
       players:   bounceTargets,
@@ -544,7 +544,7 @@ export class NightAction {
     // 미니언 여럿 → 호스트가 선택
     this._unmount = this._trackOverlay(() => mountOvalSelectPanel({
       title:     '임프 승계 — 미니언 선택',
-      roleIcon:  'imp.png',
+      roleIcon:  'imp.webp',
       roleTeam:  'demon',
       ability:   '임프가 자결했습니다. 새 임프가 될 미니언을 선택하세요.',
       players:   result.minions,

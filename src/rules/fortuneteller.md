@@ -1,10 +1,14 @@
-﻿# ![](../asset/new/Icon_fortuneteller.png) 점쟁이 (Fortune Teller)
+﻿# ![](../asset/new/Icon_fortuneteller.webp) 점쟁이 (Fortune Teller)
 
-**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
+![](../asset/generated/1x1/fortuneteller_page.webp)
+
+**진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/fortuneteller_s1_ability.webp)
 
 **매일 밤** 2명을 선택해, 그 중 **임프가 있는지** 안다.
 단, **선 플레이어 1명**은 항상 **임프처럼 잡힌다** (오탐, Red Herring).
@@ -12,6 +16,8 @@
 ---
 
 ## 플레이 가이드
+
+![](  ../asset/generated/2x1/fortuneteller_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -27,9 +33,9 @@
 
 ### 주의할 점
 
-- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
-- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
-- ![](../asset/new/Icon_recluse.png) **은둔자**: 임프로 등록될 수 있습니다 (추가 오탐).
+- ![](../asset/new/Icon_drunk.webp) **취함**: 당신이 취한 상태면 **잘못된 정보**를 받습니다.
+- ![](../asset/new/Icon_poisoner.webp) **중독**: 중독되면 정보가 **오작동**할 수 있습니다.
+- ![](../asset/new/Icon_recluse.webp) **은둔자**: 임프로 등록될 수 있습니다 (추가 오탐).
 - **사망자 조사 가능**: 죽은 사람도 조사할 수 있습니다.
 
 ### 전략 팁
@@ -45,9 +51,11 @@
 
 ## 상호작용
 
-- ![](../asset/new/Icon_imp.png) **임프**: 당신의 주요 타겟입니다.
-- ![](../asset/new/Icon_recluse.png) **은둔자**: 임프로 등록되어 추가 오탐이 될 수 있습니다.
-- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 임프 승계 시 새 임프로 조사됩니다.
+![](  ../asset/generated/2x1/fortuneteller_s3_inter.webp)
+
+- ![](../asset/new/Icon_imp.webp) **임프**: 당신의 주요 타겟입니다.
+- ![](../asset/new/Icon_recluse.webp) **은둔자**: 임프로 등록되어 추가 오탐이 될 수 있습니다.
+- ![](../asset/new/Icon_scarletwoman.webp) **진홍의 여인**: 임프 승계 시 새 임프로 조사됩니다.
 
 ---
 

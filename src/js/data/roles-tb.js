@@ -7,79 +7,79 @@ export const ROLES_TB = [
   {
     id: 'washerwoman', name: '세탁부', team: 'townsfolk',
     ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 마을 주민임을 안다.',
-    firstNight: true, otherNights: false, icon: 'washerwoman.png', iconEmoji: '👁️',
+    firstNight: true, otherNights: false, icon: 'washerwoman.webp', iconEmoji: '👁️',
     nightType: 'info'
   },
   {
     id: 'librarian', name: '사서', team: 'townsfolk',
     ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 아웃사이더임을 안다.',
-    firstNight: true, otherNights: false, icon: 'librarian.png', iconEmoji: '📚',
+    firstNight: true, otherNights: false, icon: 'librarian.webp', iconEmoji: '📚',
     nightType: 'info'
   },
   {
     id: 'investigator', name: '조사관', team: 'townsfolk',
     ability: '첫날 밤, 두 플레이어를 제시받고 그 중 한 명이 특정 미니언임을 안다.',
-    firstNight: true, otherNights: false, icon: 'investigator.png', iconEmoji: '🔍',
+    firstNight: true, otherNights: false, icon: 'investigator.webp', iconEmoji: '🔍',
     nightType: 'info'
   },
   {
     id: 'chef', name: '요리사', team: 'townsfolk',
     ability: '첫날 밤, 서로 이웃한 악 플레이어 쌍의 수를 안다.',
-    firstNight: true, otherNights: false, icon: 'chef.png', iconEmoji: '👨‍🍳',
+    firstNight: true, otherNights: false, icon: 'chef.webp', iconEmoji: '👨‍🍳',
     nightType: 'info'
   },
   {
     id: 'empath', name: '공감인', team: 'townsfolk',
     ability: '매 밤, 양옆 생존 이웃 중 악 플레이어의 수(0/1/2)를 안다.',
-    firstNight: true, otherNights: true, icon: 'empath.png', iconEmoji: '🧪',
+    firstNight: true, otherNights: true, icon: 'empath.webp', iconEmoji: '🧪',
     nightType: 'info'
   },
   {
     id: 'fortuneteller', name: '점쟁이', team: 'townsfolk',
     ability: '매 밤 2명을 선택해 그 중 임프가 있는지 안다. 선 플레이어 1명은 항상 임프처럼 잡힌다.',
-    firstNight: true, otherNights: true, icon: 'fortuneteller.png', iconEmoji: '🔮',
+    firstNight: true, otherNights: true, icon: 'fortuneteller.webp', iconEmoji: '🔮',
     nightType: 'select', maxSelect: 2
   },
   {
     id: 'undertaker', name: '장의사', team: 'townsfolk',
     ability: '매 밤, 전날 처형된 플레이어의 실제 역할을 안다.',
-    firstNight: false, otherNights: true, icon: 'undertaker.png', iconEmoji: '⚰️',
+    firstNight: false, otherNights: true, icon: 'undertaker.webp', iconEmoji: '⚰️',
     nightType: 'info'
   },
   {
     id: 'monk', name: '수도사', team: 'townsfolk',
     ability: '매 밤(자신 제외) 1명을 보호해 임프 공격으로부터 지킨다.',
-    firstNight: false, otherNights: true, icon: 'monk.png', iconEmoji: '🙏',
+    firstNight: false, otherNights: true, icon: 'monk.webp', iconEmoji: '🙏',
     nightType: 'select', maxSelect: 1
   },
   {
     id: 'ravenkeeper', name: '까마귀 사육사', team: 'townsfolk',
     ability: '밤에 죽으면, 그 밤 1명을 선택해 역할을 안다.',
-    firstNight: false, otherNights: true, icon: 'ravenkeeper.png', iconEmoji: '🐦‍⬛',
+    firstNight: false, otherNights: true, icon: 'ravenkeeper.webp', iconEmoji: '🐦‍⬛',
     nightType: 'select', maxSelect: 1
   },
   {
     id: 'virgin', name: '처녀', team: 'townsfolk',
     ability: '처음으로 자신을 지목한 사람이 마을 주민이면 그 지목자가 즉시 처형될 수 있다.',
-    firstNight: false, otherNights: false, icon: 'virgin.png', iconEmoji: '👼',
+    firstNight: false, otherNights: false, icon: 'virgin.webp', iconEmoji: '👼',
     nightType: null
   },
   {
     id: 'slayer', name: '처단자', team: 'townsfolk',
     ability: '게임 중 1회, 낮에 1명을 지목. 그 대상이 임프면 즉시 사망한다.',
-    firstNight: false, otherNights: false, icon: 'slayer.png', iconEmoji: '🗡️',
+    firstNight: false, otherNights: false, icon: 'slayer.webp', iconEmoji: '🗡️',
     nightType: null
   },
   {
     id: 'soldier', name: '군인', team: 'townsfolk',
     ability: '임프 공격으로는 죽지 않는다.',
-    firstNight: false, otherNights: false, icon: 'soldier.png', iconEmoji: '🛡️',
+    firstNight: false, otherNights: false, icon: 'soldier.webp', iconEmoji: '🛡️',
     nightType: null
   },
   {
     id: 'mayor', name: '시장', team: 'townsfolk',
     ability: '최종 3인에서 처형 없이 낮이 끝나면 선 팀이 승리할 수 있다. 임프 공격이 시장을 노리면 튕겨나갈 수 있다.',
-    firstNight: false, otherNights: false, icon: 'mayor.png', iconEmoji: '🎩',
+    firstNight: false, otherNights: false, icon: 'mayor.webp', iconEmoji: '🎩',
     nightType: null
   },
 
@@ -87,25 +87,25 @@ export const ROLES_TB = [
   {
     id: 'butler', name: '집사', team: 'outsider',
     ability: '매 밤, 주인을 1명 선택. 낮 동안 그 주인이 투표하지 않으면 자신도 투표할 수 없다.',
-    firstNight: true, otherNights: true, icon: 'butler.png', iconEmoji: '🫅',
+    firstNight: true, otherNights: true, icon: 'butler.webp', iconEmoji: '🫅',
     nightType: 'select', maxSelect: 1
   },
   {
     id: 'drunk', name: '주정뱅이', team: 'outsider',
     ability: '본인은 마을 주민이라 믿지만 실제로는 아웃사이더이며 능력이 오작동한다.',
-    firstNight: false, otherNights: false, icon: 'drunk.png', iconEmoji: '🍾',
+    firstNight: false, otherNights: false, icon: 'drunk.webp', iconEmoji: '🍾',
     nightType: null
   },
   {
     id: 'recluse', name: '은둔자', team: 'outsider',
     ability: '선 팀이지만 악 팀 또는 임프로 등록될 수 있다.',
-    firstNight: false, otherNights: false, icon: 'recluse.png', iconEmoji: '🧎',
+    firstNight: false, otherNights: false, icon: 'recluse.webp', iconEmoji: '🧎',
     nightType: null
   },
   {
     id: 'saint', name: '성자', team: 'outsider',
     ability: '성자가 처형되면 선 팀이 즉시 패배한다.',
-    firstNight: false, otherNights: false, icon: 'saint.png', iconEmoji: '😇',
+    firstNight: false, otherNights: false, icon: 'saint.webp', iconEmoji: '😇',
     nightType: null
   },
 
@@ -113,25 +113,25 @@ export const ROLES_TB = [
   {
     id: 'poisoner', name: '독약꾼', team: 'minion',
     ability: '매 밤 1명을 중독시킨다. 중독된 플레이어의 능력이 오작동한다.',
-    firstNight: true, otherNights: true, icon: 'poisoner.png', iconEmoji: '☠️',
+    firstNight: true, otherNights: true, icon: 'poisoner.webp', iconEmoji: '☠️',
     nightType: 'select', maxSelect: 1
   },
   {
     id: 'spy', name: '스파이', team: 'minion',
     ability: '그리모어 전체 정보를 볼 수 있다. 선 팀으로 등록될 수 있다.',
-    firstNight: true, otherNights: true, icon: 'spy.png', iconEmoji: '🕵️',
+    firstNight: true, otherNights: true, icon: 'spy.webp', iconEmoji: '🕵️',
     nightType: 'info'
   },
   {
     id: 'scarletwoman', name: '진홍의 여인', team: 'minion',
     ability: '생존자 5명 이상일 때 임프가 죽으면 자신이 새 임프로 승계된다.',
-    firstNight: false, otherNights: false, icon: 'scarletwoman.png', iconEmoji: '💋',
+    firstNight: false, otherNights: false, icon: 'scarletwoman.webp', iconEmoji: '💋',
     nightType: null
   },
   {
     id: 'baron', name: '남작', team: 'minion',
     ability: '게임 시작 시 아웃사이더 수를 2명 더 늘린다.',
-    firstNight: true, otherNights: false, icon: 'baron.png', iconEmoji: '🎭',
+    firstNight: true, otherNights: false, icon: 'baron.webp', iconEmoji: '🎭',
     nightType: null
   },
 
@@ -139,7 +139,7 @@ export const ROLES_TB = [
   {
     id: 'imp', name: '임프', team: 'demon',
     ability: '매 밤(첫밤 제외) 1명을 처치한다. 자신을 처치하면 살아있는 미니언이 새 임프가 된다.',
-    firstNight: true, otherNights: true, icon: 'imp.png', iconEmoji: '👿',
+    firstNight: true, otherNights: true, icon: 'imp.webp', iconEmoji: '👿',
     nightType: 'select', maxSelect: 1
   },
 
@@ -147,31 +147,31 @@ export const ROLES_TB = [
   {
     id: 'scapegoat', name: '희생양', team: 'traveller',
     ability: '플레이어가 처형으로 사망하면, 대신 당신이 처형될 수 있다. 그렇게 사망하면, 이야기꾼이 다른 플레이어의 투표권을 결정한다.',
-    firstNight: false, otherNights: false, icon: 'scapegoat.png', iconEmoji: '🐐',
+    firstNight: false, otherNights: false, icon: 'scapegoat.webp', iconEmoji: '🐐',
     nightType: null
   },
   {
     id: 'gunslinger', name: '총잡이', team: 'traveller',
     ability: '매일 투표 중, 투표한 인접 플레이어를 공개적으로 선택하여 즉사시킬 수 있다.',
-    firstNight: false, otherNights: false, icon: 'gunslinger.png', iconEmoji: '🔫',
+    firstNight: false, otherNights: false, icon: 'gunslinger.webp', iconEmoji: '🔫',
     nightType: null
   },
   {
     id: 'beggar', name: '거지', team: 'traveller',
     ability: '당신은 투표 토큰이 없다. 죽은 플레이어가 투표 토큰을 당신에게 줄 수 있다.',
-    firstNight: false, otherNights: false, icon: 'beggar.png', iconEmoji: '🫴',
+    firstNight: false, otherNights: false, icon: 'beggar.webp', iconEmoji: '🫴',
     nightType: null
   },
   {
     id: 'bureaucrat', name: '관료', team: 'traveller',
     ability: '매 밤, 플레이어 1명을 선택한다. 그 플레이어의 투표는 내일 3표로 계산된다.',
-    firstNight: true, otherNights: true, icon: 'bureaucrat.png', iconEmoji: '📋',
+    firstNight: true, otherNights: true, icon: 'bureaucrat.webp', iconEmoji: '📋',
     nightType: 'select', maxSelect: 1
   },
   {
     id: 'thief', name: '도둑', team: 'traveller',
     ability: '매 밤, 플레이어 1명을 선택한다. 그 플레이어의 투표는 내일 음수로 계산된다.',
-    firstNight: true, otherNights: true, icon: 'thief.png', iconEmoji: '🦹',
+    firstNight: true, otherNights: true, icon: 'thief.webp', iconEmoji: '🦹',
     nightType: 'select', maxSelect: 1
   },
 ]

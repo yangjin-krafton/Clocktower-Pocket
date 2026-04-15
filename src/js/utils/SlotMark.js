@@ -163,7 +163,7 @@ function addBaronPips(slot, slotPx, current, required) {
 function addDrunkStatePill(slot, slotPx) {
   return createPillBadge(slot, slotPx, {
     pos:    'BR',
-    imgSrc: './asset/new/Icon_drunk.png',
+    imgSrc: './asset/new/Icon_drunk.webp',
     bg:     '#241c11',
     glow:   'rgba(37, 39, 44, 0.55)',
     cls:    'drunk',
@@ -260,7 +260,7 @@ function addDeadEffect(slot, type) {
  * TL 배지(🛡) + 슬롯 전체 방패 반투명 페이드 루프 오버레이.
  */
 function addProtectedEffect(slot, slotPx) {
-  // 슬롯 전체를 덮는 soldier.png 반투명 페이드 루프 오버레이
+  // 슬롯 전체를 덮는 soldier.webp 반투명 페이드 루프 오버레이
   const overlay = document.createElement('div')
   overlay.className = 'slot-mark slot-mark--protected-overlay'
   const imgPx = Math.round(slotPx * 0.72)
@@ -273,7 +273,7 @@ function addProtectedEffect(slot, slotPx) {
     animation:shield-fade 2.4s ease-in-out infinite;
   `
   const img = document.createElement('img')
-  img.src = './asset/new/Icon_soldier.png'
+  img.src = './asset/new/Icon_soldier.webp'
   img.style.cssText = `width:${imgPx}px;height:${imgPx}px;object-fit:contain;`
   overlay.appendChild(img)
   slot.appendChild(overlay)
@@ -324,7 +324,7 @@ function addButlerMasterPill(slot, slotPx, masterId) {
 /**
  * 슬롯 위에 이전 역할 아이콘이 둥둥 떠오르는 모션.
  * 임프 승계가 발생한 슬롯에 부착 (진홍의 여인, 독약꾼, 스파이 등 모든 케이스 공통).
- * @param {string} fromRoleIcon  이전 역할 icon 파일명 (예: 'scarletwoman.png')
+ * @param {string} fromRoleIcon  이전 역할 icon 파일명 (예: 'scarletwoman.webp')
  */
 function addImpSuccessionFloat(slot, slotPx) {
   const iconPx = Math.round(slotPx * 0.72)
@@ -342,7 +342,7 @@ function addImpSuccessionFloat(slot, slotPx) {
   `
   // 슬롯은 이전 역할을 그대로 표시 — 떠있는 아이콘은 새로 얻은 임프 역할
   const img = document.createElement('img')
-  img.src = './asset/new/Icon_imp.png'
+  img.src = './asset/new/Icon_imp.webp'
   img.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.92;'
   el.appendChild(img)
   slot.appendChild(el)

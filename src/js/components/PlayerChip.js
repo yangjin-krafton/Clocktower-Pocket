@@ -49,7 +49,7 @@ export function renderPlayerChip(player, opts = {}) {
   const iconWrap = document.createElement('div')
   iconWrap.className = 'dict__token-icon player-chip__icon-wrap'
 
-  if (roleIcon && roleIcon.endsWith('.png')) {
+  if (roleIcon && roleIcon.endsWith('.webp')) {
     const img = document.createElement('img')
     img.src = `./asset/new/Icon_${roleIcon}`
     img.alt = `${player.id}번`

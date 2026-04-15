@@ -1,10 +1,14 @@
 ﻿# 주요 상태
 
+![](../asset/generated/1x1/statuses_page.webp)
+
 플레이어는 게임 중 다양한 상태를 가질 수 있습니다.
 
 ---
 
-## ![](../asset/life.png) 생존 (Alive)
+## ![](../asset/life.webp) 생존 (Alive)
+
+![](  ../asset/generated/2x1/statuses_s1_alive.webp)
 
 - [지목](day.md)·[투표](day.md) 모두 가능합니다.
 - 역할 능력을 정상적으로 사용합니다.
@@ -12,7 +16,9 @@
 
 ---
 
-## ![](../asset/death.png) 사망 (Dead)
+## ![](../asset/death.webp) 사망 (Dead)
+
+![](  ../asset/generated/2x1/statuses_s2_dead.webp)
 
 ### 사망 원인
 - **처형**: 낮 투표로 처형당함 (처형과 사망은 다른 개념입니다)
@@ -33,14 +39,16 @@
 > ⚠️ 사망한 플레이어도 **처형 대상이 될 수 있습니다** (하루 1회 처형 규칙에 포함).
 
 ### "사망 시" 능력 예외
-- ![](../asset/new/Icon_ravenkeeper.png) **까마귀 사육사**: 사망하는 그 밤에 능력이 발동합니다.
+- ![](../asset/new/Icon_ravenkeeper.webp) **까마귀 사육사**: 사망하는 그 밤에 능력이 발동합니다.
 - 이러한 능력은 사망 "시점"에 작동하며, 이후에는 비활성화됩니다.
 
 ---
 
-## ![](../asset/new/Icon_poisoner.png) 중독 (Poisoned)
+## ![](../asset/new/Icon_poisoner.webp) 중독 (Poisoned)
 
-![](../asset/new/Icon_poisoner.png) [독살자](minion.md)가 매 밤 1명을 중독시킵니다.
+![](  ../asset/generated/2x1/statuses_s3_poison.webp)
+
+![](../asset/new/Icon_poisoner.webp) [독살자](minion.md)가 매 밤 1명을 중독시킵니다.
 
 ### 중독 효과
 
@@ -65,7 +73,9 @@
 
 ---
 
-## ![](../asset/new/Icon_drunk.png) 취함 (Drunk)
+## ![](../asset/new/Icon_drunk.webp) 취함 (Drunk)
+
+![](  ../asset/generated/2x1/statuses_s4_drunk.webp)
 
 [주정뱅이](outsider.md) 역할에 부여된 **영구 상태**입니다.
 
@@ -86,7 +96,9 @@
 
 ## 중독 vs 취함 비교
 
-| 구분 | ![](../asset/new/Icon_poisoner.png) 중독 | ![](../asset/new/Icon_drunk.png) 취함 |
+![](  ../asset/generated/2x1/statuses_s5_compare.webp)
+
+| 구분 | ![](../asset/new/Icon_poisoner.webp) 중독 | ![](../asset/new/Icon_drunk.webp) 취함 |
 |------|------|------|
 | **원인** | 독살자가 매 밤 선택 | 주정뱅이 역할 자체 |
 | **지속** | 1밤 + 다음 낮 (재선택 시 연장) | **영구** (게임 전체) |
@@ -103,6 +115,8 @@
 
 ## 건강 / 맑은 정신 (Healthy / Sober)
 
+![](  ../asset/generated/2x1/statuses_s6_healthy.webp)
+
 - **건강(Healthy)**: 중독되지 않은 상태. 능력이 정상 작동합니다.
 - **맑은 정신(Sober)**: 취하지 않은 상태. 능력이 정상 작동합니다.
 - 대부분의 플레이어는 게임 내내 건강하고 맑은 정신 상태입니다.
@@ -110,6 +124,8 @@
 ---
 
 ## 진영 (Alignment)
+
+![](  ../asset/generated/2x1/statuses_s7_alignment.webp)
 
 - **선(Good)** 또는 **악(Evil)** 중 하나입니다.
 - 진영은 게임 중 **변경될 수 있습니다** (예: 임프 자결 → 미니언 승계).

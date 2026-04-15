@@ -138,7 +138,7 @@ export function createRoleIconEl(role, iconPx, {
     font-size:${Math.round(iconPx * 0.58)}px;
     overflow:hidden;flex-shrink:0;
   `
-  if (role?.icon?.endsWith('.png')) {
+  if (role?.icon?.endsWith('.webp')) {
     const img = document.createElement('img')
     img.src = `./asset/new/Icon_${role.icon}`
     img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -157,7 +157,7 @@ export function createRoleIconEl(role, iconPx, {
     // ① 역할 아이콘: absolute 로 겹쳐 놓고 fade-in/out
     iconEl.style.cssText += ';position:absolute;top:0;left:0;animation:drunk-fade 6s ease-in-out infinite'
 
-    // ② drunk.png: half-cycle(-3s) 오프셋으로 교대 페이드
+    // ② drunk.webp: half-cycle(-3s) 오프셋으로 교대 페이드
     const drunkEl = document.createElement('div')
     drunkEl.style.cssText = `
       position:absolute;top:0;left:0;
@@ -167,7 +167,7 @@ export function createRoleIconEl(role, iconPx, {
       animation:drunk-fade 6s ease-in-out infinite;animation-delay:-3s;
     `
     const drunkImg = document.createElement('img')
-    drunkImg.src = './asset/new/Icon_drunk.png'
+    drunkImg.src = './asset/new/Icon_drunk.webp'
     drunkImg.style.cssText = 'width:85%;height:85%;object-fit:contain;'
     drunkEl.appendChild(drunkImg)
     iconWrap.appendChild(drunkEl)

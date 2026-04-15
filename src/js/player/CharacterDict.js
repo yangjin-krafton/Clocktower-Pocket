@@ -118,7 +118,7 @@ export class CharacterDict {
 
     const iconDiv = document.createElement('div')
     iconDiv.className = 'dict__token-icon'
-    if (role.icon?.endsWith('.png')) {
+    if (role.icon?.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name
@@ -161,7 +161,7 @@ export class CharacterDict {
     // ── 큰 아이콘 (배경 없이 반투명) ──
     const iconWrap = document.createElement('div')
     iconWrap.className = 'dict__modal-icon'
-    if (role.icon?.endsWith('.png')) {
+    if (role.icon?.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name

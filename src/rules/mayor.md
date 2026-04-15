@@ -1,10 +1,14 @@
-﻿# ![](../asset/new/Icon_mayor.png) 시장 (Mayor)
+﻿# ![](../asset/new/Icon_mayor.webp) 시장 (Mayor)
 
-**진영**: ![](../asset/new/Generic_townsfolk.png) 마을 주민 (선 팀)
+![](../asset/generated/1x1/mayor_page.webp)
+
+**진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---
 
 ## 능력
+
+![](  ../asset/generated/2x1/mayor_s1_ability.webp)
 
 - **최종 3인** 생존 + 처형 없는 낮이면 **선 팀 특수 승리** 가능.
 - 임프 공격이 시장을 노리면 **다른 플레이어에게 튕겨나갈** 수 있다.
@@ -12,6 +16,8 @@
 ---
 
 ## 플레이 가이드
+
+![](  ../asset/generated/2x1/mayor_s2_guide.webp)
 
 ### 당신이 해야 할 일
 
@@ -30,12 +36,12 @@
 
 - **무작위**: 임프가 시장을 공격하면 다른 사람이 대신 죽을 수 있습니다.
 - **확정 아님**: 항상 튕기는 것은 아닙니다 (이야기꾼 판단).
-- ![](../asset/new/Icon_soldier.png) **군인 우선**: 병사가 있다면 병사에게 튕길 수 있습니다 (병사는 안 죽음).
+- ![](../asset/new/Icon_soldier.webp) **군인 우선**: 병사가 있다면 병사에게 튕길 수 있습니다 (병사는 안 죽음).
 
 ### 주의할 점
 
-- ![](../asset/new/Icon_drunk.png) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
-- ![](../asset/new/Icon_poisoner.png) **중독**: 중독되면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_drunk.webp) **취함**: 당신이 취한 상태면 능력이 **발동 안 됩니다**.
+- ![](../asset/new/Icon_poisoner.webp) **중독**: 중독되면 능력이 **발동 안 됩니다**.
 - **공개 주의**: 시장임을 공개하면 처형 타겟이 될 수 있습니다.
 - **3인 전략**: 악 팀도 3인을 피하려 할 수 있습니다.
 
@@ -51,9 +57,11 @@
 
 ## 상호작용
 
-- ![](../asset/new/Icon_imp.png) **임프**: 공격이 튕겨나갈 수 있습니다.
-- ![](../asset/new/Icon_soldier.png) **군인**: 튕긴 공격이 병사에게 가면 아무도 안 죽습니다.
-- ![](../asset/new/Icon_scarletwoman.png) **진홍의 여인**: 최종 3인에 스칼렛 우먼이 있으면 주의하세요.
+![](  ../asset/generated/2x1/mayor_s3_inter.webp)
+
+- ![](../asset/new/Icon_imp.webp) **임프**: 공격이 튕겨나갈 수 있습니다.
+- ![](../asset/new/Icon_soldier.webp) **군인**: 튕긴 공격이 병사에게 가면 아무도 안 죽습니다.
+- ![](../asset/new/Icon_scarletwoman.webp) **진홍의 여인**: 최종 3인에 스칼렛 우먼이 있으면 주의하세요.
 
 ---
 

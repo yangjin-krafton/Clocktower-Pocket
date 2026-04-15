@@ -1,8 +1,10 @@
 ﻿# 낮 진행
 
+![](../asset/generated/1x1/day_page.webp)
+
 밤이 끝난 후 **밤 사망자 공개**로 낮이 시작됩니다.
 낮은 **토론 → 지목 → 투표 → 처형** 순서로 진행됩니다.
-![](../asset/new/Generic_traveller.png) 여행자가 있다면 이와 별도로 **추방(Exile)** 이 일어날 수 있습니다.
+![](../asset/new/Generic_traveller.webp) 여행자가 있다면 이와 별도로 **추방(Exile)** 이 일어날 수 있습니다.
 
 > 게임은 대부분 **죽은 플레이어의 투표와 의견**에 의해 결정됩니다.
 > 사망자의 참여가 게임의 핵심입니다.
@@ -10,6 +12,8 @@
 ---
 
 ## 토론
+
+![](  ../asset/generated/2x1/day_s1_debate.webp)
 
 - 모든 플레이어가 **자유롭게** 정보·주장·의심을 발언할 수 있습니다.
 - **비공개 대화**도 허용됩니다 (두 명이 잠시 자리를 피하는 방식 등).
@@ -19,6 +23,8 @@
 ---
 
 ## 지목 (Nomination)
+
+![](  ../asset/generated/2x1/day_s2_nominate.webp)
 
 처형 후보를 올리는 **공식 선언**입니다.
 
@@ -37,12 +43,14 @@
 
 ### 특수 지목
 
-- ![](../asset/new/Icon_virgin.png) **처녀**: 처녀를 지목한 플레이어가 마을 주민이면, 지목자가 즉시 처형됩니다 (처녀 능력 1회).
-- ![](../asset/new/Generic_traveller.png) [여행자](travellers.md)는 일반 지목 대신 **추방 절차**로 제거할 수 있습니다.
+- ![](../asset/new/Icon_virgin.webp) **처녀**: 처녀를 지목한 플레이어가 마을 주민이면, 지목자가 즉시 처형됩니다 (처녀 능력 1회).
+- ![](../asset/new/Generic_traveller.webp) [여행자](travellers.md)는 일반 지목 대신 **추방 절차**로 제거할 수 있습니다.
 
 ---
 
 ## 투표 (Vote)
+
+![](  ../asset/generated/2x1/day_s3_vote.webp)
 
 지목된 플레이어에 대해 투표를 진행합니다.
 
@@ -69,11 +77,13 @@
 
 ### 특수 투표
 
-- ![](../asset/new/Icon_butler.png) **집사**: 자신의 주인이 투표할 때만 투표할 수 있습니다. → [집사 상세](butler.md)
+- ![](../asset/new/Icon_butler.webp) **집사**: 자신의 주인이 투표할 때만 투표할 수 있습니다. → [집사 상세](butler.md)
 
 ---
 
 ## 처형 (Execution)
+
+![](  ../asset/generated/2x1/day_s4_execution.webp)
 
 ### 처형 규칙
 
@@ -87,9 +97,9 @@
 
 | 상황 | 결과 |
 |---|---|
-| ![](../asset/new/Icon_imp.png) **임프** 처형 | **선 팀 즉시 승리** (단, ![](../asset/new/Icon_scarletwoman.png) 진홍의 여인 승계 가능) |
-| ![](../asset/new/Icon_saint.png) **성자** 처형 | **선 팀 즉시 패배** (악 팀 승리) |
-| **처형 없는 낮** | ![](../asset/new/Icon_mayor.png) 시장 + 생존자 3명이면 **선 팀 특수 승리** 가능 |
+| ![](../asset/new/Icon_imp.webp) **임프** 처형 | **선 팀 즉시 승리** (단, ![](../asset/new/Icon_scarletwoman.webp) 진홍의 여인 승계 가능) |
+| ![](../asset/new/Icon_saint.webp) **성자** 처형 | **선 팀 즉시 패배** (악 팀 승리) |
+| **처형 없는 낮** | ![](../asset/new/Icon_mayor.webp) 시장 + 생존자 3명이면 **선 팀 특수 승리** 가능 |
 | **일반 처형** | 처형 후 밤으로 진행 |
 
 ### 처형 없는 날
@@ -101,15 +111,17 @@
 
 ## 추방 (Exile)
 
-![](../asset/new/Generic_traveller.png) 여행자는 일반 플레이어처럼 처형하지 않고, 별도 절차로 **추방**할 수 있습니다.
+![](  ../asset/generated/2x1/day_s5_exile.webp)
+
+![](../asset/new/Generic_traveller.webp) 여행자는 일반 플레이어처럼 처형하지 않고, 별도 절차로 **추방**할 수 있습니다.
 
 ### 추방 규칙
 
-- ![](../asset/new/Generic_traveller.png) 추방은 **처형이 아닙니다**.
-- ![](../asset/new/Icon_virgin.png) 추방은 그날의 처형 1회를 **소모하지 않습니다**.
-- ![](../asset/new/Icon_slayer.png) 하루에 추방은 **여러 번** 일어날 수 있습니다.
-- ![](../asset/death.png) **모든 플레이어**가 추방 지지에 참여할 수 있습니다. 죽은 플레이어도, 유령표가 없어도 가능합니다.
-- ![](../asset/new/Icon_poisoner.png) 능력은 추방 결정에 **영향을 줄 수 없습니다**.
+- ![](../asset/new/Generic_traveller.webp) 추방은 **처형이 아닙니다**.
+- ![](../asset/new/Icon_virgin.webp) 추방은 그날의 처형 1회를 **소모하지 않습니다**.
+- ![](../asset/new/Icon_slayer.webp) 하루에 추방은 **여러 번** 일어날 수 있습니다.
+- ![](../asset/death.webp) **모든 플레이어**가 추방 지지에 참여할 수 있습니다. 죽은 플레이어도, 유령표가 없어도 가능합니다.
+- ![](../asset/new/Icon_poisoner.webp) 능력은 추방 결정에 **영향을 줄 수 없습니다**.
 
 → 자세한 내용은 [여행자 규칙](travellers.md)
 → [희생양](scapegoat.md) | [총잡이](gunslinger.md) | [거지](beggar.md) | [관료](bureaucrat.md) | [도둑](thief.md)
@@ -118,14 +130,18 @@
 
 ## 낮 특수 능력
 
+![](  ../asset/generated/2x1/day_s6_day_ability.webp)
+
 일부 역할은 낮에 능력을 사용할 수 있습니다:
 
-- ![](../asset/new/Icon_slayer.png) **학살자**: 게임 중 1회, 낮에 1명을 지목. 대상이 임프면 즉시 사망. → [학살자 상세](slayer.md)
-- ![](../asset/new/Icon_virgin.png) **처녀**: 첫 지목 시 지목자가 마을 주민이면 지목자 즉시 처형. → [처녀 상세](virgin.md)
+- ![](../asset/new/Icon_slayer.webp) **학살자**: 게임 중 1회, 낮에 1명을 지목. 대상이 임프면 즉시 사망. → [학살자 상세](slayer.md)
+- ![](../asset/new/Icon_virgin.webp) **처녀**: 첫 지목 시 지목자가 마을 주민이면 지목자 즉시 처형. → [처녀 상세](virgin.md)
 
 ---
 
 ## 낮 진행 요약
+
+![](  ../asset/generated/2x1/day_s7_summary.webp)
 
 ```
 밤 종료

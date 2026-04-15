@@ -516,7 +516,7 @@ export class HostApp {
       // 아이콘
       const iconWrap = document.createElement('span')
       iconWrap.style.cssText = 'width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;'
-      if (role?.icon?.endsWith('.png')) {
+      if (role?.icon?.endsWith('.webp')) {
         const img = document.createElement('img')
         img.src = `./asset/new/Icon_${role.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -1257,7 +1257,7 @@ export class HostApp {
 
         const iconDiv = document.createElement('div')
         iconDiv.style.cssText = 'width:40px;height:40px;border-radius:50%;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;'
-        if (role?.icon?.endsWith('.png')) {
+        if (role?.icon?.endsWith('.webp')) {
           const img = document.createElement('img')
           img.src = `./asset/new/Icon_${role.icon}`
           img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -1448,7 +1448,7 @@ export class HostApp {
         `
         const iconDiv = document.createElement('div')
         iconDiv.style.cssText = `width:44px;height:44px;border-radius:50%;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;`
-        if (role.icon?.endsWith('.png')) {
+        if (role.icon?.endsWith('.webp')) {
           const img = document.createElement('img')
           img.src = `./asset/new/Icon_${role.icon}`
           img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -1628,7 +1628,7 @@ export class HostApp {
     // 아이콘
     const iconWrap = document.createElement('div')
     iconWrap.style.cssText = 'width:176px;height:176px;display:flex;align-items:center;justify-content:center;font-size:4.8rem;flex-shrink:0;margin:0 auto 2px;opacity:0.72;'
-    if (role.icon?.endsWith('.png')) {
+    if (role.icon?.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${role.icon}`
       img.style.cssText = 'width:100%;height:100%;object-fit:contain;'

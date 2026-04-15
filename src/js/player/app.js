@@ -480,7 +480,7 @@ export class PlayerApp {
       `
       const iconDiv = document.createElement('div')
       iconDiv.style.cssText = 'width:44px;height:44px;border-radius:50%;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;'
-      if (role.icon?.endsWith('.png')) {
+      if (role.icon?.endsWith('.webp')) {
         const img = document.createElement('img')
         img.src = `./asset/new/Icon_${role.icon}`
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -910,7 +910,7 @@ export class PlayerApp {
           background:var(--surface2);overflow:hidden;
           display:flex;align-items:center;justify-content:center;flex-shrink:0;
         `
-        if (role.icon?.endsWith('.png')) {
+        if (role.icon?.endsWith('.webp')) {
           const img = document.createElement('img')
           img.src = `./asset/new/Icon_${role.icon}`
           img.style.cssText = 'width:100%;height:100%;object-fit:contain;'
@@ -1047,7 +1047,7 @@ export class PlayerApp {
     // 아이콘
     const iconWrap = document.createElement('div')
     iconWrap.className = 'dict__modal-icon'
-    if (role.icon?.endsWith('.png')) {
+    if (role.icon?.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name
@@ -1150,7 +1150,7 @@ export class PlayerApp {
     // ── 큰 아이콘 ──
     const iconWrap = document.createElement('div')
     iconWrap.className = 'dict__modal-icon'
-    if (role.icon?.endsWith('.png')) {
+    if (role.icon?.endsWith('.webp')) {
       const img = document.createElement('img')
       img.src = `./asset/new/Icon_${role.icon}`
       img.alt = role.name

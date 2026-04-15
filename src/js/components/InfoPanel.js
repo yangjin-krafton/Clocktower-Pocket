@@ -33,11 +33,11 @@ export function renderInfoPanel(data) {
   const iconEl = document.createElement('div')
   iconEl.className = 'info-panel__icon'
 
-  // PNG: token.png 배경 위에 역할 아이콘 오버레이
-  if (roleIcon && roleIcon.endsWith('.png')) {
+  // PNG: token.webp 배경 위에 역할 아이콘 오버레이
+  if (roleIcon && roleIcon.endsWith('.webp')) {
     iconEl.className = 'info-panel__icon info-panel__icon--token'
     iconEl.innerHTML = `
-      <img class="info-panel__token-bg"   src="./asset/token.png" alt="">
+      <img class="info-panel__token-bg"   src="./asset/token.webp" alt="">
       <img class="info-panel__token-icon" src="./asset/new/Icon_${roleIcon}" alt="${title}">
     `
   } else {

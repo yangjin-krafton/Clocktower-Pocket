@@ -1,16 +1,22 @@
-﻿# ![](../asset/new/Icon_drunk.png) 주정뱅이 (Drunk)
+﻿# ![](../asset/new/Icon_drunk.webp) 주정뱅이 (Drunk)
 
-**진영**: ![](../asset/new/Generic_outsider.png) 아웃사이더 (선 팀)
+![](../asset/generated/1x1/drunk_page.webp)
+
+**진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---
 
 ## 능력
 
-당신은 ![](../asset/new/Generic_townsfolk.png) **마을 주민**이라고 믿지만, 실제로는 **아웃사이더**이고 능력이 **오작동**한다.
+![](  ../asset/generated/2x1/drunk_s1_ability.webp)
+
+당신은 ![](../asset/new/Generic_townsfolk.webp) **마을 주민**이라고 믿지만, 실제로는 **아웃사이더**이고 능력이 **오작동**한다.
 
 ---
 
 ## 플레이 가이드
+
+![](  ../asset/generated/2x1/drunk_s2_guide.webp)
 
 ### ⚠️ 중요: 당신은 자신이 술꾼이라는 것을 **모릅니다**
 
@@ -19,7 +25,7 @@
 
 ### 술꾼의 특징
 
-- **거짓 역할**: 당신은 ![](../asset/new/Generic_townsfolk.png) Townsfolk를 받았지만 **거짓**입니다.
+- **거짓 역할**: 당신은 ![](../asset/new/Generic_townsfolk.webp) Townsfolk를 받았지만 **거짓**입니다.
 - **오작동**: 당신의 능력은 **작동하지 않습니다**.
 - **잘못된 정보**: 받는 정보가 모두 **틀릴 수 있습니다**.
 
@@ -39,14 +45,18 @@
 
 ## 특별 규칙
 
+![](  ../asset/generated/2x1/drunk_s3_special.webp)
+
 - **이야기꾼만 앎**: 누가 Drunk인지는 이야기꾼만 압니다.
 - **플레이어는 모름**: 당신도 자신이 Drunk인지 **모릅니다**.
-- ![](../asset/new/Icon_librarian.png) **사서**: 사서가 당신을 조사하면 **진짜 Townsfolk 역할**을 봅니다.
-- ![](../asset/new/Icon_undertaker.png) **장의사**: 당신이 처형되면 **진짜 Townsfolk 역할**이 공개됩니다.
+- ![](../asset/new/Icon_librarian.webp) **사서**: 사서가 당신을 조사하면 **진짜 Townsfolk 역할**을 봅니다.
+- ![](../asset/new/Icon_undertaker.webp) **장의사**: 당신이 처형되면 **진짜 Townsfolk 역할**이 공개됩니다.
 
 ---
 
 ## 게임 후 확인
+
+![](  ../asset/generated/2x1/drunk_s4_postgame.webp)
 
 게임이 끝나면 이야기꾼가 누가 Drunk였는지 공개합니다.
 

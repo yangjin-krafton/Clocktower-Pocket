@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_undertaker.webp) 장의사 (Undertaker)
 
-![](../asset/generated/1x1/undertaker_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_slayer.webp) 처단자 (Slayer)
 
-![](../asset/generated/1x1/slayer_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Generic_minion.webp) 미니언 (Minion)
 
-![](../asset/generated/1x1/minion_page.webp)
-
 [악 팀](roles.md) 소속. 임프를 보좌하며 선 팀의 조사를 방해합니다.
 미니언은 **첫날 밤에 서로와 임프를 확인**합니다. → [첫날 밤](night.md)
 

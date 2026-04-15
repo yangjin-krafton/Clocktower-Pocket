@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_imp.webp) 임프 (Imp)
 
-![](../asset/generated/1x1/imp_page.webp)
-
 **진영**: ![](../asset/new/Generic_demon.webp) 임프 (악 팀)
 
 ---

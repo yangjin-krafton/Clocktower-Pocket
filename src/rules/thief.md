@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_thief.webp) 도둑 (Thief)
 
-![](../asset/generated/1x1/thief_page.webp)
-
 **분류**: ![](../asset/new/Generic_traveller.webp) 여행자 (Traveller)
 
 ---

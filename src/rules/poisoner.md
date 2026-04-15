@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_poisoner.webp) 독약꾼 (Poisoner)
 
-![](../asset/generated/1x1/poisoner_page.webp)
-
 **진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---

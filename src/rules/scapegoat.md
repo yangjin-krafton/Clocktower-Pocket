@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_scapegoat.webp) 희생양 (Scapegoat)
 
-![](../asset/generated/1x1/scapegoat_page.webp)
-
 **분류**: ![](../asset/new/Generic_traveller.webp) 여행자 (Traveller)
 
 ---

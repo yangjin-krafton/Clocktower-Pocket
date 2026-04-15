@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_drunk.webp) 주정뱅이 (Drunk)
 
-![](../asset/generated/1x1/drunk_page.webp)
-
 **진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---

@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_gunslinger.webp) 총잡이 (Gunslinger)
 
-![](../asset/generated/1x1/gunslinger_page.webp)
-
 **분류**: ![](../asset/new/Generic_traveller.webp) 여행자 (Traveller)
 
 ---

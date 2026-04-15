@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_fortuneteller.webp) 점쟁이 (Fortune Teller)
 
-![](../asset/generated/1x1/fortuneteller_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

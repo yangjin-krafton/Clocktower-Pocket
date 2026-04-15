@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Generic_outsider.webp) 아웃사이더 (Outsider)
 
-![](../asset/generated/1x1/outsider_page.webp)
-
 [선 팀](roles.md) 소속이지만, 선 팀에 **불리한 조건**을 지닌 역할입니다.
 Trouble Brewing에는 4종이 있으며, 스크립트에 따라 0~2명이 배정됩니다.
 

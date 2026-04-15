@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_mayor.webp) 시장 (Mayor)
 
-![](../asset/generated/1x1/mayor_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_ravenkeeper.webp) 까마귀 사육사 (Ravenkeeper)
 
-![](../asset/generated/1x1/ravenkeeper_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

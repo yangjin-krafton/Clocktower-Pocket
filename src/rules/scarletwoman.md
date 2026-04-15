@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_scarletwoman.webp) 진홍의 여인 (Scarlet Woman)
 
-![](../asset/generated/1x1/scarletwoman_page.webp)
-
 **진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---

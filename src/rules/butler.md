@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_butler.webp) 집사 (Butler)
 
-![](../asset/generated/1x1/butler_page.webp)
-
 **진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---

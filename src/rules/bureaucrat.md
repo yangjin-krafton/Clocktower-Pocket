@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_bureaucrat.webp) 관료 (Bureaucrat)
 
-![](../asset/generated/1x1/bureaucrat_page.webp)
-
 **분류**: ![](../asset/new/Generic_traveller.webp) 여행자 (Traveller)
 
 ---

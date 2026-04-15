@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (Townsfolk)
 
-![](../asset/generated/1x1/townsfolk_page.webp)
-
 [선 팀](roles.md) 소속. 정보 수집 또는 보호 역할입니다.
 [중독·취함](statuses.md) 상태면 능력이 오작동할 수 있습니다.
 

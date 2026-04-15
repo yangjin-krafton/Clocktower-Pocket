@@ -1,7 +1,5 @@
 ﻿# 주요 상태
 
-![](../asset/generated/1x1/statuses_page.webp)
-
 플레이어는 게임 중 다양한 상태를 가질 수 있습니다.
 
 ---

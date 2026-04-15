@@ -141,7 +141,7 @@ export class RulesScreen {
       this.el.appendChild(backTop)
     }
 
-    // 마크다운 본문
+    // 마크다운 본문 — 히어로 위로 올라오도록 음수 마진
     const body = document.createElement('div')
     body.className = 'rules-body'
     body.innerHTML = this._parseMarkdown(text)
@@ -252,8 +252,13 @@ export class RulesScreen {
         result.push(`<ul class="rules-ul">${items.join('')}</ul>`)
         continue
       }
-      // 삽화 이미지 전용 줄 (generated/ 삽화는 블록 렌더링)
+      // 삽화 이미지 전용 줄 (generated/)
       if (/^!\[.*\]\(.*generated\//.test(line.trim())) {
+        if (/\/1x1\//.test(line)) {
+          // 1:1 페이지 헤더 → JS에서 히어로 배경으로 처리하므로 스킵
+          i++; continue
+        }
+        // 2:1 섹션 배너
         result.push(`<div class="rules-illust-wrap">${this._inline(line)}</div>`)
         i++; continue
       }
@@ -339,10 +344,13 @@ export class RulesScreen {
       // ../asset/... → asset/... (MD는 src/rules/ 위치, 앱 루트는 src/)
       const resolved = src.replace(/^(?:\.\.\/)+/, '')
 
-      // ── 삽화: generated/ 하위 이미지 → 블록 배너로 렌더링
+      // ── 삽화: generated/ 하위 이미지
       if (/\/generated\//.test(resolved)) {
-        const ratio = /\/1x1\//.test(resolved) ? 'rules-illust--1x1' : 'rules-illust--2x1'
-        return `<img class="rules-illust ${ratio}" src="${resolved}" alt="${alt}" loading="lazy">`
+        if (/\/1x1\//.test(resolved)) {
+          return '' // 1:1 히어로는 JS _render()에서 배경으로 처리
+        }
+        // 2:1 섹션 배너
+        return `<img class="rules-illust rules-illust--2x1" src="${resolved}" alt="${alt}" loading="lazy">`
       }
 
       // ── 역할 아이콘: token.webp 배경 위에 아이콘 오버레이
@@ -454,7 +462,7 @@ if (!document.getElementById('rules-screen-style')) {
   font-size: 0.82rem;
 }
 
-/* ── 삽화 (generated 이미지) ── */
+/* ── 섹션 삽화 (2:1 배너) ── */
 .rules-illust {
   display: block;
   width: 100%;
@@ -462,12 +470,6 @@ if (!document.getElementById('rules-screen-style')) {
   object-fit: cover;
   margin: 6px 0 10px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-}
-.rules-illust--1x1 {
-  max-width: 280px;
-  aspect-ratio: 1 / 1;
-  margin-left: auto;
-  margin-right: auto;
 }
 .rules-illust--2x1 {
   max-width: 100%;

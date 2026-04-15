@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Generic_demon.webp) 임프 (Demon)
 
-![](../asset/generated/1x1/demon_page.webp)
-
 [악 팀](roles.md)의 우두머리. Trouble Brewing에는 **임프(Imp)** 단 1명입니다.
 게임 내내 자신의 정체를 숨기며 매 밤 마을 주민을 제거합니다.
 

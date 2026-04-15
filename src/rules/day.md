@@ -1,7 +1,5 @@
 ﻿# 낮 진행
 
-![](../asset/generated/1x1/day_page.webp)
-
 밤이 끝난 후 **밤 사망자 공개**로 낮이 시작됩니다.
 낮은 **토론 → 지목 → 투표 → 처형** 순서로 진행됩니다.
 ![](../asset/new/Generic_traveller.webp) 여행자가 있다면 이와 별도로 **추방(Exile)** 이 일어날 수 있습니다.

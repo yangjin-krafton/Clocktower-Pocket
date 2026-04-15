@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_monk.webp) 수도사 (Monk)
 
-![](../asset/generated/1x1/monk_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

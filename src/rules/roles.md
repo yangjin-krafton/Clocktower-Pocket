@@ -1,7 +1,5 @@
 ﻿# 역할 분류
 
-![](../asset/generated/1x1/roles_page.webp)
-
 기본 역할은 4가지 분류로 나뉩니다. 여기에 별도로 게임 중 합류/이탈이 가능한 [여행자](travellers.md)가 있습니다.
 
 ---

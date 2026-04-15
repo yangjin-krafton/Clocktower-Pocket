@@ -1,7 +1,5 @@
 # ![](../asset/demon-head2.webp) 앱 사용법
 
-![](  ../asset/generated/1x1/app_page.webp)
-
 ---
 
 ## 호스트 (이야기꾼)

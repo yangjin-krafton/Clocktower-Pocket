@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_baron.webp) 남작 (Baron)
 
-![](../asset/generated/1x1/baron_page.webp)
-
 **진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---

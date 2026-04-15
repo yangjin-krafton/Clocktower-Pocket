@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_spy.webp) 스파이 (Spy)
 
-![](../asset/generated/1x1/spy_page.webp)
-
 **진영**: ![](../asset/new/Generic_minion.webp) 미니언 (악 팀)
 
 ---

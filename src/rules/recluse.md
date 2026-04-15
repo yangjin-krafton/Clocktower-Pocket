@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_recluse.webp) 은둔자 (Recluse)
 
-![](../asset/generated/1x1/recluse_page.webp)
-
 **진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---

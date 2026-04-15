@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_beggar.webp) 거지 (Beggar)
 
-![](../asset/generated/1x1/beggar_page.webp)
-
 **분류**: ![](../asset/new/Generic_traveller.webp) 여행자 (Traveller)
 
 ---

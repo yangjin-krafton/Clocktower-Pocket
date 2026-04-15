@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_virgin.webp) 처녀 (Virgin)
 
-![](../asset/generated/1x1/virgin_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (Townsfolk)
 
 ---

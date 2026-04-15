@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_saint.webp) 성자 (Saint)
 
-![](../asset/generated/1x1/saint_page.webp)
-
 **진영**: ![](../asset/new/Generic_outsider.webp) 아웃사이더 (선 팀)
 
 ---

@@ -1,7 +1,5 @@
 # ![](../asset/new/Generic_traveller.webp) 여행자 (Travellers)
 
-![](  ../asset/generated/1x1/travellers_page.webp)
-
 늦게 합류하거나 중간에 먼저 나가야 하는 플레이어를 위한 특수 역할입니다.
 정체와 능력은 **공개**되지만, 진영은 이야기꾼이 정하며 **공개되지 않습니다**.
 

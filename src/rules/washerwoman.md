@@ -1,7 +1,5 @@
 ﻿# ![](../asset/new/Icon_washerwoman.webp) 세탁부 (Washerwoman)
 
-![](../asset/generated/1x1/washerwoman_page.webp)
-
 **진영**: ![](../asset/new/Generic_townsfolk.webp) 마을 주민 (선 팀)
 
 ---

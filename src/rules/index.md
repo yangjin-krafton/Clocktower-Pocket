@@ -1,7 +1,5 @@
 ﻿# Blood on the Clocktower ![](../asset/new/Logo_trouble_brewing.webp)
 
-![](../asset/generated/1x1/index_page.webp)
-
 **Trouble Brewing** 에디션 기준 규칙서입니다.
 
 ---
